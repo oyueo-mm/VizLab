@@ -173,6 +173,11 @@ const loaders: Record<string, Loader> = {
   pcoa: () => import('./bioCharts').then((m) => m.pcoaModule),
   'phylogenetic-tree': () => import('./bioCharts').then((m) => m.phyloModule),
   'clustered-heatmap': () => import('./bioCharts').then((m) => m.clusterHeatModule),
+  venn: () => import('./netCharts').then((m) => m.vennModule),
+  upset: () => import('./netCharts').then((m) => m.upsetModule),
+  hypergraph: () => import('./netCharts').then((m) => m.hypergraphModule),
+  biofabric: () => import('./netCharts').then((m) => m.fabricModule),
+  'radial-tree': () => import('./netCharts').then((m) => m.radialTreeModule),
   lisa: () => import('./spatialStatsCharts').then((m) => m.lisaModule),
 }
 

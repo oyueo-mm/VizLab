@@ -168,4 +168,9 @@ export const needs: Record<string, Slot[]> = {
   'pcoa': [['number'], ['number'], ['number']],
   'phylogenetic-tree': [['number'], ['number'], ['number']],
   'clustered-heatmap': [['number'], ['number']],
+  'venn': [['number'], ['number']],
+  'upset': [['number'], ['number']],
+  'hypergraph': [['number'], ['number']],
+  'biofabric': [['category'], ['category']],
+  'radial-tree': [['category']],
 }

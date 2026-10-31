@@ -16,7 +16,7 @@ export type DatasetId =
   | 'terrain-hills' | 'temp-stations' | 'raster-grid' | 'wind-sources' | 'gps-tracks' | 'spatial-values' | 'kr-indicators' | 'kr-composition' | 'world-continents' | 'buffer-features' | 'tissot-grid'
   | 'regression-demo' | 'survival-trial' | 'process-shift' | 'forecast-overconfident' | 'forecast-calibrated'
   | 'surface-grid' | 'signal-chirp' | 'rp-series' | 'phase-seeds' | 'bifurcation-marks' | 'wind-obs' | 'soil-texture' | 'polar-curves' | 'points-2d' | 'hourly-visits' | 'yield-curves' | 'order-book' | 'spike-trials' | 'event-log' | 'lifelines' | 'kanban'
-  | 'de-genes' | 'gwas-synth' | 'binding-sites' | 'coverage-synth' | 'microbiome-dist' | 'expression-matrix' | 'species-dist'
+  | 'de-genes' | 'gwas-synth' | 'binding-sites' | 'coverage-synth' | 'microbiome-dist' | 'expression-matrix' | 'species-dist' | 'set-members'
 
 export interface DatasetSize { min: number; max: number; default: number; step: number; label: string }
 
