@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { initialLabState } from '../lab/state'
-import { modules } from '../viz/charts'
+import { useVizModule } from '../viz/charts'
 import { ChartBoundary } from './ChartBoundary'
 
 const noop = () => {}
@@ -28,11 +28,11 @@ export function ChartPreview({ id }: { id: string }) {
     }
     return () => { ro.disconnect(); io?.disconnect() }
   }, [])
-  const mod = modules[id]
+  const { mod } = useVizModule(id, visible)
   const state = useMemo(() => (visible && mod ? initialLabState(id, mod) : null), [visible, id, mod])
   return (
     <div ref={ref} className="chart-preview" aria-hidden="true" data-testid={`preview-${id}`}>
-      {state && size && size.width > 0 && (
+      {state && mod && size && size.width > 0 && (
         <ChartBoundary compact>
           <mod.Chart table={state.table} mapping={state.mapping} params={state.params} setParams={noop} width={size.width} height={size.height} compact />
         </ChartBoundary>

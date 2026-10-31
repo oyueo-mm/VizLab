@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { categoryById } from './viz/catalog'
 import type { CategoryId } from './viz/types'
 
 /** Hash routes survive refresh on static hosting (GitHub Pages has no SPA fallback). */
@@ -7,12 +8,10 @@ export type Route =
   | { page: 'catalog'; category: CategoryId | 'all' }
   | { page: 'viz'; id: string }
 
-const CATEGORIES = new Set(['distribution', 'relationship', 'comparison', 'timeseries', 'composition', 'multivariate', 'other'])
-
 export function parseHash(hash: string): Route {
   const path = hash.replace(/^#\/?/, '').split('?')[0]
   const [head, arg] = path.split('/').map((s) => decodeURIComponent(s ?? ''))
-  if (head === 'catalog') return { page: 'catalog', category: arg && CATEGORIES.has(arg) ? (arg as CategoryId) : 'all' }
+  if (head === 'catalog') return { page: 'catalog', category: arg && categoryById.has(arg as CategoryId) ? (arg as CategoryId) : 'all' }
   if (head === 'viz' && arg) return { page: 'viz', id: arg }
   return { page: 'home' }
 }

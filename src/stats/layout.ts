@@ -3,8 +3,9 @@ import { pearson } from './descriptive'
 /**
  * Beeswarm "dodge": keep every circle at its exact value on the value axis and push it sideways
  * to the smallest offset (searching both sides) that avoids overlapping already-placed circles.
+ * `oneSided` only searches non-negative offsets (points pile up on one side like a dot plot).
  */
-export function dodge(positions: readonly number[], radius: number, maxOffset = Infinity) {
+export function dodge(positions: readonly number[], radius: number, maxOffset = Infinity, oneSided = false) {
   const order = positions.map((p, i) => [p, i] as const).sort((a, b) => a[0] - b[0])
   const placed: { p: number; o: number }[] = []
   const offsets = new Array<number>(positions.length).fill(0)
@@ -21,7 +22,7 @@ export function dodge(positions: readonly number[], radius: number, maxOffset = 
         candidates.push(q.o + h + 0.01, q.o - h - 0.01)
       }
       candidates.sort((a, b) => Math.abs(a) - Math.abs(b))
-      best = candidates.find((c) => near.every((q) => (q.p - p) ** 2 + (q.o - c) ** 2 >= d2 - 1e-6)) ?? 0
+      best = (oneSided ? candidates.filter((c) => c >= 0) : candidates).find((c) => near.every((q) => (q.p - p) ** 2 + (q.o - c) ** 2 >= d2 - 1e-6)) ?? 0
     }
     best = Math.max(-maxOffset, Math.min(maxOffset, best))
     placed.push({ p, o: best })

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { DEFAULT_SEED, datasetById, generateDataset, type DatasetId } from '../data/datasets'
 import type { DataTable } from '../data/table'
 import { readStored, writeStored } from '../hooks/storage'
-import { modules } from '../viz/charts'
 import { autoMapping } from '../viz/mapping'
 import type { Mapping, VizModule } from '../viz/types'
 
@@ -28,7 +27,7 @@ export function datasetSize(datasetId: DatasetId) {
   return datasetById.get(datasetId)?.size?.default ?? 0
 }
 
-export function initialLabState(id: string, mod: VizModule = modules[id]): LabState {
+export function initialLabState(_id: string, mod: VizModule): LabState {
   const datasetId = mod.datasets[0]
   const n = datasetSize(datasetId)
   const table = generateDataset(datasetId, DEFAULT_SEED, n)
@@ -68,8 +67,7 @@ function persist(id: string, s: LabState) {
 const HISTORY = 60
 
 /** Lab state with persistence and an undo/redo stack for table edits. */
-export function useLabState(id: string) {
-  const mod = modules[id]
+export function useLabState(id: string, mod: VizModule) {
   const [state, setState] = useState<LabState>(() => restore(id, mod))
   // Source of truth for event handlers, updated synchronously so rapid consecutive edits compose.
   const current = useRef(state)

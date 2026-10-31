@@ -7,6 +7,7 @@ import { fmt, pct } from '../../lib/format'
 import { updateRow } from '../../data/table'
 import { useTween } from '../../hooks/motion'
 import { movingAverage } from '../../stats/descriptive'
+import { stackSeries } from '../../stats/stack'
 import { roleColumn } from '../mapping'
 import type { ChartProps, ControlsProps, VizModule } from '../types'
 import { dragDigits, paddedDomain, pointRows, roundTo, uniqueGroups, type PointDatum } from './shared'
@@ -178,16 +179,7 @@ export const lineModule: VizModule<LineParams> = {
 
 // ─── Area chart ──────────────────────────────────────────────────────────────
 
-const offsets = { overlap: d3.stackOffsetNone, stack: d3.stackOffsetNone, normalize: d3.stackOffsetExpand, stream: d3.stackOffsetWiggle }
-
-/** Aligns series on the union of x values (missing values count as 0) and stacks them. */
-export function stackSeries(series: { key: string; pts: PointDatum[] }[], mode: LineParams['mode']) {
-  const xs = [...new Set(series.flatMap((s) => s.pts.map((p) => p.x)))].sort((a, b) => a - b)
-  const rows = xs.map((xv) => Object.fromEntries([['__x', xv], ...series.map((s) => [s.key, Math.max(0, s.pts.find((p) => p.x === xv)?.y ?? 0)])]))
-  const stack = d3.stack<Record<string, number>>().keys(series.map((s) => s.key)).offset(offsets[mode])
-    .order(mode === 'stream' ? d3.stackOrderInsideOut : d3.stackOrderNone)
-  return { xs, layers: stack(rows) }
-}
+export { stackSeries }
 
 function AreaChart({ table, mapping, params, setParams, width, height, compact }: ChartProps<LineParams>) {
   const xCol = roleColumn(mapping, 'x')
@@ -247,7 +239,8 @@ function AreaChart({ table, mapping, params, setParams, width, height, compact }
             ? <AxisLeft scale={y} x={0} grid={iw} label={params.mode === 'normalize' ? '비율' : yCol} compact={compact} format={params.mode === 'normalize' ? (v) => pct(v, 0) : undefined} />
             : <AxisLeft scale={y} x={0} grid={0} label={`${yCol} (기준선 이동)`} compact={compact} format={() => ''} />}
           {order.map((key, li) => {
-            const geo = shown[li] ?? target[li]
+            const tweened = shown[li]
+            const geo = tweened && tweened.length === xs.length ? tweened : target[li]
             if (!geo) return null
             const area = d3.area<number[]>().curve(curves[params.curve]).x((_, i) => x(xs[i])).y0((d) => d[0]).y1((d) => d[1])
             const top = d3.line<number[]>().curve(curves[params.curve]).x((_, i) => x(xs[i])).y((d) => d[1])

@@ -6,7 +6,9 @@ import { useMediaQuery } from '../hooks/useMediaQuery'
 import { useSize } from '../hooks/useSize'
 import { routeHref } from '../router'
 import { categoryById, vizById } from '../viz/catalog'
+import { useVizModule } from '../viz/charts'
 import { mappingErrors } from '../viz/mapping'
+import type { VizModule } from '../viz/types'
 import { DataPanel } from './DataPanel'
 import { Related } from './Related'
 import { useLabState } from './state'
@@ -45,9 +47,17 @@ function useFullscreen<T extends HTMLElement>() {
   return { ref, expanded: full || fallback, fallback, toggle }
 }
 
-export function LabPage({ id }: { id: string }) {
+/** Loads the chart implementation, then shows the lab. */
+export default function LabPage({ id }: { id: string }) {
+  const { mod, error } = useVizModule(id)
+  if (error) return <div className="empty-state" role="alert"><p>시각화를 불러오지 못했습니다. 네트워크 연결을 확인한 뒤 새로고침하세요.</p></div>
+  if (!mod) return <div className="lab-loading" aria-busy="true" data-testid="lab-loading" />
+  return <Lab id={id} mod={mod} />
+}
+
+function Lab({ id, mod }: { id: string; mod: VizModule }) {
   const meta = vizById.get(id)!
-  const { state, mod, actions, canUndo, canRedo } = useLabState(id)
+  const { state, actions, canUndo, canRedo } = useLabState(id, mod)
   const [panelOpen, setPanelOpen] = useStoredState('ui:panel-open', true)
   const [tab, setTab] = useStoredState<Tab>('ui:panel-tab', 'settings')
   const [wide, setWide] = useState(false)
@@ -138,7 +148,7 @@ export function LabPage({ id }: { id: string }) {
           <div id="tabpanel" role="tabpanel" aria-labelledby={tab === 'settings' ? 'tab-settings' : 'tab-data'} className="panel-body">
             {tab === 'settings' ? (
               <>
-                {Controls && errors.length === 0 ? <Controls params={state.params} setParams={actions.setParams} table={state.table} mapping={state.mapping} /> : <p className="control-hint">데이터 매핑을 먼저 완료하세요.</p>}
+                {Controls && errors.length === 0 ? <Controls params={state.params} setParams={actions.setParams} table={state.table} mapping={state.mapping} setTable={actions.setTable} /> : <p className="control-hint">데이터 매핑을 먼저 완료하세요.</p>}
                 <section className="control-group">
                   <p className="control-group-title">관련 시각화</p>
                   <Related id={id} compact />

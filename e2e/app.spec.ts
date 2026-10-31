@@ -6,18 +6,27 @@ test.describe('home', () => {
     await expect(page.getByRole('heading', { name: 'VizLab', level: 1 })).toBeVisible()
     await expect(page.getByText('인터랙티브 데이터 시각화 백과사전')).toBeVisible()
     const demo = page.getByTestId('hero-demo')
-    await expect(demo.locator('.hero-points circle')).toHaveCount(140)
+    await expect(demo.getByTestId('hero-marks').locator('circle')).toHaveCount(140)
     await expect(demo).toHaveAttribute('data-stage', 'scatter')
-    // auto-advances to the next representation of the same data
-    await expect(demo).toHaveAttribute('data-stage', 'histogram', { timeout: 6000 })
+    await expect(demo.getByTestId('hero-count')).toHaveText('1 / 16')
+    // auto-advances to the next representation of the same data after ~1.8 s
+    await expect(demo).toHaveAttribute('data-stage', 'histogram', { timeout: 4000 })
     await expect(page.getByTestId('featured-scatter')).toBeVisible()
     await expect(page.getByTestId('home-cat-distribution')).toBeVisible()
   })
 
-  test('hero stages are selectable and link to the matching lab', async ({ page }) => {
+  test('hero prev/next buttons step through the stages and the chart links to the matching lab', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('./')
-    await page.getByTestId('hero-stage-kde').click()
-    await expect(page.getByTestId('hero-demo')).toHaveAttribute('data-stage', 'kde')
+    const demo = page.getByTestId('hero-demo')
+    await page.getByTestId('hero-next').click()
+    await expect(demo).toHaveAttribute('data-stage', 'histogram')
+    await page.getByTestId('hero-next').click()
+    await expect(demo).toHaveAttribute('data-stage', 'kde')
+    await expect(page.getByTestId('hero-name')).toHaveText('KDE 플롯')
+    await page.getByTestId('hero-prev').click()
+    await expect(demo).toHaveAttribute('data-stage', 'histogram')
+    await page.getByTestId('hero-next').click()
     await page.getByTestId('hero-link').click()
     await expect(page).toHaveURL(/#\/viz\/kde$/)
     await expect(page.getByRole('heading', { level: 1 })).toContainText('KDE')
@@ -28,13 +37,14 @@ test.describe('home', () => {
     await page.goto('./')
     await page.waitForTimeout(4200)
     await expect(page.getByTestId('hero-demo')).toHaveAttribute('data-stage', 'scatter')
+    await expect(page.getByTestId('hero-demo')).toHaveAttribute('data-running', '0')
   })
 
   test('the call to action opens the catalog', async ({ page }) => {
     await page.goto('./')
     await page.getByTestId('hero-cta').click()
     await expect(page).toHaveURL(/#\/catalog$/)
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(20)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(40)
   })
 })
 
@@ -55,12 +65,17 @@ test.describe('sidebar', () => {
     await expect(page.getByTestId('sidebar')).not.toHaveClass(/is-collapsed/)
   })
 
-  test('category links filter the catalog and the 기타 category is marked as not ready', async ({ page }) => {
+  test('category links filter the catalog and no category is empty', async ({ page }) => {
     await page.goto('./')
     await page.getByTestId('nav-cat-timeseries').click()
     await expect(page).toHaveURL(/#\/catalog\/timeseries$/)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(7)
+    await expect(page.getByTestId('sidebar').getByText('준비 중')).toHaveCount(0)
+    await page.getByTestId('nav-cat-hierarchy').click()
+    await expect(page).toHaveURL(/#\/catalog\/hierarchy$/)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(6)
+    await page.getByTestId('nav-cat-uncertainty').click()
     await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(2)
-    await expect(page.getByTestId('sidebar').getByText('준비 중')).toBeVisible()
   })
 })
 
@@ -73,9 +88,9 @@ test.describe('catalog', () => {
 
   test('shows real chart previews for every card', async ({ page }) => {
     const cards = page.getByTestId('catalog-grid').locator('.viz-card')
-    await expect(cards).toHaveCount(20)
+    await expect(cards).toHaveCount(40)
     await cards.last().scrollIntoViewIfNeeded()
-    for (const id of ['scatter', 'heatmap', 'radar']) {
+    for (const id of ['scatter', 'heatmap', 'radar', 'ridgeline', 'sankey', 'ci']) {
       await page.getByTestId(`card-${id}`).scrollIntoViewIfNeeded()
       await expect(page.getByTestId(`preview-${id}`).locator('svg')).toBeVisible()
     }
@@ -88,7 +103,8 @@ test.describe('catalog', () => {
     await expect(cards).toHaveCount(1)
     await expect(page.getByTestId('card-histogram')).toBeVisible()
     await search.fill('violin')
-    await expect(cards).toHaveCount(1)
+    await expect(cards).toHaveCount(2)
+    await expect(page.getByTestId('card-violin')).toBeVisible()
     await search.fill('density')
     await expect(page.getByTestId('card-kde')).toBeVisible()
     await search.fill('이상치')
@@ -102,15 +118,15 @@ test.describe('catalog', () => {
     await page.getByTestId('chip-comparison').click()
     await expect(page).toHaveURL(/#\/catalog\/comparison$/)
     const comparison = await cards.count()
-    expect(comparison).toBeGreaterThan(3)
+    expect(comparison).toBeGreaterThan(8)
     await page.getByTestId('catalog-search').fill('막대')
-    await expect(cards).toHaveCount(3)
+    await expect(cards).toHaveCount(6)
     await page.getByTestId('chip-composition').click()
-    await expect(cards).toHaveCount(1)
+    await expect(cards).toHaveCount(2)
     await expect(page.getByTestId('card-stacked-bar')).toBeVisible()
-    await expect(page.getByTestId('chip-other')).toBeDisabled()
+    await expect(page.getByTestId('card-stacked-bar-100')).toBeVisible()
     await page.getByTestId('chip-all').click()
-    await expect(cards).toHaveCount(3)
+    await expect(cards).toHaveCount(6)
     // the search box survives a reload
     await page.reload()
     await expect(page.getByTestId('catalog-search')).toHaveValue('막대')
@@ -126,7 +142,7 @@ test.describe('catalog', () => {
   })
 
   test('unknown charts show a not-found message', async ({ page }) => {
-    await page.goto('./#/viz/sankey')
+    await page.goto('./#/viz/not-a-chart')
     await expect(page.getByTestId('not-found')).toBeVisible()
   })
 })

@@ -5,7 +5,7 @@ import { ChartMessage, Tooltip, localPoint, useTooltip } from '../../components/
 import { ControlGroup, Hint, Select, Slider, Toggle } from '../../components/controls'
 import { colorAt, textOn } from '../../lib/colors'
 import { fmt, pct } from '../../lib/format'
-import { columnIndex, toLabel, toNumber, type DataTable } from '../../data/table'
+import { buildTree, type TreeNode } from '../../stats/hierarchy'
 import { useTween } from '../../hooks/motion'
 import { roleColumn, roleColumns } from '../mapping'
 import type { ChartProps, ControlsProps, VizModule } from '../types'
@@ -17,34 +17,10 @@ export interface TreemapParams {
   focus: string[]
 }
 
-export interface TreeNode { name: string; value?: number; children?: TreeNode[] }
-
 const tiles = { squarify: d3.treemapSquarify, binary: d3.treemapBinary, slice: d3.treemapSlice, dice: d3.treemapDice, sliceDice: d3.treemapSliceDice }
 
-/** Builds a nested tree from level columns (outer → inner), summing positive values of identical paths. */
-export function buildTree(table: DataTable, levels: string[], valueCol: string | null): { tree: TreeNode; skipped: number } {
-  const li = levels.map((l) => columnIndex(table, l))
-  const vi = columnIndex(table, valueCol)
-  const root: TreeNode = { name: '전체', children: [] }
-  let skipped = 0
-  for (const r of table.rows) {
-    const v = vi >= 0 ? toNumber(r[vi]) : 1
-    if (v == null || v <= 0) { skipped++; continue }
-    let node = root
-    li.forEach((ci, depth) => {
-      const name = toLabel(r[ci]) || '(빈 값)'
-      node.children ??= []
-      let child = node.children.find((c) => c.name === name)
-      if (!child) {
-        child = depth === li.length - 1 ? { name, value: 0 } : { name, children: [] }
-        node.children.push(child)
-      }
-      node = child
-    })
-    node.value = (node.value ?? 0) + v
-  }
-  return { tree: root, skipped }
-}
+export { buildTree }
+export type { TreeNode }
 
 function TreemapChart({ table, mapping, params, setParams, width, height, compact }: ChartProps<TreemapParams>) {
   const levels = roleColumns(mapping, 'levels')

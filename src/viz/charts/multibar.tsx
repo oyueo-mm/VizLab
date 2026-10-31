@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 import { useMemo, useRef, useState, type PointerEvent } from 'react'
 import { AxisLeft, BandAxis, ChartMessage, Legend, Tooltip, localPoint, margins, toggleIn, useTooltip } from '../../components/chart/primitives'
-import { ControlGroup, Hint, Segmented, Select, Slider, Toggle } from '../../components/controls'
+import { ControlGroup, Hint, Segmented, Select, Slider, StatTable, Toggle } from '../../components/controls'
 import { categoryColor } from '../../lib/colors'
 import { fmt, pct } from '../../lib/format'
 import { updateRow } from '../../data/table'
@@ -10,12 +10,15 @@ import { aggregate } from '../../stats/descriptive'
 import { roleColumn } from '../mapping'
 import type { ChartProps, ControlsProps, VizModule } from '../types'
 import { aggOptions, type BarParams } from './bar'
+import { stackCrossTab } from '../../stats/stack'
 import { crossTab, dragDigits, roundTo } from './shared'
 
 export interface MultiBarParams {
   agg: BarParams['agg']
   swap: boolean
-  sort: 'none' | 'desc' | 'asc'
+  sort: 'none' | 'desc' | 'asc' | 'share'
+  /** 100% bar: group whose share orders the categories (empty = data order). */
+  shareOf: string
   labels: boolean
   hidden: string[]
   /** grouped only */
@@ -26,17 +29,9 @@ export interface MultiBarParams {
   totals: boolean
 }
 
-const defaults: MultiBarParams = { agg: 'sum', swap: false, sort: 'none', labels: false, hidden: [], innerPad: 0.08, mode: 'stack', order: 'none', totals: true }
+const defaults: MultiBarParams = { agg: 'sum', swap: false, sort: 'none', labels: false, hidden: [], innerPad: 0.08, mode: 'stack', order: 'none', totals: true, shareOf: '' }
 
-const stackOrders = { none: d3.stackOrderNone, ascending: d3.stackOrderAscending, descending: d3.stackOrderDescending, insideOut: d3.stackOrderInsideOut }
-
-/** Stacks a category × group cross-tab with d3.stack: one series per group, each segment [y0, y1]. */
-export function stackCrossTab(cats: string[], groups: string[], value: (c: string, g: string) => number, mode: MultiBarParams['mode'], order: MultiBarParams['order']) {
-  const rows = cats.map((c) => Object.fromEntries([['__cat', c], ...groups.map((g) => [g, Math.max(0, value(c, g))])]))
-  const stack = d3.stack<Record<string, number | string>>().keys(groups).value((d, k) => d[k] as number)
-    .order(stackOrders[order]).offset(mode === 'normalize' ? d3.stackOffsetExpand : d3.stackOffsetNone)
-  return stack(rows)
-}
+export { stackCrossTab }
 
 function MultiBarChart({ table, mapping, params, setParams, width, height, compact, onTableChange, stacked }: ChartProps<MultiBarParams> & { stacked?: boolean }) {
   const c1 = roleColumn(mapping, 'category')
@@ -52,9 +47,10 @@ function MultiBarChart({ table, mapping, params, setParams, width, height, compa
     const out = [...tab.cats]
     if (params.sort === 'desc') out.sort((a, b) => total(b) - total(a))
     if (params.sort === 'asc') out.sort((a, b) => total(a) - total(b))
+    if (params.sort === 'share' && tab.groups.includes(params.shareOf)) out.sort((a, b) => (total(b) ? tab.value(b, params.shareOf) / total(b) : 0) - (total(a) ? tab.value(a, params.shareOf) / total(a) : 0))
     return out
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, params.sort, visible.join()])
+  }, [tab, params.sort, params.shareOf, visible.join()])
   const m = margins(compact)
   const iw = Math.max(10, width - m.left - m.right)
   const ih = Math.max(10, height - m.top - m.bottom)
@@ -225,4 +221,53 @@ export const stackedBarModule: VizModule<MultiBarParams> = {
   Chart: (p) => <MultiBarChart {...p} stacked />,
   Controls: (p) => <SharedControls {...p} stacked />,
   hint: '범례를 클릭해 그룹을 빼면 나머지가 다시 쌓입니다 · 막대에 마우스를 올려 비율 확인',
+}
+
+// ─── 100% stacked bar ────────────────────────────────────────────────────────
+
+function Stacked100Controls({ params, setParams, table, mapping }: ControlsProps<MultiBarParams>) {
+  const c1 = roleColumn(mapping, 'category')
+  const c2 = roleColumn(mapping, 'group')
+  const catCol = params.swap ? c2 : c1
+  const groupCol = params.swap ? c1 : c2
+  const tab = crossTab(table, catCol, groupCol, roleColumn(mapping, 'value'), (v) => aggregate(v, params.agg))
+  const share = (c: string, g: string) => {
+    const t = d3.sum(tab.groups, (k) => tab.value(c, k))
+    return t ? tab.value(c, g) / t : 0
+  }
+  return (
+    <>
+      <ControlGroup title="비율 계산">
+        <Segmented label="축 기준" value={params.mode} onChange={(mode) => setParams({ mode })} testId="ctl-mode"
+          options={[{ value: 'normalize', label: '백분율 (100%)' }, { value: 'stack', label: '절댓값' }]} />
+        <Hint>{params.mode === 'normalize' ? '막대마다 합계로 나눠 높이를 모두 100%로 맞춥니다. 범주 사이의 구성 비교에는 좋지만 전체 크기 정보는 사라집니다.' : '같은 데이터를 실제 값으로 쌓은 모습입니다. 합계가 다른 범주의 크기를 함께 볼 수 있습니다.'}</Hint>
+        <Select label="집계" value={params.agg} onChange={(agg) => setParams({ agg })} options={aggOptions} />
+        <Toggle label="범주와 그룹 바꾸기" checked={params.swap} onChange={(swap) => setParams({ swap, hidden: [], shareOf: '' })} testId="ctl-swap" />
+      </ControlGroup>
+      <ControlGroup title="정렬">
+        <Select label="범주 정렬" value={params.sort === 'share' ? 'share' : 'none'} onChange={(v) => setParams({ sort: v === 'share' ? 'share' : 'none', shareOf: v === 'share' && !params.shareOf ? tab.groups[0] ?? '' : params.shareOf })} testId="ctl-sort"
+          options={[{ value: 'none', label: '데이터 순서' }, { value: 'share', label: '선택한 그룹의 비율 순' }]} />
+        {params.sort === 'share' && (
+          <Select label="기준 그룹" value={params.shareOf} onChange={(shareOf) => setParams({ shareOf })} testId="ctl-share-of"
+            options={tab.groups.map((g) => ({ value: g, label: g }))} />
+        )}
+        <Select label="쌓는 순서" value={params.order} onChange={(order) => setParams({ order })}
+          options={[{ value: 'none', label: '데이터 순서' }, { value: 'ascending', label: '작은 그룹 아래' }, { value: 'descending', label: '큰 그룹 아래' }]} />
+        <Toggle label="비율 레이블" checked={params.labels} onChange={(labels) => setParams({ labels })} testId="ctl-labels" />
+      </ControlGroup>
+      <ControlGroup title="비율 표" defaultOpen={false}>
+        <StatTable rows={[[catCol ?? '', ...tab.groups], ...tab.cats.map((c) => [c, ...tab.groups.map((g) => pct(share(c, g), 1))])]} />
+        <Hint>각 칸은 그 범주 합계에서 그룹이 차지하는 비율이며, 한 행의 합은 항상 100%입니다.</Hint>
+      </ControlGroup>
+    </>
+  )
+}
+
+export const stacked100Module: VizModule<MultiBarParams> = {
+  roles,
+  datasets: ['categorical', 'budget'],
+  defaultParams: { ...defaults, mode: 'normalize', labels: true },
+  Chart: (p) => <MultiBarChart {...p} stacked />,
+  Controls: (p) => <Stacked100Controls {...p} />,
+  hint: '막대 조각에 마우스를 올려 비율 확인 · 범례로 그룹을 빼면 남은 그룹이 다시 100%가 됩니다',
 }

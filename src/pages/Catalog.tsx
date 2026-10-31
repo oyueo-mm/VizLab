@@ -4,11 +4,11 @@ import { ChartPreview } from '../components/ChartPreview'
 import { useStoredState } from '../hooks/storage'
 import { routeHref, type Route } from '../router'
 import { catalog, categories, categoryById, inCategory, searchCatalog } from '../viz/catalog'
-import { modules } from '../viz/charts'
+import { hasModule } from '../viz/charts'
 import type { CategoryId } from '../viz/types'
 
 /** Only charts with a working implementation are listed. */
-const available = catalog.filter((v) => modules[v.id])
+const available = catalog.filter((v) => hasModule(v.id))
 
 export function Catalog({ category, navigate }: { category: CategoryId | 'all'; navigate: (r: Route) => void }) {
   const [query, setQuery] = useStoredState('catalog:query', '')

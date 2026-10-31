@@ -1,14 +1,16 @@
 import { Menu } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Sidebar } from './components/Sidebar'
 import { useStoredState } from './hooks/storage'
 import { useMediaQuery } from './hooks/useMediaQuery'
-import { LabPage } from './lab/LabPage'
 import { Catalog } from './pages/Catalog'
 import { Home } from './pages/Home'
 import { routeHref, useRoute } from './router'
 import { vizById } from './viz/catalog'
-import { modules } from './viz/charts'
+import { hasModule } from './viz/charts'
+
+// The lab (panels, data editor, chart modules) loads on first visit to a chart.
+const LabPage = lazy(() => import('./lab/LabPage'))
 
 export default function App() {
   const [route, navigate] = useRoute()
@@ -16,7 +18,7 @@ export default function App() {
   const drawer = useMediaQuery('(max-width: 760px)')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const main = useRef<HTMLElement>(null)
-  const known = route.page !== 'viz' || (vizById.has(route.id) && !!modules[route.id])
+  const known = route.page !== 'viz' || (vizById.has(route.id) && hasModule(route.id))
   const lab = route.page === 'viz' && known
 
   useEffect(() => {
@@ -46,7 +48,7 @@ export default function App() {
           {route.page === 'home' && <Home />}
           {route.page === 'catalog' && <Catalog category={route.category} navigate={navigate} />}
           {route.page === 'viz' && (known
-            ? <LabPage key={route.id} id={route.id} />
+            ? <Suspense fallback={<div className="lab-loading" aria-busy="true" />}><LabPage key={route.id} id={route.id} /></Suspense>
             : (
               <div className="empty-state" data-testid="not-found">
                 <p>‘{route.id}’ 시각화를 찾을 수 없습니다.</p>

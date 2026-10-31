@@ -5,6 +5,7 @@ export type DatasetId =
   | 'normal' | 'uniform' | 'bimodal' | 'skewed' | 'groups' | 'outliers'
   | 'pos-corr' | 'neg-corr' | 'dense' | 'timeseries' | 'categorical' | 'votes'
   | 'flowers' | 'cars' | 'players' | 'budget' | 'activity'
+  | 'temps' | 'before-after' | 'cashflow' | 'streams' | 'league' | 'daily' | 'energy' | 'migration' | 'nutrition'
 
 export interface DatasetSize { min: number; max: number; default: number; step: number; label: string }
 
@@ -240,6 +241,132 @@ export const datasets: DatasetDef[] = [
       })
       return table([cat('요일'), ...hours.map((h) => num(`${h}시`))], rows)
     },
+  },
+  {
+    id: 'temps', name: '월별 기온 분포', description: '서울의 계절 변화를 본뜬 월별 일 최고기온(°C) 합성 데이터입니다. 달마다 분포의 위치와 퍼짐이 다릅니다.', size: sizes(360, 48, 3600, 12, '관측 일수'),
+    generate: (seed, n) => {
+      const r = createRng(seed)
+      const mu = [1.6, 4.6, 11.0, 18.1, 23.6, 27.4, 29.3, 30.4, 26.4, 20.3, 11.9, 4.2]
+      const sd = [4.2, 4.4, 4.6, 4.1, 3.4, 2.8, 2.6, 2.4, 2.9, 3.4, 4.3, 4.4]
+      const rows: Cell[][] = Array.from({ length: n }, (_, i) => {
+        const m = i % 12
+        return [`${m + 1}월`, round(r.normal(mu[m], sd[m]), 1)]
+      })
+      return table([cat('월'), num('최고기온')], rows)
+    },
+  },
+  {
+    id: 'before-after', name: '두 시점 비교', description: '가상 회사의 팀별 직원 만족도 점수(100점 만점)를 작년과 올해 두 번 조사한 결과입니다.',
+    generate: () =>
+      table([cat('팀'), num('작년'), num('올해')], [
+        ['기획', 62, 71], ['개발', 70, 74], ['디자인', 75, 69], ['영업', 58, 66],
+        ['마케팅', 66, 63], ['인사', 72, 78], ['재무', 64, 65], ['고객지원', 55, 68],
+      ]),
+  },
+  {
+    id: 'cashflow', name: '손익 항목', description: '가상 회사의 분기 손익 항목(억 원)입니다. 양수는 이익을 늘리고 음수는 줄입니다.',
+    generate: () =>
+      table([cat('항목'), num('증감')], [
+        ['매출', 420], ['매출원가', -185], ['인건비', -96], ['마케팅비', -38], ['임대료', -22], ['기타 수익', 17], ['이자 비용', -9], ['법인세', -21],
+      ]),
+  },
+  {
+    id: 'streams', name: '장르별 주간 재생 수', description: '가상 음원 서비스의 여섯 장르별 주간 재생 수(만 회)입니다. 장르마다 유행 시기가 다릅니다.', size: sizes(40, 8, 156, 4, '주 수'),
+    generate: (seed, n) => {
+      const r = createRng(seed)
+      const genres: { name: string; base: number; peaks: [number, number][] }[] = [
+        { name: '발라드', base: 38, peaks: [[0.15, 22], [0.8, 16]] },
+        { name: '힙합', base: 26, peaks: [[0.45, 30]] },
+        { name: '댄스', base: 30, peaks: [[0.3, 18], [0.65, 24]] },
+        { name: '록', base: 14, peaks: [[0.55, 12]] },
+        { name: '재즈', base: 9, peaks: [[0.9, 8]] },
+        { name: '트로트', base: 18, peaks: [[0.05, 10], [0.5, 14]] },
+      ]
+      const rows: Cell[][] = []
+      for (let w = 1; w <= n; w++) {
+        const t = (w - 1) / Math.max(1, n - 1)
+        for (const g of genres) {
+          const bump = g.peaks.reduce((s, [c, a]) => s + a * Math.exp(-(((t - c) / 0.09) ** 2)), 0)
+          rows.push([w, g.name, round(Math.max(0, g.base + bump + r.normal(0, g.base * 0.08)), 1)])
+        }
+      }
+      return table([num('주'), cat('장르'), num('재생 수')], rows)
+    },
+  },
+  {
+    id: 'league', name: '리그 순위표', description: '가상 축구 리그 여덟 팀의 라운드별 누적 승점입니다 (승 3점, 무 1점, 패 0점). 승점이 같은 팀이 자주 나옵니다.', size: sizes(14, 4, 38, 1, '라운드 수'),
+    generate: (seed, n) => {
+      const r = createRng(seed)
+      const teams = ['가람', '나래', '다솜', '라온', '마루', '바다', '새봄', '아라']
+      const strength = teams.map(() => r.normal(0, 0.6))
+      const points = teams.map(() => 0)
+      const rows: Cell[][] = []
+      for (let round = 1; round <= n; round++) {
+        // Fisher–Yates shuffle pairs the teams differently every round.
+        const order = teams.map((_, i) => i)
+        for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [order[i], order[j]] = [order[j], order[i]] }
+        for (let k = 0; k < order.length; k += 2) {
+          const a = order[k]
+          const b = order[k + 1]
+          const diff = strength[a] - strength[b] + r.normal(0, 1)
+          if (diff > 0.45) points[a] += 3
+          else if (diff < -0.45) points[b] += 3
+          else { points[a] += 1; points[b] += 1 }
+        }
+        teams.forEach((t, i) => rows.push([round, t, points[i]]))
+      }
+      return table([num('라운드'), cat('팀'), num('승점')], rows)
+    },
+  },
+  {
+    id: 'daily', name: '일별 걸음 수', description: '2023년 1월 1일부터 2024년 12월 31일까지(2024년은 윤년) 한 사람의 하루 걸음 수 합성 데이터입니다. 기록이 빠진 날이 있습니다.',
+    generate: (seed) => {
+      const r = createRng(seed)
+      const rows: Cell[][] = []
+      for (let t = Date.UTC(2023, 0, 1); t <= Date.UTC(2024, 11, 31); t += 86400000) {
+        const d = new Date(t)
+        if (r() < 0.035) continue
+        const dow = d.getUTCDay()
+        const doy = (t - Date.UTC(d.getUTCFullYear(), 0, 1)) / 86400000
+        const season = 1200 * Math.cos(((doy - 130) / 365) * 2 * Math.PI)
+        const weekend = dow === 0 ? -1800 : dow === 6 ? 1500 : 0
+        rows.push([d.toISOString().slice(0, 10), Math.round(Math.max(300, 7600 + season + weekend + r.normal(0, 1900)))])
+      }
+      return table([cat('날짜'), num('걸음 수')], rows)
+    },
+  },
+  {
+    id: 'energy', name: '흐름 데이터: 에너지', description: '가상 국가의 에너지가 원천에서 전력·직접 연소를 거쳐 용도로 흘러가는 양(PJ)입니다. 중간 노드에서는 들어온 양과 나간 양이 같습니다.',
+    generate: () =>
+      table([cat('출발'), cat('도착'), num('양')], [
+        ['석탄', '전력', 40], ['천연가스', '전력', 28], ['천연가스', '직접 연소', 22], ['원자력', '전력', 30], ['재생에너지', '전력', 12], ['석유', '직접 연소', 48],
+        ['전력', '가정', 26], ['전력', '상업', 24], ['전력', '산업', 44], ['전력', '손실', 16],
+        ['직접 연소', '산업', 22], ['직접 연소', '수송', 38], ['직접 연소', '가정', 10],
+      ]),
+  },
+  {
+    id: 'migration', name: '관계 행렬: 지역 간 이동', description: '가상 국가의 다섯 지역 사이 연간 이동 인구(천 명)입니다. 행이 출발 지역, 열이 도착 지역이며 같은 지역 안 이동(대각선)은 0입니다.',
+    generate: () => {
+      const regions = ['수도권', '충청', '호남', '영남', '강원']
+      const m = [
+        [0, 62, 38, 71, 24],
+        [70, 0, 12, 14, 5],
+        [44, 11, 0, 9, 2],
+        [79, 13, 8, 0, 6],
+        [27, 4, 2, 5, 0],
+      ]
+      return table([cat('출발 지역'), ...regions.map(num)], regions.map((name, i) => [name, ...m[i]]))
+    },
+  },
+  {
+    id: 'nutrition', name: '과일 영양 성분', description: '열네 가지 과일의 100g당 영양 성분 근삿값입니다 (공개 영양 성분표 참고, 품종·숙성도에 따라 달라집니다). 단위: 열량 kcal, 당류·식이섬유 g, 비타민C·칼륨 mg.',
+    generate: () =>
+      table([cat('과일'), num('열량'), num('당류'), num('식이섬유'), num('비타민C'), num('칼륨')], [
+        ['사과', 52, 10.4, 2.4, 4.6, 107], ['바나나', 89, 12.2, 2.6, 8.7, 358], ['딸기', 32, 4.9, 2.0, 58.8, 153], ['포도', 69, 15.5, 0.9, 3.2, 191],
+        ['귤', 53, 10.6, 1.8, 26.7, 166], ['오렌지', 47, 9.4, 2.4, 53.2, 181], ['키위', 61, 9.0, 3.0, 92.7, 312], ['블루베리', 57, 10.0, 2.4, 9.7, 77],
+        ['수박', 30, 6.2, 0.4, 8.1, 112], ['망고', 60, 13.7, 1.6, 36.4, 168], ['아보카도', 160, 0.7, 6.7, 10.0, 485], ['배', 57, 9.8, 3.1, 4.3, 116],
+        ['복숭아', 39, 8.4, 1.5, 6.6, 190], ['파인애플', 50, 9.9, 1.4, 47.8, 109],
+      ]),
   },
 ]
 

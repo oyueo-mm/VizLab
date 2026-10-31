@@ -94,6 +94,16 @@ export function NumberField({ label, value, onChange, step = 1, min, max, testId
   )
 }
 
+export function ColorField({ label, value, onChange, testId }: { label: string; value: string; onChange: (v: string) => void; testId?: string }) {
+  const id = useId()
+  return (
+    <div className="field color-field">
+      <label htmlFor={id}><span className="color-swatch" style={{ background: value }} aria-hidden="true" />{label}</label>
+      <input id={id} type="color" value={value} onChange={(e) => onChange(e.target.value)} data-testid={testId} />
+    </div>
+  )
+}
+
 export function Hint({ children }: { children: ReactNode }) {
   return <p className="control-hint">{children}</p>
 }

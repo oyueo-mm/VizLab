@@ -1,11 +1,11 @@
 import { ChartPreview } from '../components/ChartPreview'
 import { routeHref } from '../router'
 import { vizById } from '../viz/catalog'
-import { modules } from '../viz/charts'
+import { hasModule } from '../viz/charts'
 
 export function Related({ id, compact }: { id: string; compact?: boolean }) {
   const meta = vizById.get(id)
-  const related = (meta?.related ?? []).filter((r) => modules[r] && vizById.has(r))
+  const related = (meta?.related ?? []).filter((r) => hasModule(r) && vizById.has(r))
   if (!related.length) return null
   return (
     <div className={`related ${compact ? 'is-compact' : ''}`}>

@@ -2,7 +2,7 @@ import type { ComponentType } from 'react'
 import type { DatasetId } from '../data/datasets'
 import type { ColumnType, DataTable } from '../data/table'
 
-export type CategoryId = 'distribution' | 'relationship' | 'comparison' | 'timeseries' | 'composition' | 'multivariate' | 'other'
+export type CategoryId = 'distribution' | 'relationship' | 'comparison' | 'timeseries' | 'composition' | 'multivariate' | 'hierarchy' | 'uncertainty'
 
 /** A visual channel the chart needs (x, y, color, …) and what kind of column can fill it. */
 export interface RoleSpec {
@@ -51,6 +51,8 @@ export interface ControlsProps<P> {
   setParams: (patch: Partial<P>) => void
   table: DataTable
   mapping: Mapping
+  /** Structural edits from the panel (add a series, a node, a time point…); undoable like table edits. */
+  setTable?: (next: DataTable) => void
 }
 
 export interface VizModule<P extends object = any> {

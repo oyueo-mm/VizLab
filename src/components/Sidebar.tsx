@@ -1,7 +1,7 @@
 import { House, LayoutGrid, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
 import { routeHref, type Route } from '../router'
 import { catalog, categories, inCategory } from '../viz/catalog'
-import { modules } from '../viz/charts'
+import { hasModule } from '../viz/charts'
 import { categoryIcons } from './icons'
 
 interface Props {
@@ -60,7 +60,7 @@ export function Sidebar({ route, collapsed, onToggle, drawer, open, onClose }: P
           {item({ page: 'catalog', category: 'all' }, '시각화 도감', LayoutGrid, { testId: 'nav-catalog' })}
           <p className="nav-caption nav-label">카테고리</p>
           {categories.map((c) => {
-            const count = catalog.filter((v) => inCategory(v, c.id) && modules[v.id]).length
+            const count = catalog.filter((v) => inCategory(v, c.id) && hasModule(v.id)).length
             return <div key={c.id}>{item({ page: 'catalog', category: c.id }, c.name, categoryIcons[c.id], { count, disabled: count === 0, active: vizCategory === c.id, testId: `nav-cat-${c.id}` })}</div>
           })}
         </nav>

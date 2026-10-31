@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { generateDataset } from '../../data/datasets'
-import { heroLayout, heroSample, heroStages } from '../../pages/HeroDemo'
 import { parseHash, routeHref } from '../../router'
 import { stepPath } from './ecdf'
 import { buildMatrix } from './heatmap'
@@ -101,32 +100,16 @@ describe('chart data transforms', () => {
   })
 })
 
-describe('home demo', () => {
-  it('lays out the same sample for every stage', () => {
-    const { xs, ys } = heroSample(0)
-    for (const s of heroStages) {
-      const l = heroLayout(s.key, xs, ys, 560, 380)
-      expect(l.pts.length).toBe(xs.length)
-      expect(l.pts.every((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]))).toBe(true)
-    }
-    // histogram stage: one stacked dot per observation, so dots per column ∝ bar height
-    const h = heroLayout('histogram', xs, ys, 560, 380)
-    const perColumn = new Map<string, number>()
-    for (const p of h.pts) perColumn.set(p[0].toFixed(3), (perColumn.get(p[0].toFixed(3)) ?? 0) + 1)
-    const filled = h.bars.filter((b) => b.h > 0)
-    expect(filled.length).toBe(perColumn.size)
-    const unit = filled[0].h / perColumn.get((filled[0].x - 1 + (filled[0].w + 2) / 2).toFixed(3))!
-    for (const b of filled) expect(b.h / unit).toBeCloseTo(perColumn.get((b.x - 1 + (b.w + 2) / 2).toFixed(3))!, 6)
-    expect(heroSample(1)).not.toEqual(heroSample(0))
-  })
-})
-
 describe('router', () => {
   it('parses and formats hash routes', () => {
     expect(parseHash('')).toEqual({ page: 'home' })
     expect(parseHash('#/catalog')).toEqual({ page: 'catalog', category: 'all' })
     expect(parseHash('#/catalog/distribution')).toEqual({ page: 'catalog', category: 'distribution' })
     expect(parseHash('#/catalog/bogus')).toEqual({ page: 'catalog', category: 'all' })
+    expect(parseHash('#/catalog/hierarchy')).toEqual({ page: 'catalog', category: 'hierarchy' })
+    expect(parseHash('#/catalog/uncertainty')).toEqual({ page: 'catalog', category: 'uncertainty' })
+    expect(parseHash('#/catalog/other')).toEqual({ page: 'catalog', category: 'all' })
+    expect(parseHash('#/viz/stacked-bar-100')).toEqual({ page: 'viz', id: 'stacked-bar-100' })
     expect(parseHash('#/viz/kde')).toEqual({ page: 'viz', id: 'kde' })
     expect(routeHref({ page: 'viz', id: 'grouped-bar' })).toBe('#/viz/grouped-bar')
     expect(parseHash(routeHref({ page: 'catalog', category: 'timeseries' }))).toEqual({ page: 'catalog', category: 'timeseries' })

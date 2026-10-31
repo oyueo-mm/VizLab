@@ -16,7 +16,7 @@ test.describe('mobile', () => {
     await page.getByTestId('nav-catalog').click()
     await expect(page).toHaveURL(/#\/catalog$/)
     await expect(page.getByTestId('sidebar')).not.toHaveClass(/is-open/)
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(20)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(40)
     await noHorizontalScroll(page)
   })
 
@@ -38,7 +38,7 @@ test.describe('mobile', () => {
   })
 
   test('every lab renders on a phone', async ({ page }) => {
-    for (const id of ['pairplot', 'parallel', 'treemap', 'heatmap', 'radar']) {
+    for (const id of ['pairplot', 'parallel', 'treemap', 'heatmap', 'radar', 'ridgeline', 'sankey', 'chord', 'calendar', 'dendrogram']) {
       await page.goto(`./#/viz/${id}`)
       await expect(page.getByTestId('chart-svg')).toBeVisible()
       await noHorizontalScroll(page)

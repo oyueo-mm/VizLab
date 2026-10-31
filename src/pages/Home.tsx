@@ -3,7 +3,7 @@ import { ChartPreview } from '../components/ChartPreview'
 import { categoryIcons } from '../components/icons'
 import { routeHref } from '../router'
 import { catalog, categories, inCategory, vizById } from '../viz/catalog'
-import { modules } from '../viz/charts'
+import { hasModule } from '../viz/charts'
 import { HeroDemo } from './HeroDemo'
 
 const featured = ['scatter', 'histogram', 'violin', 'stacked-bar', 'heatmap', 'treemap']
@@ -25,7 +25,7 @@ export function Home() {
       <section className="home-section" aria-labelledby="featured-title">
         <h2 id="featured-title">대표 시각화</h2>
         <div className="card-grid is-featured">
-          {featured.filter((id) => modules[id]).map((id) => {
+          {featured.filter((id) => hasModule(id)).map((id) => {
             const m = vizById.get(id)!
             return (
               <a key={id} href={routeHref({ page: 'viz', id })} className="viz-card" data-testid={`featured-${id}`}>
@@ -41,7 +41,7 @@ export function Home() {
         <h2 id="category-title">카테고리별 탐색</h2>
         <div className="category-grid">
           {categories.map((c) => {
-            const items = catalog.filter((v) => inCategory(v, c.id) && modules[v.id])
+            const items = catalog.filter((v) => inCategory(v, c.id) && hasModule(v.id))
             const Icon = categoryIcons[c.id]
             const inner = (
               <>

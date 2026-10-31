@@ -1,4 +1,4 @@
-import { ChartArea, ChartColumn, ChartLine, ChartNetwork, ChartPie, ChartScatter, Shapes, type LucideIcon } from 'lucide-react'
+import { ChartArea, ChartColumn, ChartLine, ChartNetwork, ChartPie, ChartScatter, Network, Sigma, type LucideIcon } from 'lucide-react'
 import type { CategoryId } from '../viz/types'
 
 export const categoryIcons: Record<CategoryId, LucideIcon> = {
@@ -8,5 +8,6 @@ export const categoryIcons: Record<CategoryId, LucideIcon> = {
   timeseries: ChartLine,
   composition: ChartPie,
   multivariate: ChartNetwork,
-  other: Shapes,
+  hierarchy: Network,
+  uncertainty: Sigma,
 }
