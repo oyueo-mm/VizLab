@@ -5,7 +5,7 @@ import type { CategoryId, DataKind } from './viz/types'
 /** Hash routes survive refresh on static hosting (GitHub Pages has no SPA fallback). */
 export type Route =
   | { page: 'home' }
-  | { page: 'catalog'; category: CategoryId | 'all'; q?: string; kinds?: DataKind[] }
+  | { page: 'catalog'; category: CategoryId | 'all'; q?: string; kinds?: DataKind[]; sub?: string }
   | { page: 'compare'; preset?: string }
   | { page: 'viz'; id: string }
 
@@ -16,8 +16,9 @@ export function parseHash(hash: string): Route {
     const params = new URLSearchParams(rawQuery)
     const kinds = (params.get('t') ?? '').split(',').filter((k): k is DataKind => dataKindById.has(k as DataKind))
     const q = params.get('q') ?? ''
+    const sub = params.get('s') ?? ''
     // q / kinds are only present when set, so plain catalog URLs parse exactly as in v0.2.
-    return { page: 'catalog', category: arg && categoryById.has(arg as CategoryId) ? (arg as CategoryId) : 'all', ...(q ? { q } : {}), ...(kinds.length ? { kinds: [...new Set(kinds)] } : {}) }
+    return { page: 'catalog', category: arg && categoryById.has(arg as CategoryId) ? (arg as CategoryId) : 'all', ...(q ? { q } : {}), ...(kinds.length ? { kinds: [...new Set(kinds)] } : {}), ...(sub ? { sub } : {}) }
   }
   if (head === 'compare') return { page: 'compare', preset: arg || undefined }
   if (head === 'viz' && arg) return { page: 'viz', id: arg }
@@ -29,6 +30,7 @@ export function routeHref(route: Route) {
     const params = new URLSearchParams()
     if (route.q?.trim()) params.set('q', route.q)
     if (route.kinds?.length) params.set('t', route.kinds.join(','))
+    if (route.sub) params.set('s', route.sub)
     const query = params.toString()
     return `${route.category === 'all' ? '#/catalog' : `#/catalog/${route.category}`}${query ? `?${query}` : ''}`
   }

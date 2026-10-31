@@ -30,7 +30,7 @@ export function useMapZoom(svg: RefObject<SVGSVGElement | null>, { enabled = tru
       .filter((e: Event) => {
         const me = e as MouseEvent
         if ((e.target as Element | null)?.closest?.('[data-nodrag]')) return false
-        return !me.button && (e.type !== 'dblclick')
+        return !me.button && e.type !== 'dblclick' && (!me.shiftKey || e.type === 'wheel')
       })
       .on('zoom', (e) => setT({ k: e.transform.k, x: e.transform.x, y: e.transform.y }))
     zoom.current = z
@@ -42,7 +42,12 @@ export function useMapZoom(svg: RefObject<SVGSVGElement | null>, { enabled = tru
 
   const reset = useCallback(() => { const el = svg.current; if (el && zoom.current) d3.select(el).transition().duration(250).call(zoom.current.transform, d3.zoomIdentity); else setT(IDENTITY) }, [svg])
   const by = useCallback((f: number) => { const el = svg.current; if (el && zoom.current) d3.select(el).transition().duration(200).call(zoom.current.scaleBy, f) }, [svg])
-  return { t, reset, zoomIn: () => by(1.6), zoomOut: () => by(1 / 1.6) }
+  /** Animates so that the screen point (x, y) of the unzoomed map ends up at the centre of the view at scale k. */
+  const to = useCallback((x: number, y: number, k: number) => {
+    const el = svg.current
+    if (el && zoom.current) d3.select(el).transition().duration(350).call(zoom.current.transform, d3.zoomIdentity.translate(width / 2 - x * k, height / 2 - y * k).scale(k))
+  }, [svg, width, height])
+  return { t, reset, to, zoomIn: () => by(1.6), zoomOut: () => by(1 / 1.6) }
 }
 
 /** Zoom buttons for touch screens and keyboard users; wheel and pinch work without them. */

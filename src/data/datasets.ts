@@ -1,6 +1,7 @@
 import { createRng, round, type Rng } from '../lib/random'
 import { datasetsV3 } from './datasetsV3'
 import { datasetsV4 } from './datasetsV4'
+import { datasetsV5 } from './datasetsV5'
 import type { Cell, Column, DataTable } from './table'
 
 export type DatasetId =
@@ -12,6 +13,7 @@ export type DatasetId =
   | 'scores' | 'scores-imbalanced' | 'survey' | 'trajectory' | 'big-groups' | 'inventory'
   | 'kr-regions' | 'world-regions' | 'kr-flows' | 'world-flows' | 'geo-points' | 'studies' | 'studies-biased' | 'paired' | 'risk-model' | 'process' | 'process-counts'
   | 'conversion' | 'process-flow' | 'projects' | 'market' | 'profile' | 'affiliations' | 'modules'
+  | 'terrain-hills' | 'temp-stations' | 'raster-grid' | 'wind-sources' | 'gps-tracks' | 'spatial-values' | 'kr-indicators' | 'kr-composition' | 'world-continents' | 'buffer-features' | 'tissot-grid'
 
 export interface DatasetSize { min: number; max: number; default: number; step: number; label: string }
 
@@ -377,6 +379,7 @@ export const datasets: DatasetDef[] = [
   },
   ...datasetsV3,
   ...datasetsV4,
+  ...datasetsV5,
 ]
 
 export const datasetById = new Map(datasets.map((d) => [d.id, d]))

@@ -6,6 +6,7 @@ import { datasetById, generateDataset } from '../data/datasets'
 import { cloneTable, type DataTable } from '../data/table'
 import { initialLabState } from '../lab/state'
 import { heroStages } from '../pages/heroFrames'
+import { catalogV5 } from './catalogV5'
 import { catalog, categories, categoryById, dataKinds, inCategory, searchCatalog, vizById } from './catalog'
 import { hasModule, loadAllModules, moduleIds } from './charts'
 import { autoMapping, incompatibility, mappingErrors } from './mapping'
@@ -15,7 +16,8 @@ const V1 = ['scatter', 'bubble', 'hexbin', 'pairplot', 'histogram', 'kde', 'ecdf
 const V2 = ['ridgeline', 'raincloud', 'beeswarm', 'qq', 'lollipop', 'dumbbell', 'slope', 'waterfall', 'stacked-bar-100', 'waffle', 'stacked-area', 'streamgraph', 'bump', 'calendar', 'sunburst', 'pack', 'sankey', 'chord', 'dendrogram', 'ci']
 const V3 = ['kde2d', 'pp', 'letter-value', 'connected-scatter', 'pca-biplot', 'andrews', 'pyramid', 'pareto', 'bullet', 'step', 'candlestick', 'horizon', 'mosaic', 'icicle', 'network', 'arc', 'alluvial', 'roc', 'pr', 'fan']
 const V4 = ['choropleth', 'symbol-map', 'dot-density', 'geo-hexbin', 'flow-map', 'tile-grid', 'dorling', 'forest', 'bland-altman', 'calibration', 'control', 'funnel-plot', 'gantt', 'funnel', 'marimekko', 'flame', 'adjacency', 'edge-bundling', 'bipartite', 'hive']
-const ALL = [...V1, ...V2, ...V3, ...V4]
+const V5 = catalogV5.map((c) => c.id)
+const ALL = [...V1, ...V2, ...V3, ...V4, ...V5]
 
 let modules: Record<string, VizModule>
 beforeAll(async () => { modules = await loadAllModules() })
@@ -24,9 +26,9 @@ const render = (id: string, table: DataTable, mapping: Record<string, any>, para
   renderToStaticMarkup(createElement(modules[id].Chart, { table, mapping, params, setParams: () => {}, width: 640, height: 420, compact }))
 
 describe('visualization registry', () => {
-  it('lists the 20 v0.1, 20 v0.2, 20 v0.3 and 20 v0.4 charts (80), each with an implementation and content', () => {
-    expect(catalog.length).toBe(80)
-    expect(new Set(catalog.map((c) => c.id)).size).toBe(80)
+  it('lists the 80 charts of v0.1–v0.4 plus every v0.5 chart, each with an implementation and content', () => {
+    expect(catalog.length).toBe(80 + V5.length)
+    expect(new Set(catalog.map((c) => c.id)).size).toBe(80 + V5.length)
     expect([...catalog.map((c) => c.id)].sort()).toEqual([...ALL].sort())
     expect(moduleIds.sort()).toEqual([...ALL].sort())
     for (const meta of catalog) {
@@ -46,7 +48,7 @@ describe('visualization registry', () => {
 
   it('has no empty category and every new chart is reachable from a category', () => {
     for (const c of categories) expect(catalog.filter((v) => inCategory(v, c.id)).length, c.id).toBeGreaterThan(0)
-    expect(categories.map((c) => c.id)).toEqual(['distribution', 'relationship', 'comparison', 'timeseries', 'composition', 'multivariate', 'hierarchy', 'uncertainty', 'geo', 'network', 'special'])
+    expect(categories.map((c) => c.id)).toEqual(['distribution', 'relationship', 'comparison', 'timeseries', 'composition', 'multivariate', 'hierarchy', 'uncertainty', 'geo', 'network', 'special', 'science', 'bio', 'finance'])
   })
 
   it('uses datasets that exist and fit every chart by default', () => {
@@ -87,7 +89,7 @@ describe('visualization registry', () => {
   })
 
   it('survives broken data without throwing (empty table, text in numeric cells, missing numbers)', () => {
-    for (const id of [...V2, ...V3, ...V4]) {
+    for (const id of [...V2, ...V3, ...V4, ...V5]) {
       const mod = modules[id]
       const s = initialLabState(id, mod)
       const empty: DataTable = { columns: s.table.columns, rows: [] }
@@ -151,7 +153,7 @@ describe('data-type filter', () => {
     expect(ids(['network'])).toEqual(expect.arrayContaining(['network', 'arc', 'alluvial', 'sankey', 'chord']))
     expect(ids(['hierarchical'], '', 'hierarchy')).toEqual(expect.arrayContaining(['sunburst', 'pack', 'icicle']))
     expect(ids(['hierarchical'], '', 'hierarchy')).not.toContain('network')
-    expect(ids(['timeseries'], '', 'uncertainty')).toEqual(['fan', 'control'])
+    expect(ids(['timeseries'], '', 'uncertainty')).toEqual(expect.arrayContaining(['fan', 'control']))
     expect(ids(['timeseries'], '캔들')).toEqual(['candlestick'])
     expect(ids(['numeric', 'timeseries'], 'plot')).toEqual(expect.arrayContaining(['step', 'kde2d']))
     expect(ids(['multivariate'], '', 'multivariate')).toEqual(expect.arrayContaining(['pca-biplot', 'andrews', 'parallel']))
@@ -159,16 +161,16 @@ describe('data-type filter', () => {
   })
 
   it('an empty selection means no data-type restriction', () => {
-    expect(ids([])).toHaveLength(80)
+    expect(ids([])).toHaveLength(catalog.length)
   })
 })
 
 describe('v0.4 catalog', () => {
   it('has 7 geospatial, 5 statistics, 4 special and 4 network charts reachable from their categories', () => {
     const inCat = (c: Parameters<typeof inCategory>[1]) => catalog.filter((v) => inCategory(v, c)).map((v) => v.id)
-    expect(inCat('geo').sort()).toEqual(['choropleth', 'dorling', 'dot-density', 'flow-map', 'geo-hexbin', 'symbol-map', 'tile-grid'])
+    expect(inCat('geo').sort()).toEqual(expect.arrayContaining(['choropleth', 'dorling', 'dot-density', 'flow-map', 'geo-hexbin', 'symbol-map', 'tile-grid']))
     expect(inCat('uncertainty')).toEqual(expect.arrayContaining(['forest', 'bland-altman', 'calibration', 'control', 'funnel-plot']))
-    expect(inCat('special').sort()).toEqual(['flame', 'funnel', 'gantt', 'marimekko'])
+    expect(inCat('special')).toEqual(expect.arrayContaining(['flame', 'funnel', 'gantt', 'marimekko']))
     expect(inCat('network')).toEqual(expect.arrayContaining(['adjacency', 'edge-bundling', 'bipartite', 'hive', 'network', 'arc', 'sankey', 'chord', 'alluvial']))
   })
 
@@ -197,11 +199,12 @@ describe('catalog search', () => {
     expect(searchCatalog('violin').map((v) => v.id)).toEqual(['violin', 'raincloud'])
     expect(searchCatalog('density').map((v) => v.id)).toContain('kde')
     expect(searchCatalog('이상치').map((v) => v.id)).toContain('box')
-    expect(searchCatalog('Pie Chart').map((v) => v.id)).toEqual(['pie'])
+    expect(searchCatalog('Pie Chart').map((v) => v.id)).toContain('pie')
+    expect(searchCatalog('Pie Chart')[0].id).toBe('pie')
   })
 
   it('finds every new chart by its Korean and English names', () => {
-    for (const id of [...V2, ...V3, ...V4]) {
+    for (const id of [...V2, ...V3, ...V4, ...V5]) {
       const m = vizById.get(id)!
       expect(searchCatalog(m.name).map((v) => v.id), `ko ${id}`).toContain(id)
       expect(searchCatalog(m.nameEn).map((v) => v.id), `en ${id}`).toContain(id)

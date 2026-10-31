@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ChartPreview } from '../components/ChartPreview'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import { routeHref, type Route } from '../router'
-import { catalog, categories, categoryById, dataKinds, inCategory, searchCatalog } from '../viz/catalog'
+import { catalog, categories, categoryById, dataKinds, inCategory, searchCatalog, subcategories } from '../viz/catalog'
 import { hasModule } from '../viz/charts'
 import type { CategoryId, DataKind } from '../viz/types'
 
@@ -14,21 +14,26 @@ interface Props {
   category: CategoryId | 'all'
   query: string
   kinds: DataKind[]
+  /** Sub-category of the chosen category ('' = all). */
+  sub: string
   navigate: (r: Route, options?: { replace?: boolean }) => void
 }
 
-export function Catalog({ category, query, kinds, navigate }: Props) {
+export function Catalog({ category, query, kinds, sub, navigate }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const narrow = useMediaQuery('(max-width: 760px)')
   const [filtersOpen, setFiltersOpen] = useState(false)
   // Category, data type and search text are independent filters; all three live in the URL so Back, reload and shared links restore them.
-  const go = (patch: Partial<{ category: CategoryId | 'all'; q: string; kinds: DataKind[] }>, replace = false) =>
-    navigate({ page: 'catalog', category: patch.category ?? category, q: patch.q ?? query, kinds: patch.kinds ?? kinds }, { replace })
-  const results = searchCatalog(query, category, available, kinds)
+  const go = (patch: Partial<{ category: CategoryId | 'all'; q: string; kinds: DataKind[]; sub: string }>, replace = false) =>
+    navigate({ page: 'catalog', category: patch.category ?? category, q: patch.q ?? query, kinds: patch.kinds ?? kinds, sub: patch.category !== undefined && patch.category !== category ? '' : patch.sub ?? sub }, { replace })
+  const subs = category === 'all' ? undefined : subcategories[category]
+  const activeSub = subs?.some((x) => x.id === sub) ? sub : ''
+  const results = searchCatalog(query, category, available, kinds, activeSub)
   const categoryCount = (c: CategoryId | 'all') => searchCatalog(query, c, available, kinds).length
+  const subCount = (id: string) => searchCatalog(query, category, available, kinds, id).length
   const kindCount = (k: DataKind) => searchCatalog(query, category, available, [k]).length
   const title = category === 'all' ? '시각화 도감' : `${categoryById.get(category)?.name} 시각화`
-  const active = (category !== 'all' ? 1 : 0) + kinds.length + (query.trim() ? 1 : 0)
+  const active = (category !== 'all' ? 1 : 0) + (activeSub ? 1 : 0) + kinds.length + (query.trim() ? 1 : 0)
   const kindNames = kinds.map((k) => dataKinds.find((d) => d.id === k)?.name).filter(Boolean).join('·')
 
   useEffect(() => { document.title = `${title} — VizLab` }, [title])
@@ -75,6 +80,17 @@ export function Catalog({ category, query, kinds, navigate }: Props) {
             )
           })}
         </div>
+        {subs && (
+          <div className="filter-chips filter-subs" role="group" aria-label="하위 분류 필터" data-testid="sub-filters">
+            <span className="filter-label">하위 분류</span>
+            <button type="button" className="chip" aria-pressed={!activeSub} onClick={() => go({ sub: '' })} data-testid="sub-all">전체 <span>{categoryCount(category)}</span></button>
+            {subs.map((x) => (
+              <button key={x.id} type="button" className="chip" aria-pressed={activeSub === x.id} disabled={subCount(x.id) === 0 && activeSub !== x.id} onClick={() => go({ sub: x.id })} data-testid={`sub-${x.id}`}>
+                {x.name} <span>{subCount(x.id)}</span>
+              </button>
+            ))}
+          </div>
+        )}
         <div className="filter-chips filter-kinds" role="group" aria-label="데이터 유형 필터">
           <span className="filter-label">데이터 유형</span>
           {dataKinds.map((k) => (
@@ -85,8 +101,8 @@ export function Catalog({ category, query, kinds, navigate }: Props) {
         </div>
       </div>
       <div className="result-bar" role="status" aria-live="polite">
-        <span data-testid="result-count"><b>{results.length}</b>개 시각화{active > 0 && <small>{[category !== 'all' && categoryById.get(category)?.name, kindNames, query.trim() && `‘${query.trim()}’`].filter(Boolean).join(' · ')}</small>}</span>
-        {active > 0 && <button type="button" className="link-btn" onClick={() => navigate({ page: 'catalog', category: 'all', q: '', kinds: [] })} data-testid="filter-reset"><X size={13} aria-hidden="true" />필터 초기화</button>}
+        <span data-testid="result-count"><b>{results.length}</b>개 시각화{active > 0 && <small>{[category !== 'all' && categoryById.get(category)?.name, activeSub && subs?.find((x) => x.id === activeSub)?.name, kindNames, query.trim() && `‘${query.trim()}’`].filter(Boolean).join(' · ')}</small>}</span>
+        {active > 0 && <button type="button" className="link-btn" onClick={() => navigate({ page: 'catalog', category: 'all', q: '', kinds: [], sub: '' })} data-testid="filter-reset"><X size={13} aria-hidden="true" />필터 초기화</button>}
       </div>
       {results.length ? (
         <div className="card-grid" data-testid="catalog-grid">

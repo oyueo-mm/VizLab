@@ -5,7 +5,7 @@ import type { ColumnType, DataTable } from '../data/table'
 /** Kinds of data a chart can show, used by the catalog's data-type filter (independent of the category). */
 export type DataKind = 'numeric' | 'categorical' | 'timeseries' | 'multivariate' | 'hierarchical' | 'network' | 'geospatial'
 
-export type CategoryId = 'distribution' | 'relationship' | 'comparison' | 'timeseries' | 'composition' | 'multivariate' | 'hierarchy' | 'uncertainty' | 'geo' | 'network' | 'special'
+export type CategoryId = 'distribution' | 'relationship' | 'comparison' | 'timeseries' | 'composition' | 'multivariate' | 'hierarchy' | 'uncertainty' | 'geo' | 'network' | 'special' | 'science' | 'bio' | 'finance'
 
 /** A visual channel the chart needs (x, y, color, …) and what kind of column can fill it. */
 export interface RoleSpec {
@@ -37,6 +37,8 @@ export interface VizMeta {
   category: CategoryId
   /** Extra categories the chart also appears under. */
   alsoIn?: CategoryId[]
+  /** Sub-category inside the main category (see `subcategories` in the catalog); shown as a second filter row in the catalog. */
+  sub?: string
   keywords: string[]
   /** Data the chart works with; a chart can belong to several kinds. */
   dataKinds: DataKind[]

@@ -24,3 +24,29 @@
 /* Legends sit over the chart area; they must not swallow hover or drag aimed at the marks underneath (only toggle buttons stay clickable). */
 .chart-legend { pointer-events: none; }
 .chart-legend button { pointer-events: auto; }
+
+/* ── v0.5: raster / dot canvases under or over SVG maps, stage overlays ── */
+.raster-canvas { position: absolute; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; }
+.dot-canvas { position: absolute; left: 0; top: 0; pointer-events: none; }
+.stage-corner { position: absolute; left: 8px; bottom: 8px; z-index: 2; }
+.sun-dial { touch-action: none; cursor: pointer; }
+.aspect-chip { display: inline-block; padding: 0 5px; border-radius: 4px; color: #111; font-size: 10px; line-height: 16px; }
+.filter-subs { padding-top: 2px; }
+.iso-line { pointer-events: none; }
+@keyframes cluster-in { from { opacity: 0; transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(.4); } to { opacity: 1; transform: translate(0, 0) scale(1); } }
+.cluster-mark { animation: cluster-in .38s ease-out both; transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: reduce) { .cluster-mark { animation: none; } }
+.flow-canvas { position: absolute; left: 0; top: 0; pointer-events: none; }
+.traj-bar { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: rgba(255, 255, 255, .94); border: 1px solid var(--line-strong); border-radius: 10px; }
+.traj-bar input[type="range"] { flex: 1; }
+.traj-bar output { min-width: 128px; text-align: right; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--muted); }
+.chart-note { position: absolute; left: 8px; bottom: 8px; margin: 0; font-size: 11.5px; color: var(--muted); background: rgba(255, 255, 255, .9); padding: 2px 8px; border-radius: 6px; max-width: 60%; }
+.moran-scatter { z-index: 2; }
+.orbit-box { position: relative; touch-action: none; cursor: grab; outline: none; user-select: none; }
+.orbit-box:active { cursor: grabbing; }
+.orbit-box:focus-visible { outline: 2px solid var(--accent-mid); outline-offset: -2px; }
+.canvas3d { position: absolute; left: 0; top: 0; pointer-events: none; }
+/* A positioned canvas would paint over a static SVG: lift the map SVG above raster layers and keep dot/flow canvases above it. */
+.chart-root > .map-svg { position: relative; z-index: 1; }
+.raster-canvas { z-index: 0; }
+.dot-canvas, .flow-canvas { z-index: 2; }

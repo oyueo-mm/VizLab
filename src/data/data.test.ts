@@ -33,7 +33,7 @@ describe('dataset library', () => {
         expect(row.length).toBe(t.columns.length)
         row.forEach((cell, i) => {
           // Sparse on purpose: history rows have no forecast; a network row without a target only declares a node.
-          if ((d.id === 'forecast' || d.id === 'network') && cell === null) return
+          if ((d.id === 'forecast' || d.id === 'network' || d.id === 'raster-grid') && cell === null) return
           if (t.columns[i].type === 'number') expect(typeof cell === 'number' && Number.isFinite(cell), `${d.id}.${t.columns[i].name}`).toBe(true)
           else if (t.columns[i].type === 'date') expect(toTime(cell), `${d.id}.${t.columns[i].name}`).not.toBeNull()
           else expect(typeof cell).toBe('string')
