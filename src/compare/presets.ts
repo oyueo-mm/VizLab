@@ -31,6 +31,16 @@ export const presets: Preset[] = [
   { id: 'network-matrix', name: '네트워크 · 인접 행렬', note: '같은 간선 목록을 노드 링크와 행렬로 — 노드를 가리키면 행과 열, 칸을 가리키면 간선이 강조됩니다', datasetId: 'network', n: 30, charts: ['network', 'adjacency'] },
   { id: 'bipartite', name: '네트워크 · 이분 그래프', note: '사람–모임 관계를 일반 네트워크와 두 집합 배치로', datasetId: 'affiliations', n: 14, charts: ['network', 'bipartite'] },
   { id: 'mekko', name: '모자이크 · 마리메코', note: '같은 (지역, 제품군, 매출)을 빈도 모자이크와 값 기반 마리메코로', datasetId: 'market', charts: ['mosaic', 'marimekko'] },
+  { id: 'terrain', name: '음영기복 · 경사·사면 · 등고선', note: '같은 지형을 빛과 그림자, 경사와 방향, 같은 높이 선으로 — 표고 한 장에서 파생한 세 가지 표면 표현', datasetId: 'terrain-hills', charts: ['hillshade', 'slope-aspect', 'isoline'] },
+  { id: 'vector', name: '벡터장 · 유선 · 입자 흐름', note: '같은 바람장을 방향 화살표, 흐름선, 움직이는 입자로', datasetId: 'wind-sources', charts: ['vector-field', 'streamline', 'particle-flow'] },
+  { id: 'cartogram', name: '코로플레스 · 연속 카토그램 · 데머스', note: '같은 지역 값을 면적 그대로, 값에 비례해 왜곡한 지도, 값 비례 정사각형으로', datasetId: 'kr-regions', charts: ['choropleth', 'cartogram-contiguous', 'demers'] },
+  { id: 'regression-diagnostics', name: '잔차 · 척도-위치 · 영향력', note: '같은 회귀 적합의 세 가지 진단: 모형 형태, 등분산성, 영향이 큰 관측', datasetId: 'regression-demo', n: 80, charts: ['residual-plot', 'scale-location', 'influence-plot'] },
+  { id: 'survival', name: '카플란–마이어 · 넬슨–알렌', note: '같은 생존 자료를 생존 확률과 누적 위험으로', datasetId: 'survival-trial', charts: ['kaplan-meier', 'nelson-aalen'] },
+  { id: 'price-bricks', name: '캔들 · 하이킨 아시 · 렌코', note: '같은 시세를 시간 기준 봉, 평균 봉, 가격 기준 벽돌로 — 잡음을 걸러내는 방식의 차이', datasetId: 'ohlc', n: 120, charts: ['candlestick', 'heikin-ashi', 'renko'] },
+  { id: 'spectral', name: '스펙트로그램 · 스칼로그램 · 재귀 도표', note: '같은 신호를 시간–주파수(STFT), 시간–스케일(웨이블릿), 상태 재방문으로', datasetId: 'signal-chirp', charts: ['spectrogram', 'scalogram', 'recurrence-plot'] },
+  { id: 'differential-expression', name: '화산 도표 · MA 도표', note: '같은 유전자 결과를 효과 크기와 유의성, 발현량과 배수 변화로 — 한쪽에서 가리킨 유전자가 다른 쪽에서도 강조됩니다', datasetId: 'de-genes', n: 1500, charts: ['volcano', 'ma-plot'] },
+  { id: 'set-overlap', name: '벤·오일러 · UpSet · 하이퍼그래프', note: '같은 소속 데이터를 원의 겹침, 조합 막대, 집합 영역으로 — 한쪽에서 고른 조합의 항목이 다른 쪽에서도 강조됩니다', datasetId: 'set-members', charts: ['venn', 'upset', 'hypergraph'] },
+  { id: 'community-distance', name: 'PCoA · 계통수', note: '같은 거리 행렬을 평면 배치와 가지 모양으로', datasetId: 'microbiome-dist', charts: ['pcoa', 'phylogenetic-tree'] },
 ]
 
 export const presetById = new Map(presets.map((p) => [p.id, p]))

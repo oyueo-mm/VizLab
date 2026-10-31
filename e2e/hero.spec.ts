@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures'
 
-const STAGES = ['scatter', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'connected', 'bar', 'grouped', 'stacked', 'stacked100', 'pyramid', 'line', 'area', 'stream', 'horizon', 'treemap', 'sunburst', 'flame', 'sankey', 'network', 'bundle', 'choropleth', 'forest']
+const STAGES = ['scatter', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'connected', 'bar', 'grouped', 'stacked', 'stacked100', 'pyramid', 'line', 'area', 'stream', 'horizon', 'treemap', 'sunburst', 'flame', 'sankey', 'network', 'bundle', 'choropleth', 'forest', 'isoline', 'streamline', 'voronoi', 'km', 'renko', 'manhattan', 'phase', 'upset', 'rose', 'venn', 'bifurcation', 'spiral']
 
 /** Records the time at which `data-stage` changes, in ms since the first call. */
 async function watchStages(page: import('@playwright/test').Page) {
@@ -27,7 +27,7 @@ test.describe('home animation', () => {
     expect(await marks.locator('*').count()).toBeGreaterThan(100)
   })
 
-  test('walks through all 24 charts and wraps around with new data', async ({ page }) => {
+  test('walks through all 36 charts and wraps around with new data', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('./')
     const demo = page.getByTestId('hero-demo')
@@ -44,13 +44,13 @@ test.describe('home animation', () => {
     await expect(demo).toHaveAttribute('data-stage', 'scatter')
     await expect(marks.locator('circle')).toHaveCount(140)
     await page.getByTestId('hero-prev').click()
-    await expect(demo).toHaveAttribute('data-stage', 'forest')
+    await expect(demo).toHaveAttribute('data-stage', 'spiral')
     expect(new Set(sig).size).toBeGreaterThan(10)
   })
 
   test('each chart links to its own lab', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    const viz = ['scatter', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'connected-scatter', 'bar', 'grouped-bar', 'stacked-bar', 'stacked-bar-100', 'pyramid', 'line', 'area', 'streamgraph', 'horizon', 'treemap', 'sunburst', 'flame', 'sankey', 'network', 'edge-bundling', 'choropleth', 'forest']
+    const viz = ['scatter', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'connected-scatter', 'bar', 'grouped-bar', 'stacked-bar', 'stacked-bar-100', 'pyramid', 'line', 'area', 'streamgraph', 'horizon', 'treemap', 'sunburst', 'flame', 'sankey', 'network', 'edge-bundling', 'choropleth', 'forest', 'isoline', 'streamline', 'voronoi-map', 'kaplan-meier', 'renko', 'manhattan', 'phase-portrait', 'upset', 'nightingale-rose', 'venn', 'bifurcation', 'spiral-plot']
     await page.goto('./')
     for (let i = 0; i < STAGES.length; i++) {
       await expect(page.getByTestId('hero-link')).toHaveAttribute('href', `#/viz/${viz[i]}`)
@@ -58,8 +58,8 @@ test.describe('home animation', () => {
     }
     await page.getByTestId('hero-prev').click()
     await page.getByTestId('hero-link').click()
-    await expect(page).toHaveURL(/#\/viz\/forest$/)
-    await expect(page.getByTestId('lab')).toHaveAttribute('data-viz', 'forest')
+    await expect(page).toHaveURL(/#\/viz\/spiral-plot$/)
+    await expect(page.getByTestId('lab')).toHaveAttribute('data-viz', 'spiral-plot')
   })
 
   test('pauses while scrolled out of view and resumes when it is visible again', async ({ page }) => {

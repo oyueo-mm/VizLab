@@ -8,7 +8,7 @@ test.describe('home', () => {
     const demo = page.getByTestId('hero-demo')
     await expect(demo.getByTestId('hero-marks').locator('circle')).toHaveCount(140)
     await expect(demo).toHaveAttribute('data-stage', 'scatter')
-    await expect(demo.getByTestId('hero-count')).toHaveText('1 / 24')
+    await expect(demo.getByTestId('hero-count')).toHaveText('1 / 36')
     // auto-advances to the next representation of the same data after ~1.8 s
     await expect(demo).toHaveAttribute('data-stage', 'histogram', { timeout: 4000 })
     await expect(page.getByTestId('featured-scatter')).toBeVisible()
@@ -44,7 +44,7 @@ test.describe('home', () => {
     await page.goto('./')
     await page.getByTestId('hero-cta').click()
     await expect(page).toHaveURL(/#\/catalog$/)
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(80)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(167)
   })
 })
 
@@ -69,17 +69,17 @@ test.describe('sidebar', () => {
     await page.goto('./')
     await page.getByTestId('nav-cat-timeseries').click()
     await expect(page).toHaveURL(/#\/catalog\/timeseries$/)
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(14)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(34)
     await expect(page.getByTestId('sidebar').getByText('준비 중')).toHaveCount(0)
     await page.getByTestId('nav-cat-hierarchy').click()
     await expect(page).toHaveURL(/#\/catalog\/hierarchy$/)
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(12)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(15)
     await page.getByTestId('nav-cat-uncertainty').click()
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(11)
-    for (const c of ['geo', 'network', 'special']) {
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(24)
+    for (const c of ['geo', 'network', 'special', 'science', 'bio', 'finance']) {
       await page.getByTestId(`nav-cat-${c}`).click()
       await expect(page).toHaveURL(new RegExp(`#/catalog/${c}$`))
-      await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(c === 'geo' ? 7 : c === 'network' ? 10 : 4)
+      await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount({ geo: 39, network: 16, special: 12, science: 12, bio: 8, finance: 10 }[c]!)
     }
   })
 })
@@ -93,7 +93,7 @@ test.describe('catalog', () => {
 
   test('shows real chart previews for every card', async ({ page }) => {
     const cards = page.getByTestId('catalog-grid').locator('.viz-card')
-    await expect(cards).toHaveCount(80)
+    await expect(cards).toHaveCount(167)
     await cards.last().scrollIntoViewIfNeeded()
     for (const id of ['scatter', 'heatmap', 'radar', 'ridgeline', 'sankey', 'ci']) {
       await page.getByTestId(`card-${id}`).scrollIntoViewIfNeeded()
@@ -105,7 +105,7 @@ test.describe('catalog', () => {
     const search = page.getByTestId('catalog-search')
     const cards = page.getByTestId('catalog-grid').locator('.viz-card')
     await search.fill('히스토')
-    await expect(cards).toHaveCount(1)
+    await expect(cards).toHaveCount(2) // 히스토그램 and the event raster (its summary mentions a histogram)
     await expect(page.getByTestId('card-histogram')).toBeVisible()
     await search.fill('violin')
     await expect(cards).toHaveCount(2)
@@ -125,14 +125,14 @@ test.describe('catalog', () => {
     const comparison = await cards.count()
     expect(comparison).toBeGreaterThan(8)
     await page.getByTestId('catalog-search').fill('막대')
-    await expect(cards).toHaveCount(7)
+    await expect(cards).toHaveCount(9) // the v0.5 polar and radial bar charts match too
     await page.getByTestId('chip-composition').click()
     await expect(cards).toHaveCount(3)
     await expect(page.getByTestId('card-stacked-bar')).toBeVisible()
     await expect(page.getByTestId('card-stacked-bar-100')).toBeVisible()
     await expect(page.getByTestId('card-pyramid')).toBeVisible()
     await page.getByTestId('chip-all').click()
-    await expect(cards).toHaveCount(7)
+    await expect(cards).toHaveCount(11)
     // the search box survives a reload
     await page.reload()
     await expect(page.getByTestId('catalog-search')).toHaveValue('막대')

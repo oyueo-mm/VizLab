@@ -6,6 +6,7 @@ import { routeHref } from '../router'
 import { MarkEngine } from './heroEngine'
 import { buildFrame, heroData, heroStages } from './heroFrames'
 import { heroGeoReady, loadHeroGeo } from './heroFramesV4'
+import { heroV5Ready, loadHeroV5 } from './heroFramesV5Lazy'
 
 export { heroStages } from './heroFrames'
 export type { HeroStage } from './heroFrames'
@@ -27,6 +28,7 @@ export function HeroDemo() {
   const last = useRef<{ w: number; h: number } | null>(null)
   const stage = heroStages[index]
   const [geoReady, setGeoReady] = useState(heroGeoReady())
+  const [v5Ready, setV5Ready] = useState(heroV5Ready())
   const width = size.width || 560
   const height = Math.max(260, Math.min(420, width * 0.68))
   const data = useMemo(() => heroData(cycle), [cycle])
@@ -39,6 +41,14 @@ export function HeroDemo() {
     void loadHeroGeo().then(() => { if (live) setGeoReady(true) }).catch(() => {})
     return () => { live = false }
   }, [index, geoReady])
+
+  // The v0.5 stages' engines are another chunk: fetched a few stages ahead, or at once when a v0.5 stage is shown directly (the previous button wraps around).
+  useEffect(() => {
+    if (v5Ready || (index < heroStages.findIndex((s) => s.group === 'v5') - 5 && stage.group !== 'v5')) return
+    let live = true
+    void loadHeroV5().then(() => { if (live) setV5Ready(true) }).catch(() => {})
+    return () => { live = false }
+  }, [index, v5Ready, stage.group])
 
   // Pause when the chart is off-screen or the tab is hidden.
   useEffect(() => {
@@ -70,7 +80,7 @@ export function HeroDemo() {
     const resized = !last.current || last.current.w !== width || last.current.h !== height
     last.current = { w: width, h: height }
     engine.current.setFrame(buildFrame(stage.key, data, width, height), resized || reduced || !running ? 0 : MOVE_MS, width)
-  }, [stage.key, data, width, height, reduced, running, geoReady])
+  }, [stage.key, data, width, height, reduced, running, geoReady, v5Ready])
 
   useEffect(() => () => { engine.current?.destroy(); engine.current = null }, [])
 

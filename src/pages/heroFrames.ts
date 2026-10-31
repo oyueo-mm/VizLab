@@ -14,10 +14,12 @@ import { buildNetwork, layoutNetwork, type ForceOptions } from '../stats/network
 import { collectFlows, sankeyLayout } from '../stats/sankey'
 import { stackRows } from '../stats/stack'
 import { bundlingFrame, choroplethFrame, flameFrame, forestFrame } from './heroFramesV4'
+import type { HeroV5Key } from './heroFramesV5'
+import { v5Frame } from './heroFramesV5Lazy'
 
 // ─── stages ──────────────────────────────────────────────────────────────────
 
-export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network' | 'geo' | 'meta' | 'flame' | 'bundle'
+export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network' | 'geo' | 'meta' | 'flame' | 'bundle' | 'v5'
 
 export const heroStages = [
   { key: 'scatter', label: '산점도', viz: 'scatter', group: 'dist' },
@@ -44,6 +46,18 @@ export const heroStages = [
   { key: 'bundle', label: '계층형 에지 번들링', viz: 'edge-bundling', group: 'bundle' },
   { key: 'choropleth', label: '코로플레스 지도', viz: 'choropleth', group: 'geo' },
   { key: 'forest', label: '포레스트 플롯', viz: 'forest', group: 'meta' },
+  { key: 'isoline', label: '등고선 지도', viz: 'isoline', group: 'v5' },
+  { key: 'streamline', label: '유선 지도', viz: 'streamline', group: 'v5' },
+  { key: 'voronoi', label: '보로노이 지도', viz: 'voronoi-map', group: 'v5' },
+  { key: 'km', label: '카플란–마이어 곡선', viz: 'kaplan-meier', group: 'v5' },
+  { key: 'renko', label: '렌코 차트', viz: 'renko', group: 'v5' },
+  { key: 'manhattan', label: '맨해튼 도표', viz: 'manhattan', group: 'v5' },
+  { key: 'phase', label: '위상 초상도', viz: 'phase-portrait', group: 'v5' },
+  { key: 'upset', label: 'UpSet 도표', viz: 'upset', group: 'v5' },
+  { key: 'rose', label: '나이팅게일 로즈 차트', viz: 'nightingale-rose', group: 'v5' },
+  { key: 'venn', label: '벤·오일러 다이어그램', viz: 'venn', group: 'v5' },
+  { key: 'bifurcation', label: '분기 다이어그램', viz: 'bifurcation', group: 'v5' },
+  { key: 'spiral', label: '나선형 시계열 그래프', viz: 'spiral-plot', group: 'v5' },
 ] as const
 export type HeroStage = (typeof heroStages)[number]['key']
 
@@ -535,6 +549,7 @@ export function buildFrame(stage: HeroStage, data: HeroData, w: number, h: numbe
     case 'meta': return forestFrame(data.cycle, w, h)
     case 'flame': return flameFrame(data.cycle, w, h)
     case 'bundle': return bundlingFrame(data.cycle, w, h)
+    case 'v5': return v5Frame(stage as HeroV5Key, data.cycle, w, h)
     case 'compare': return compareFrame(stage, data.compare, w, h)
     case 'time': return timeFrame(stage, data.time, w, h)
     case 'hierarchy': return hierarchyFrame(stage, data.tree, w, h)

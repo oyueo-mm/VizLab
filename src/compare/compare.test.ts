@@ -15,12 +15,16 @@ beforeAll(async () => { modules = await loadAllModules() })
 const issueFor = (viz: string, table = generateDataset('normal'), remembered = {}) => compareIssue(modules[viz], table, paneMapping(modules[viz], table, remembered))
 
 describe('recommended comparison presets', () => {
-  it('has the v0.3 combinations and the v0.4 geo, agreement, calibration, network and mosaic ones', () => {
+  it('has the v0.3 combinations the v0.4 geo, agreement, calibration, network and mosaic ones, and ten v0.5 ones', () => {
     expect(presets.map((p) => p.charts)).toEqual([
       ['histogram', 'kde', 'ecdf'], ['box', 'violin', 'raincloud'], ['scatter', 'hexbin', 'kde2d'], ['bar', 'lollipop', 'bullet'],
       ['line', 'area', 'step'], ['treemap', 'sunburst', 'icicle'], ['roc', 'pr'],
       ['roc', 'pr', 'calibration'], ['choropleth', 'symbol-map', 'bar'], ['choropleth', 'tile-grid', 'dorling'], ['scatter', 'bland-altman'],
       ['network', 'adjacency'], ['network', 'bipartite'], ['mosaic', 'marimekko'],
+      // v0.5
+      ['hillshade', 'slope-aspect', 'isoline'], ['vector-field', 'streamline', 'particle-flow'], ['choropleth', 'cartogram-contiguous', 'demers'],
+      ['residual-plot', 'scale-location', 'influence-plot'], ['kaplan-meier', 'nelson-aalen'], ['candlestick', 'heikin-ashi', 'renko'],
+      ['spectrogram', 'scalogram', 'recurrence-plot'], ['volcano', 'ma-plot'], ['venn', 'upset', 'hypergraph'], ['pcoa', 'phylogenetic-tree'],
     ])
     for (const p of presets) { expect(p.charts.length).toBeLessThanOrEqual(MAX_PANES); expect(p.charts.length).toBeGreaterThanOrEqual(2) }
   })

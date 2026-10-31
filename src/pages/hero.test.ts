@@ -2,12 +2,13 @@ import * as d3 from 'd3'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { MOVE_MS, STAGE_MS } from './HeroDemo'
 import { bundleCurve, heroGeoValue, loadHeroGeo, resample } from './heroFramesV4'
+import { loadHeroV5 } from './heroFramesV5Lazy'
 import { buildFrame, heroData, heroFlows, heroSample, heroStages, heroTree, HERO_N, type HeroStage, type Mark } from './heroFrames'
 
 const W = 560
 const H = 380
 
-beforeAll(async () => { await loadHeroGeo() })
+beforeAll(async () => { await loadHeroGeo(); await loadHeroV5() })
 
 describe('home animation timing', () => {
   it('shows each chart for about 1.8 s with a 0.5–0.65 s morph', () => {
@@ -23,12 +24,13 @@ describe('home animation frames', () => {
   const frame = (s: HeroStage, d = data) => buildFrame(s, d, W, H)
   const numbers = (m: Mark): number[] => Object.values(m).flatMap((v) => (typeof v === 'number' ? [v] : Array.isArray(v) && typeof v[0] !== 'string' ? (v as any[]).flat().filter((x) => typeof x === 'number') : []))
 
-  it('has 24 distinct stages, each drawn from real engines', () => {
-    expect(heroStages.length).toBe(24)
-    expect(new Set(heroStages.map((s) => s.key)).size).toBe(24)
-    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(24)
-    expect(heroStages.map((s) => s.group)).toEqual([...Array(6).fill('dist'), 'path', ...Array(4).fill('compare'), 'pyramid', ...Array(4).fill('time'), ...Array(2).fill('hierarchy'), 'flame', 'flow', 'network', 'bundle', 'geo', 'meta'])
-    expect(heroStages.map((s) => s.viz)).toEqual(expect.arrayContaining(['connected-scatter', 'pyramid', 'network', 'horizon', 'choropleth', 'forest', 'flame', 'edge-bundling']))
+  it('has 36 distinct stages, each drawn from real engines', () => {
+    expect(heroStages.length).toBe(36)
+    expect(new Set(heroStages.map((s) => s.key)).size).toBe(36)
+    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(36)
+    expect(heroStages.slice(0, 24).map((s) => s.group)).toEqual([...Array(6).fill('dist'), 'path', ...Array(4).fill('compare'), 'pyramid', ...Array(4).fill('time'), ...Array(2).fill('hierarchy'), 'flame', 'flow', 'network', 'bundle', 'geo', 'meta'])
+    expect(heroStages.slice(24).every((s) => s.group === 'v5')).toBe(true)
+    expect(heroStages.map((s) => s.viz)).toEqual(expect.arrayContaining(['connected-scatter', 'pyramid', 'network', 'horizon', 'choropleth', 'forest', 'flame', 'edge-bundling', 'isoline', 'kaplan-meier', 'manhattan', 'upset']))
   })
 
   it('builds finite, uniquely keyed marks for every stage', () => {
@@ -329,5 +331,56 @@ describe('home animation: v0.4 stages', () => {
     expect(line[2][0]).toBeCloseTo(10, 6)
     const curve = bundleCurve([[0, 0], [30, 60], [60, 0], [100, 40]], 0)
     for (const [x, y] of curve) expect(Math.abs(y - 0.4 * x)).toBeLessThan(2.5)
+  })
+})
+
+describe('v0.5 stages', () => {
+  const W5 = 560, H5 = 380
+  const f = (k: HeroStage, cycle = 0) => buildFrame(k, heroData(cycle), W5, H5)
+
+  it('isolines: contour lines of a terrain, one level per interval, the highest levels have the fewest lines', () => {
+    const lines = f('isoline').filter((m) => m.t === 'poly') as Extract<Mark, { t: 'poly' }>[]
+    expect(lines.length).toBeGreaterThan(8)
+    expect(lines.every((l) => !l.closed && l.pts.length >= 2)).toBe(true)
+  })
+  it('Kaplan–Meier: survival steps never increase and stay between 0 and 1', () => {
+    for (const g of [0, 1]) {
+      const l = f('km').find((m) => m.k === `km:l${g}`) as Extract<Mark, { t: 'poly' }>
+      const ys = l.pts.map((p) => p[1])
+      // screen y grows downward, so a non-increasing survival curve has non-decreasing y
+      for (let i = 1; i < ys.length; i++) expect(ys[i]).toBeGreaterThanOrEqual(ys[i - 1] - 1e-9)
+    }
+  })
+  it('Renko: bricks are equal-sized and each starts where the previous one ended or one brick apart', () => {
+    const bricks = f('renko').filter((m) => m.t === 'rect' && m.k.startsWith('rk:')) as Extract<Mark, { t: 'rect' }>[]
+    expect(bricks.length).toBeGreaterThan(5)
+    const hs = bricks.map((b) => b.h)
+    for (const v of hs) expect(v).toBeCloseTo(hs[0], 6)
+  })
+  it('Manhattan: significant points rise above the 5×10⁻⁸ line (a planted signal), most points lie below it', () => {
+    const marks = f('manhattan')
+    const line = marks.find((m) => m.k === 'mh:gw') as Extract<Mark, { t: 'line' }>
+    const dots = marks.filter((m) => m.t === 'circle') as Extract<Mark, { t: 'circle' }>[]
+    const above = dots.filter((d) => d.y < line.y1)
+    expect(above.length).toBeGreaterThan(0)
+    expect(above.length).toBeLessThan(dots.length * 0.2)
+  })
+  it('UpSet: bars are sorted by size and set membership dots match the bar columns', () => {
+    const marks = f('upset')
+    const bars = marks.filter((m) => m.t === 'rect' && /^us:b/.test(m.k)) as Extract<Mark, { t: 'rect' }>[]
+    expect(bars.length).toBe(10)
+    for (let i = 1; i < bars.length; i++) expect(bars[i].h).toBeLessThanOrEqual(bars[i - 1].h + 1e-9)
+  })
+  it('Nightingale rose: slice area is proportional to the value', () => {
+    const arcs = f('rose').filter((m) => m.t === 'arc') as Extract<Mark, { t: 'arc' }>[]
+    expect(arcs.length).toBe(12)
+    const widths = new Set(arcs.map((a) => (a.a1 - a.a0).toFixed(6)))
+    expect(widths.size).toBe(1)
+  })
+  it('the home loop stays reproducible: the same cycle gives the same marks, another cycle differs', () => {
+    for (const k of ['isoline', 'streamline', 'voronoi', 'km', 'renko', 'manhattan', 'phase', 'upset', 'rose', 'venn', 'bifurcation', 'spiral'] as const) {
+      expect(JSON.stringify(f(k, 1)), k).toBe(JSON.stringify(f(k, 1)))
+      expect(JSON.stringify(f(k, 1)), k).not.toBe(JSON.stringify(f(k, 2)))
+    }
   })
 })
