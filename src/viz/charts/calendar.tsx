@@ -5,7 +5,8 @@ import { ControlGroup, Hint, NumberField, Segmented, Select, Toggle } from '../.
 import { appendRow, columnIndex, removeRows, templateRow, toLabel, toNumber, updateRow, type DataTable } from '../../data/table'
 import { schemes, type SequentialScheme } from '../../lib/colors'
 import { fmt } from '../../lib/format'
-import { calendarCell, daysInYear, formatDate, isLeapYear, parseDate, weekday, yearDates } from '../../stats/calendar'
+import { calendarCell, daysInMonth, formatDate, fromDayNumber, isLeapYear, weekday, yearDates } from '../../stats/calendar'
+import { parseDateTime } from '../../stats/datetime'
 import { roleColumn } from '../mapping'
 import type { ChartProps, ControlsProps, VizModule } from '../types'
 
@@ -20,6 +21,8 @@ export interface CalendarParams {
   agg: 'sum' | 'mean' | 'max'
   missing: 'hatch' | 'blank'
   labelDays: boolean
+  /** Part of the year shown: the whole year, a half or a quarter (bigger cells on small screens). */
+  view: 'year' | 'h1' | 'h2' | 'q1' | 'q2' | 'q3' | 'q4'
 }
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -35,7 +38,8 @@ export function dayValues(table: DataTable, dateCol: string | null, valueCol: st
   let invalid = 0
   if (di >= 0 && vi >= 0) {
     table.rows.forEach((r, i) => {
-      const d = parseDate(toLabel(r[di]))
+      const ms = typeof r[di] === 'number' ? (r[di] as number) : parseDateTime(toLabel(r[di]))
+      const d = ms == null || !Number.isFinite(ms) ? null : fromDayNumber(Math.floor(ms / 86400000))
       const v = toNumber(r[vi])
       if (!d || v == null) { if (toLabel(r[di]) !== '' || r[vi] != null) invalid++; return }
       const key = formatDate(d)
@@ -71,18 +75,27 @@ function CalendarChart({ table, mapping, params, width, height, compact, onTable
   const padL = compact ? 4 : params.labelDays ? 30 : 8
   const padT = compact ? 4 : 56
   const padB = compact ? 4 : 34
-  const weeks = 53
-  const cell = Math.max(3, Math.min((width - padL - 8) / weeks, (height - padT - padB) / 7))
+  // The visible months decide which week columns are drawn; the cells never shrink below a readable size, so a narrow
+  // screen scrolls sideways (or the view can be narrowed to a half or a quarter of the year) instead of squeezing 53 weeks.
+  const [m0, m1] = compact ? [1, 12] : { year: [1, 12], h1: [1, 6], h2: [7, 12], q1: [1, 3], q2: [4, 6], q3: [7, 9], q4: [10, 12] }[params.view] ?? [1, 12]
+  const startCol = calendarCell({ y: year, m: m0, d: 1 }, params.weekStart).col
+  const endCol = calendarCell({ y: year, m: m1, d: daysInMonth(year, m1) }, params.weekStart).col
+  const weeks = endCol - startCol + 1
+  const minCell = compact ? 3 : 15
+  const cell = Math.max(minCell, Math.min((width - padL - 8) / weeks, (height - padT - padB) / 7))
   const gap = Math.max(0.5, cell * 0.12)
   const gridW = cell * weeks
+  const svgW = compact ? width : Math.max(width, padL + gridW + 8)
+  const colX = (col: number) => (col - startCol) * cell
   const offsetY = compact ? padT : padT + Math.max(0, (height - padT - padB - cell * 7) / 2)
 
-  if (!dateCol || !valueCol) return <ChartMessage>날짜(범주형)와 값(숫자형) 열을 선택하세요.</ChartMessage>
-  if (!years.length) return <ChartMessage>YYYY-MM-DD 형식의 날짜가 있는 행이 없습니다.{invalid > 0 && ` (${invalid}행은 날짜나 값을 읽지 못했습니다)`}</ChartMessage>
+  if (!dateCol || !valueCol) return <ChartMessage>날짜와 값(숫자형) 열을 선택하세요.</ChartMessage>
+  if (!years.length) return <ChartMessage>읽을 수 있는 날짜(예: 2024-03-15)가 있는 행이 없습니다.{invalid > 0 && ` (${invalid}행은 날짜나 값을 읽지 못했습니다)`}</ChartMessage>
   const editable = !!onTableChange && !compact
-  const cells = dates.map((d) => ({ d, key: formatDate(d), ...calendarCell(d, params.weekStart), data: days.get(formatDate(d)) }))
+  const cells = dates.map((d) => ({ d, key: formatDate(d), ...calendarCell(d, params.weekStart), data: days.get(formatDate(d)) })).filter((c) => c.col >= startCol && c.col <= endCol && c.d.m >= m0 && c.d.m <= m1)
   const cellAt = new Map(cells.map((c) => [`${c.col},${c.row}`, c]))
   const filled = cells.filter((c) => c.data).length
+  const shownDays = cells.length
   const total = d3.sum(cells, (c) => c.data?.value ?? 0)
 
   const commit = () => {
@@ -101,16 +114,17 @@ function CalendarChart({ table, mapping, params, width, height, compact, onTable
   }
 
   return (
-    <div className="chart-root">
-      <svg ref={svgRef} width={width} height={height} className={`chart-svg ${editable ? 'is-editable' : ''}`} role="img" data-testid="chart-svg"
-        aria-label={`캘린더 히트맵: ${year}년 ${valueCol}, ${daysInYear(year)}일 중 ${filled}일 기록`} onPointerLeave={hide}>
+    <div className="chart-root cal-scroll" data-testid="cal-scroll" style={{ overflowX: svgW > width ? 'auto' : undefined }}>
+      <svg ref={svgRef} width={svgW} height={height} className={`chart-svg ${editable ? 'is-editable' : ''}`} role="img" data-testid="chart-svg"
+        aria-label={`캘린더 히트맵: ${year}년 ${valueCol}, ${shownDays}일 중 ${filled}일 기록`} onPointerLeave={hide}>
         <defs>
           <pattern id="cal-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#d5dbd9" strokeWidth="1.4" /></pattern>
         </defs>
         <g transform={`translate(${padL},${offsetY})`}>
-          {!compact && Array.from({ length: 12 }, (_, mi) => {
-            const col = calendarCell({ y: year, m: mi + 1, d: 1 }, params.weekStart).col
-            return <text key={mi} className="cal-month" x={col * cell} y={-8}>{mi + 1}월</text>
+          {!compact && Array.from({ length: m1 - m0 + 1 }, (_, k) => {
+            const mi = m0 + k
+            const col = Math.max(startCol, calendarCell({ y: year, m: mi, d: 1 }, params.weekStart).col)
+            return <text key={mi} className="cal-month" x={colX(col)} y={-8}>{mi}월</text>
           })}
           {!compact && params.labelDays && [1, 3, 5].map((k) => {
             const wd = (k + params.weekStart) % 7
@@ -121,7 +135,7 @@ function CalendarChart({ table, mapping, params, width, height, compact, onTable
             const has = !!c.data
             const fill = has ? color(c.data!.value) : params.missing === 'hatch' ? 'url(#cal-hatch)' : 'transparent'
             return (
-              <rect key={c.key} className={`cal-cell ${has ? '' : 'is-missing'}`} data-date={c.key} data-testid="cal-cell" x={c.col * cell + gap / 2} y={c.row * cell + gap / 2}
+              <rect key={c.key} className={`cal-cell ${has ? '' : 'is-missing'}`} data-date={c.key} data-testid="cal-cell" x={colX(c.col) + gap / 2} y={c.row * cell + gap / 2}
                 width={Math.max(1, cell - gap)} height={Math.max(1, cell - gap)} rx={Math.min(3, cell / 5)} fill={fill} stroke={has ? 'none' : '#e5e9e8'} strokeWidth={has || params.missing === 'blank' && !compact ? 0.6 : 0}
                 onPointerMove={compact ? undefined : (e) => {
                   const lp = localPoint(svgRef.current!, e)
@@ -135,12 +149,12 @@ function CalendarChart({ table, mapping, params, width, height, compact, onTable
             const out: React.ReactNode[] = []
             const below = cellAt.get(`${c.col},${c.row + 1}`)
             const right = cellAt.get(`${c.col + 1},${c.row}`)
-            if (c.row === 6 || (below && below.d.m !== c.d.m)) out.push(<line key="b" className="cal-sep" x1={c.col * cell} x2={(c.col + 1) * cell} y1={(c.row + 1) * cell} y2={(c.row + 1) * cell} />)
-            if (right && right.d.m !== c.d.m) out.push(<line key="r" className="cal-sep" x1={(c.col + 1) * cell} x2={(c.col + 1) * cell} y1={c.row * cell} y2={(c.row + 1) * cell} />)
+            if (c.row === 6 || (below && below.d.m !== c.d.m)) out.push(<line key="b" className="cal-sep" x1={colX(c.col)} x2={colX(c.col + 1)} y1={(c.row + 1) * cell} y2={(c.row + 1) * cell} />)
+            if (right && right.d.m !== c.d.m) out.push(<line key="r" className="cal-sep" x1={colX(c.col + 1)} x2={colX(c.col + 1)} y1={c.row * cell} y2={(c.row + 1) * cell} />)
             return out.length ? <g key={c.key}>{out}</g> : null
           })}
           {!compact && (
-            <g transform={`translate(${Math.max(40, gridW - 280)},${7 * cell + 8})`} aria-hidden="true">
+            <g transform={`translate(${Math.max(44, gridW - 280)},${7 * cell + 8})`} aria-hidden="true">
               <text className="cal-day" x={-6} y={9} textAnchor="end">적음</text>
               {Array.from({ length: 9 }, (_, k) => <rect key={k} x={k * 16} y={0} width={14} height={12} rx={2} fill={color(lo + ((hi - lo) * k) / 8)} />)}
               <text className="cal-day" x={9 * 16 + 4} y={9}>많음 ({fmt(hi)})</text>
@@ -150,7 +164,7 @@ function CalendarChart({ table, mapping, params, width, height, compact, onTable
       </svg>
       {!compact && (
         <>
-          <Readout items={[{ label: '연도', value: `${year}${isLeapYear(year) ? ' (윤년)' : ''}` }, { label: '기록', value: `${filled} / ${daysInYear(year)}일` }, { label: '합계', value: fmt(total) }, ...(invalid ? [{ label: '읽지 못한 행', value: invalid }] : [])]} />
+          <Readout items={[{ label: '연도', value: `${year}${isLeapYear(year) ? ' (윤년)' : ''}` }, { label: '기록', value: `${filled} / ${shownDays}일` }, { label: '합계', value: fmt(total) }, ...(invalid ? [{ label: '읽지 못한 행', value: invalid }] : [])]} />
           <Tooltip tip={tip} width={width} />
           {edit && (
             <form className="cell-popover" style={{ left: Math.min(width - 190, edit.x), top: edit.y + 10 }} onSubmit={(e) => { e.preventDefault(); commit() }}>
@@ -176,6 +190,8 @@ function CalendarControls({ params, setParams, table, mapping }: ControlsProps<C
           options={(years.length ? years : [0]).map((y) => ({ value: String(y), label: y ? `${y}년${isLeapYear(y) ? ' (윤년)' : ''}` : '데이터 없음' }))} />
         <Segmented label="주 시작" value={String(params.weekStart)} onChange={(v) => setParams({ weekStart: Number(v) as 0 | 1 })} testId="ctl-weekstart"
           options={[{ value: '0', label: '일요일' }, { value: '1', label: '월요일' }]} />
+        <Select label="표시 기간" value={params.view} onChange={(view) => setParams({ view })} testId="ctl-view"
+          options={[{ value: 'year', label: '1년 전체' }, { value: 'h1', label: '상반기 (1–6월)' }, { value: 'h2', label: '하반기 (7–12월)' }, { value: 'q1', label: '1분기' }, { value: 'q2', label: '2분기' }, { value: 'q3', label: '3분기' }, { value: 'q4', label: '4분기' }]} />
         <Select label="같은 날 여러 행" value={params.agg} onChange={(agg) => setParams({ agg })} options={[{ value: 'sum', label: '합계' }, { value: 'mean', label: '평균' }, { value: 'max', label: '최댓값' }]} />
       </ControlGroup>
       <ControlGroup title="색상">
@@ -190,7 +206,7 @@ function CalendarControls({ params, setParams, table, mapping }: ControlsProps<C
         )}
         <Segmented label="기록 없는 날" value={params.missing} onChange={(missing) => setParams({ missing })} options={[{ value: 'hatch', label: '빗금' }, { value: 'blank', label: '빈칸' }]} />
         <Toggle label="요일 이름" checked={params.labelDays} onChange={(labelDays) => setParams({ labelDays })} />
-        <Hint>기록이 없는 날은 값이 0인 날과 다르게 표시됩니다. 칸을 클릭해 값을 입력하거나(비우면 삭제), 데이터 탭에서 날짜를 YYYY-MM-DD로 편집하세요.</Hint>
+        <Hint>기록이 없는 날은 값이 0인 날과 다르게 표시됩니다. 칸을 클릭해 값을 입력하거나(비우면 삭제), 데이터 탭에서 날짜를 편집하세요. 좁은 화면에서는 칸이 일정한 크기 밑으로 줄지 않고 옆으로 스크롤되며, ‘표시 기간’으로 일부만 크게 볼 수 있습니다.</Hint>
       </ControlGroup>
     </>
   )
@@ -198,11 +214,11 @@ function CalendarControls({ params, setParams, table, mapping }: ControlsProps<C
 
 export const calendarModule: VizModule<CalendarParams> = {
   roles: [
-    { key: 'date', label: '날짜 (YYYY-MM-DD)', type: 'category', required: true },
+    { key: 'date', label: '날짜 (예: 2024-03-15)', type: 'date', accept: ['date', 'category'], required: true },
     { key: 'value', label: '값', type: 'number', required: true },
   ],
   datasets: ['daily'],
-  defaultParams: { year: 0, weekStart: 0, scheme: 'teal', range: 'auto', min: 0, max: 1, agg: 'sum', missing: 'hatch', labelDays: true },
+  defaultParams: { year: 0, weekStart: 0, scheme: 'teal', range: 'auto', min: 0, max: 1, agg: 'sum', missing: 'hatch', labelDays: true, view: 'year' },
   Chart: CalendarChart,
   Controls: CalendarControls,
   hint: '칸을 클릭해 그날의 값 입력·수정(비우면 삭제) · 마우스를 올려 날짜와 요일 확인',

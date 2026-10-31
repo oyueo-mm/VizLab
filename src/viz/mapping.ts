@@ -1,21 +1,25 @@
-import type { DataTable } from '../data/table'
+import type { ColumnType, DataTable } from '../data/table'
 import type { Mapping, RoleSpec } from './types'
 
-const typeLabel = { number: '숫자형', category: '범주형' } as const
+const typeLabel: Record<ColumnType, string> = { number: '숫자형', category: '범주형', date: '날짜형' }
 
-/** Fills roles in declaration order with the first unused column of the right type. */
+/** Column types that can fill a role, preferred type first. */
+export const roleTypes = (role: RoleSpec): ColumnType[] => (role.accept ? [role.type, ...role.accept.filter((t) => t !== role.type)] : [role.type])
+export const roleTypeLabel = (role: RoleSpec) => roleTypes(role).map((t) => typeLabel[t]).join(' 또는 ')
+
+/** Fills roles in declaration order with the first unused column of an accepted type (preferred type first). */
 export function autoMapping(roles: readonly RoleSpec[], table: DataTable, previous?: Mapping): Mapping {
   const used = new Set<string>()
   const out: Mapping = {}
-  const has = (name: unknown, type: string) => typeof name === 'string' && table.columns.some((c) => c.name === name && c.type === type)
+  const has = (name: unknown, role: RoleSpec) => typeof name === 'string' && table.columns.some((c) => c.name === name && roleTypes(role).includes(c.type))
   // Keep still-valid choices from the previous mapping (e.g. after a cell edit or a compatible dataset switch).
   if (previous) {
     for (const role of roles) {
       const prev = previous[role.key]
       if (role.multiple && Array.isArray(prev)) {
-        const kept = prev.filter((n) => has(n, role.type) && !used.has(n))
+        const kept = prev.filter((n) => has(n, role) && !used.has(n))
         if (kept.length >= role.multiple.min) { out[role.key] = kept; kept.forEach((n) => used.add(n)) }
-      } else if (typeof prev === 'string' && has(prev, role.type) && !used.has(prev)) {
+      } else if (typeof prev === 'string' && has(prev, role) && !used.has(prev)) {
         out[role.key] = prev
         used.add(prev)
       } else if (prev === null && !role.required && role.key in previous) out[role.key] = null
@@ -23,7 +27,8 @@ export function autoMapping(roles: readonly RoleSpec[], table: DataTable, previo
   }
   for (const role of roles) {
     if (role.key in out) continue
-    const free = table.columns.filter((c) => c.type === role.type && !used.has(c.name)).map((c) => c.name)
+    // Preferred type first, then the other accepted types, each in column order.
+    const free = roleTypes(role).flatMap((t) => table.columns.filter((c) => c.type === t && !used.has(c.name)).map((c) => c.name))
     if (role.multiple) {
       const pick = free.slice(0, role.multiple.max ?? free.length)
       out[role.key] = pick
@@ -36,13 +41,24 @@ export function autoMapping(roles: readonly RoleSpec[], table: DataTable, previo
   return out
 }
 
-/** Why a table cannot drive the chart at all (independent of the current mapping), or null when it can. */
+const TYPES: ColumnType[] = ['number', 'category', 'date']
+
+/**
+ * Why a table cannot drive the chart at all (independent of the current mapping), or null when it can.
+ * Required roles are matched to columns by type (Hall's condition over every set of column types), so a role that
+ * accepts "date or number" correctly shares columns with a role that needs a number.
+ */
 export function incompatibility(roles: readonly RoleSpec[], table: DataTable): string | null {
   if (!table.rows.length) return '데이터 행이 없습니다.'
-  for (const type of ['number', 'category'] as const) {
-    const need = roles.filter((r) => r.required && r.type === type).reduce((s, r) => s + (r.multiple ? r.multiple.min : 1), 0)
-    const have = table.columns.filter((c) => c.type === type).length
-    if (need > have) return `${typeLabel[type]} 열이 ${need}개 이상 필요하지만 ${have}개뿐입니다.`
+  const slots = roles.filter((r) => r.required).flatMap((r) => Array.from({ length: r.multiple ? r.multiple.min : 1 }, () => roleTypes(r)))
+  for (let mask = 1; mask < 1 << TYPES.length; mask++) {
+    const set = TYPES.filter((_, i) => mask & (1 << i))
+    const need = slots.filter((s) => s.every((t) => set.includes(t))).length
+    const have = table.columns.filter((c) => set.includes(c.type)).length
+    if (need > have) {
+      const names = set.map((t) => typeLabel[t]).join('·')
+      return `${names} 열이 ${need}개 이상 필요하지만 ${have}개뿐입니다.`
+    }
   }
   return null
 }
@@ -54,14 +70,15 @@ export function mappingErrors(roles: readonly RoleSpec[], table: DataTable, mapp
   const errors: string[] = []
   for (const role of roles) {
     const value = mapping[role.key]
+    const ok = (name: string) => table.columns.some((c) => c.name === name && roleTypes(role).includes(c.type))
     if (role.multiple) {
       const list = Array.isArray(value) ? value : []
-      const valid = list.filter((n) => table.columns.some((c) => c.name === n && c.type === role.type))
-      if (valid.length < role.multiple.min) errors.push(`‘${role.label}’에 ${typeLabel[role.type]} 열을 ${role.multiple.min}개 이상 선택하세요.`)
+      const valid = list.filter(ok)
+      if (valid.length < role.multiple.min) errors.push(`‘${role.label}’에 ${roleTypeLabel(role)} 열을 ${role.multiple.min}개 이상 선택하세요.`)
     } else if (typeof value === 'string') {
       const col = table.columns.find((c) => c.name === value)
       if (!col) errors.push(`‘${role.label}’에 지정한 열 ‘${value}’이(가) 없습니다.`)
-      else if (col.type !== role.type) errors.push(`‘${role.label}’에는 ${typeLabel[role.type]} 열이 필요합니다.`)
+      else if (!roleTypes(role).includes(col.type)) errors.push(`‘${role.label}’에는 ${roleTypeLabel(role)} 열이 필요합니다.`)
     } else if (role.required) errors.push(`‘${role.label}’에 사용할 열을 선택하세요.`)
   }
   return errors

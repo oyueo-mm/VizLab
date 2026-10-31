@@ -1,10 +1,11 @@
-import { ArrowDown, ArrowUp, Download, RotateCcw, Shuffle, Upload } from 'lucide-react'
+import { ArrowDown, ArrowUp, Download, FileJson, RotateCcw, Shuffle, Upload } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { ControlGroup, Hint, Select, Slider } from '../components/controls'
-import { parseCsv, formatCsv } from '../data/csv'
+import { formatCsv, formatJson, parseCsv, parseJson } from '../data/csv'
 import { datasets, datasetById, generateDataset, type DatasetId } from '../data/datasets'
-import { invalidNumericCells, type DataTable } from '../data/table'
-import { incompatibility, mappingErrors } from '../viz/mapping'
+import { invalidDateCells, invalidNumericCells, type DataTable } from '../data/table'
+import { dateFormats, type DateFormat } from '../stats/datetime'
+import { incompatibility, mappingErrors, roleTypeLabel, roleTypes } from '../viz/mapping'
 import type { Mapping, RoleSpec, VizModule } from '../viz/types'
 import { DataTableEditor } from './DataTableEditor'
 import type { LabActions, LabState } from './state'
@@ -17,12 +18,12 @@ const sample = (id: DatasetId) => {
   return t
 }
 
-function MappingEditor({ roles, table, mapping, onChange }: { roles: RoleSpec[]; table: DataTable; mapping: Mapping; onChange: (m: Mapping) => void }) {
+export function MappingEditor({ roles, table, mapping, onChange }: { roles: RoleSpec[]; table: DataTable; mapping: Mapping; onChange: (m: Mapping) => void }) {
   return (
     <div className="mapping-editor" data-testid="mapping-editor">
       {roles.map((role) => {
-        const cols = table.columns.filter((c) => c.type === role.type).map((c) => c.name)
-        const typeName = role.type === 'number' ? '숫자형' : '범주형'
+        const cols = roleTypes(role).flatMap((t) => table.columns.filter((c) => c.type === t).map((c) => c.name))
+        const typeName = roleTypeLabel(role)
         if (role.multiple) {
           const chosen = (Array.isArray(mapping[role.key]) ? mapping[role.key] : []) as string[]
           const order = [...chosen.filter((c) => cols.includes(c)), ...cols.filter((c) => !chosen.includes(c))]
@@ -70,6 +71,9 @@ function MappingEditor({ roles, table, mapping, onChange }: { roles: RoleSpec[];
 
 export function DataPanel({ mod, state, actions }: { mod: VizModule; state: LabState; actions: LabActions }) {
   const fileRef = useRef<HTMLInputElement>(null)
+  const lastText = useRef<{ text: string; name: string; json: boolean } | null>(null)
+  const [dateFormat, setDateFormat] = useState<DateFormat>('iso')
+  const [ambiguous, setAmbiguous] = useState<string[]>([])
   const [notice, setNotice] = useState<{ kind: 'error' | 'info'; text: string } | null>(null)
   const def = state.datasetId === 'custom' ? null : datasetById.get(state.datasetId)
   const preferred = mod.datasets
@@ -83,25 +87,42 @@ export function DataPanel({ mod, state, actions }: { mod: VizModule; state: LabS
   const incompatible = ordered.filter((id) => incompatibility(mod.roles, sample(id)))
   const errors = mappingErrors(mod.roles, state.table, state.mapping)
   const invalid = invalidNumericCells(state.table)
+  const invalidDates = invalidDateCells(state.table)
+  const hasDates = state.table.columns.some((c) => c.type === 'date')
 
-  const onFile = async (file: File) => {
-    if (file.size > 8 * 1024 * 1024) { setNotice({ kind: 'error', text: '8MB보다 큰 파일은 불러올 수 없습니다.' }); return }
-    const res = parseCsv(await file.text())
-    if (!res.table) { setNotice({ kind: 'error', text: res.error ?? 'CSV를 읽지 못했습니다.' }); return }
+  const importText = (text: string, name: string, json: boolean, fmt: DateFormat) => {
+    const res = json ? parseJson(text, fmt) : parseCsv(text, fmt)
+    if (!res.table) { setNotice({ kind: 'error', text: res.error ?? `${json ? 'JSON' : 'CSV'}를 읽지 못했습니다.` }); setAmbiguous([]); return }
     const reason = incompatibility(mod.roles, res.table)
-    actions.loadCustom(res.table, file.name)
+    actions.loadCustom(res.table, name)
+    setAmbiguous(res.ambiguous)
     const info = [`${res.table.rows.length}행 × ${res.table.columns.length}열을 불러왔습니다.`, ...res.warnings]
     if (reason) info.push(`이 시각화에 맞지 않습니다: ${reason}`)
     setNotice({ kind: reason ? 'error' : 'info', text: info.join(' ') })
   }
-  const exportCsv = () => {
-    const blob = new Blob([String.fromCharCode(0xfeff) + formatCsv(state.table)], { type: 'text/csv;charset=utf-8' })
+  const onFile = async (file: File) => {
+    if (file.size > 8 * 1024 * 1024) { setNotice({ kind: 'error', text: '8MB보다 큰 파일은 불러올 수 없습니다.' }); return }
+    const json = /\.json$/i.test(file.name) || file.type === 'application/json'
+    const text = await file.text()
+    lastText.current = { text, name: file.name, json }
+    importText(text, file.name, json, dateFormat)
+  }
+  // Choosing a day/month order re-reads the file that was just imported with that order.
+  const changeFormat = (fmt: DateFormat) => {
+    setDateFormat(fmt)
+    const last = lastText.current
+    if (last && (ambiguous.length > 0 || hasDates)) importText(last.text, last.name, last.json, fmt)
+  }
+  const download = (content: string, mime: string, ext: string) => {
+    const blob = new Blob([ext === 'csv' ? String.fromCharCode(0xfeff) + content : content], { type: `${mime};charset=utf-8` })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
-    a.download = `${state.customName?.replace(/\.csv$/i, '') ?? def?.name ?? 'data'}.csv`
+    a.download = `${state.customName?.replace(/\.(csv|json)$/i, '') ?? def?.name ?? 'data'}.${ext}`
     a.click()
     setTimeout(() => URL.revokeObjectURL(a.href), 1000)
   }
+  const exportCsv = () => download(formatCsv(state.table), 'text/csv', 'csv')
+  const exportJson = () => download(formatJson(state.table), 'application/json', 'json')
 
   return (
     <div className="data-panel">
@@ -135,16 +156,21 @@ export function DataPanel({ mod, state, actions }: { mod: VizModule; state: LabS
       </ControlGroup>
       <ControlGroup title={`데이터 편집 (${state.table.rows.length}행)`}>
         <div className="data-actions">
-          <button type="button" className="btn btn-secondary btn-sm" onClick={() => fileRef.current?.click()} data-testid="csv-import"><Upload size={14} aria-hidden="true" />CSV 가져오기</button>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => fileRef.current?.click()} data-testid="csv-import"><Upload size={14} aria-hidden="true" />CSV·JSON 가져오기</button>
           <button type="button" className="btn btn-secondary btn-sm" onClick={exportCsv} data-testid="csv-export"><Download size={14} aria-hidden="true" />CSV 내보내기</button>
           <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setNotice(null); actions.restoreData() }} disabled={state.datasetId === 'custom' || !state.edited} data-testid="restore-data"><RotateCcw size={14} aria-hidden="true" />기본 데이터 복원</button>
-          <input ref={fileRef} type="file" accept=".csv,text/csv" hidden data-testid="csv-file"
+          <button type="button" className="btn btn-secondary btn-sm" onClick={exportJson} data-testid="json-export"><FileJson size={14} aria-hidden="true" />JSON 내보내기</button>
+          <input ref={fileRef} type="file" accept=".csv,text/csv,.json,application/json" hidden data-testid="csv-file"
             onChange={(e) => { const f = e.target.files?.[0]; if (f) void onFile(f); e.target.value = '' }} />
         </div>
         {notice && <div className={`notice ${notice.kind === 'error' ? 'is-error' : ''}`} role="status">{notice.text}</div>}
         {invalid > 0 && <div className="notice is-error" role="status">숫자형 열에 숫자가 아닌 값이 {invalid}개 있습니다. 해당 칸(빨간색)은 그래프에서 제외됩니다.</div>}
-        <DataTableEditor table={state.table} onChange={(t) => actions.setTable(t)} />
-        <Hint>데이터는 브라우저 안에서만 처리되며 서버로 전송되지 않습니다. 열 머리글의 형식 표시를 누르면 숫자형·범주형을 바꿀 수 있습니다.</Hint>
+        {invalidDates > 0 && <div className="notice is-error" role="status" data-testid="date-invalid">날짜형 열에 올바르지 않은 날짜가 {invalidDates}개 있습니다(예: 2023-02-29). 해당 칸(빨간색)은 그래프에서 제외됩니다.</div>}
+        <Select label="날짜 해석 형식" value={dateFormat} onChange={changeFormat} testId="date-format"
+          options={dateFormats.map((f) => ({ value: f.value, label: `${f.label} — ${f.example}` }))} />
+        {ambiguous.length > 0 && <div className="notice is-error" role="status" data-testid="date-ambiguous">‘{ambiguous.join('’, ‘')}’ 열은 일·월 순서가 모호합니다. 위에서 ‘월/일/년’ 또는 ‘일/월/년’을 고르면 파일을 다시 읽어 날짜형으로 바꿉니다.</div>}
+        <DataTableEditor table={state.table} onChange={(t) => actions.setTable(t)} dateFormat={dateFormat} />
+        <Hint>데이터는 브라우저 안에서만 처리되며 서버로 전송되지 않습니다. 열 머리글의 형식 표시를 누르면 숫자형 → 범주형 → 날짜형으로 바꿉니다. 날짜는 시간대 변환 없이 UTC 달력 시각으로 다룹니다(‘Z’나 ‘+09:00’이 붙은 값은 UTC로 환산).</Hint>
       </ControlGroup>
     </div>
   )

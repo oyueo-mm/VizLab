@@ -11,7 +11,7 @@ import { kde, kdeGrid, kernelReach, kernels, scottBandwidth, silvermanBandwidth,
 import { roleColumn } from '../mapping'
 import type { ChartProps, ControlsProps, VizModule } from '../types'
 import { addValueAt, Rug } from './distShared'
-import { groupedValues, type ValueGroup } from './shared'
+import { groupedValues, type ValueGroup, markedValues, rowsNear } from './shared'
 
 export interface KdeParams {
   bwMode: 'silverman' | 'scott' | 'manual'
@@ -42,7 +42,7 @@ const dataSpan = (groups: ValueGroup[]) => {
   return hi > lo ? hi - lo : 1
 }
 
-function KdeChart({ table, mapping, params, width, height, compact, onTableChange }: ChartProps<KdeParams>) {
+function KdeChart({ table, mapping, params, width, height, compact, onTableChange, linked }: ChartProps<KdeParams>) {
   const valueCol = roleColumn(mapping, 'value')
   const groupCol = roleColumn(mapping, 'group')
   const groups = useMemo(() => groupedValues(table, valueCol, groupCol), [table, valueCol, groupCol])
@@ -106,9 +106,11 @@ function KdeChart({ table, mapping, params, width, height, compact, onTableChang
           const gx = x.invert(lp.x - m.left)
           if (gx < grid[0] || gx > grid[grid.length - 1]) { hide(); return }
           const i = Math.round(((gx - grid[0]) / (grid[grid.length - 1] - grid[0])) * (grid.length - 1))
+          // The observations that feed the density at this position: those within one bandwidth.
+          linked?.set(rowsNear(groups, gx, model.curves[0].h))
           show(lp.x, lp.y, <>{valueCol} = {fmt(grid[i])}<br />{model.curves.map((c) => <span key={c.key}>{groupCol ? `${c.key}: ` : 'f̂(x) = '}{fmt(c.ys[i], 4)}<br /></span>)}</>)
         }}
-        onPointerLeave={hide}>
+        onPointerLeave={() => { hide(); linked?.set(null) }}>
         <g transform={`translate(${m.left},${m.top})`}>
           <rect width={iw} height={ih} className="plot-bg" fill="transparent" />
           <AxisLeft scale={y} x={0} grid={iw} label="밀도" compact={compact} format={(v) => fmt(v, 3)} />
@@ -127,6 +129,11 @@ function KdeChart({ table, mapping, params, width, height, compact, onTableChang
           })}
           <AxisBottom scale={x} y={ih} label={valueCol} compact={compact} />
           {params.showRug && !compact && <Rug groups={groups} x={x} y={ih} color={color} editable={editable} table={table} onTableChange={onTableChange} />}
+          {markedValues(groups, linked?.rows ?? []).slice(0, 400).map((q) => {
+            const k = Math.max(0, model.curves.findIndex((c) => c.key === q.key))
+            const gi = Math.max(0, Math.min(grid.length - 1, Math.round(((q.v - grid[0]) / (grid[grid.length - 1] - grid[0])) * (grid.length - 1))))
+            return <circle key={q.row} cx={x(q.v)} cy={y(model.curves[k].ys[gi])} r={4} fill="#e07a3f" stroke="#fff" strokeWidth={1.5} pointerEvents="none" data-testid="linked-mark" />
+          })}
         </g>
       </svg>
       {!compact && (

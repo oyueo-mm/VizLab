@@ -1,8 +1,7 @@
 import * as d3 from 'd3'
 import { describe, expect, it } from 'vitest'
-import { generateDataset } from '../data/datasets'
 import { MOVE_MS, STAGE_MS } from './HeroDemo'
-import { buildFrame, heroData, heroSample, heroStages, HERO_N, type HeroStage, type Mark } from './heroFrames'
+import { buildFrame, heroData, heroFlows, heroSample, heroStages, heroTree, HERO_N, type HeroStage, type Mark } from './heroFrames'
 
 const W = 560
 const H = 380
@@ -21,11 +20,12 @@ describe('home animation frames', () => {
   const frame = (s: HeroStage, d = data) => buildFrame(s, d, W, H)
   const numbers = (m: Mark): number[] => Object.values(m).flatMap((v) => (typeof v === 'number' ? [v] : Array.isArray(v) && typeof v[0] !== 'string' ? (v as any[]).flat().filter((x) => typeof x === 'number') : []))
 
-  it('has 16 distinct stages, each drawn from real engines', () => {
-    expect(heroStages.length).toBe(16)
-    expect(new Set(heroStages.map((s) => s.key)).size).toBe(16)
-    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(16)
-    expect(heroStages.map((s) => s.group)).toEqual([...Array(6).fill('dist'), ...Array(4).fill('compare'), ...Array(3).fill('time'), ...Array(2).fill('hierarchy'), 'flow'])
+  it('has 20 distinct stages, each drawn from real engines', () => {
+    expect(heroStages.length).toBe(20)
+    expect(new Set(heroStages.map((s) => s.key)).size).toBe(20)
+    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(20)
+    expect(heroStages.map((s) => s.group)).toEqual([...Array(6).fill('dist'), 'path', ...Array(4).fill('compare'), 'pyramid', ...Array(4).fill('time'), ...Array(2).fill('hierarchy'), 'flow', 'network'])
+    expect(heroStages.map((s) => s.viz)).toEqual(expect.arrayContaining(['connected-scatter', 'pyramid', 'network', 'horizon']))
   })
 
   it('builds finite, uniquely keyed marks for every stage', () => {
@@ -120,7 +120,7 @@ describe('home animation frames', () => {
 
   it('treemap area and sunburst angle are both proportional to the budget values', () => {
     const tm = frame('treemap').filter((m) => m.t === 'rect') as Extract<Mark, { t: 'rect' }>[]
-    expect(tm.length).toBe(generateDataset('budget').rows.length)
+    expect(tm.length).toBe(d3.hierarchy(data.tree).leaves().length)
     const sb = frame('sunburst').filter((m) => m.t === 'arc') as Extract<Mark, { t: 'arc' }>[]
     expect(sb.length).toBeGreaterThan(tm.length)
     const top = sb.filter((a) => a.r0 === sb[0].r0)
@@ -142,7 +142,120 @@ describe('home animation frames', () => {
     expect(heroSample(1)).not.toEqual(heroSample(0))
     expect(heroData(1).compare.value('노트북', '1분기')).not.toBe(heroData(0).compare.value('노트북', '1분기'))
     expect(heroData(1).time.value('검색', 1)).not.toBe(heroData(0).time.value('검색', 1))
-    // fixed-structure groups stay valid
-    expect(heroData(1).flows.length).toBe(heroData(0).flows.length)
+    expect(heroData(1).pyramid.left).not.toEqual(heroData(0).pyramid.left)
+    expect(heroData(1).path.pts).not.toEqual(heroData(0).path.pts)
+  })
+
+  it('is reproducible: the same cycle always yields the same data', () => {
+    const a = heroData(3)
+    const b = heroData(3)
+    for (const k of ['dist', 'path', 'pyramid', 'net', 'tree', 'flows'] as const) expect(a[k], k).toEqual(b[k])
+    expect(a.compare.value('노트북', '1분기')).toBe(b.compare.value('노트북', '1분기'))
+  })
+})
+
+describe('home animation: new stages', () => {
+  const W2 = 560
+  const H2 = 380
+  const frame = (s: HeroStage, d = heroData(0)) => buildFrame(s, d, W2, H2)
+
+  it('connected scatter draws one point per time step plus a path through all of them in order', () => {
+    const data = heroData(0)
+    const marks = frame('connected', data)
+    const dots = marks.filter((m) => m.t === 'circle') as Extract<Mark, { t: 'circle' }>[]
+    const path = marks.find((m) => m.k === 'cs:path') as Extract<Mark, { t: 'poly' }>
+    expect(dots).toHaveLength(data.path.pts.length)
+    expect(path.pts).toHaveLength(data.path.pts.length)
+    path.pts.forEach((p, i) => { expect(p[0]).toBeCloseTo(dots[i].x, 6); expect(p[1]).toBeCloseTo(dots[i].y, 6) })
+    // the path grows out of the first point
+    expect((path.from as any).pts.every((p: number[]) => p[0] === path.pts[0][0] && p[1] === path.pts[0][1])).toBe(true)
+    // x grows with income, so the later steps are further right
+    expect(dots[dots.length - 1].x).toBeGreaterThan(dots[0].x)
+  })
+
+  it('population pyramid bars are proportional to the values and mirrored around the centre', () => {
+    const data = heroData(0)
+    const marks = frame('pyramid', data)
+    const left = marks.filter((m) => /^py:l\d+$/.test(m.k)) as Extract<Mark, { t: 'rect' }>[]
+    const right = marks.filter((m) => /^py:r\d+$/.test(m.k)) as Extract<Mark, { t: 'rect' }>[]
+    expect(left).toHaveLength(data.pyramid.ages.length)
+    const unit = right[0].w / data.pyramid.right[0]
+    left.forEach((l, i) => { expect(l.w / data.pyramid.left[i]).toBeCloseTo(unit, 6); expect(l.x + l.w).toBeCloseTo(W2 / 2, 6) })
+    right.forEach((r, i) => { expect(r.w / data.pyramid.right[i]).toBeCloseTo(unit, 6); expect(r.x).toBeCloseTo(W2 / 2, 6) })
+  })
+
+  it('horizon stage folds each series into bands whose sum rebuilds the deviation from the mean', () => {
+    const data = heroData(0)
+    const marks = frame('horizon', data)
+    const bands = marks.filter((m) => m.t === 'band') as Extract<Mark, { t: 'band' }>[]
+    expect(bands).toHaveLength(data.time.keys.length * 2 * 3)
+    expect(bands.every((b) => b.pts.length === data.time.months.length)).toBe(true)
+    const { keys, months, value } = data.time
+    const mean = d3.mean(months, (m) => value(keys[0], m))!
+    const bandsOf = bands.filter((b) => b.k.startsWith(`hz:${keys[0]}:`))
+    const fill = (b: (typeof bands)[number], i: number) => b.pts[i][1] - b.pts[i][2]
+    const biggest = Math.max(...keys.map((k) => d3.max(months, (m) => Math.abs(value(k, m) - d3.mean(months, (mm) => value(k, mm))!))!))
+    const w = biggest / 3
+    // every band is a fraction of the strip height, so (positive − negative) bands × band width gives back the deviation
+    const strip = (H2 - 34 - 18 - 8 * (keys.length - 1)) / keys.length
+    months.forEach((m, i) => {
+      const pos = d3.sum(bandsOf.filter((b) => b.k.includes(':p')), (b) => fill(b, i)) / strip
+      const neg = d3.sum(bandsOf.filter((b) => b.k.includes(':n')), (b) => fill(b, i)) / strip
+      expect((pos - neg) * w).toBeCloseTo(value(keys[0], m) - mean, 6)
+    })
+  })
+
+  it('network stage draws every node and edge at finite, in-bounds positions and starts from a different layout', () => {
+    const data = heroData(0)
+    const marks = frame('network', data)
+    const nodes = marks.filter((m) => m.t === 'circle') as Extract<Mark, { t: 'circle' }>[]
+    const links = marks.filter((m) => m.t === 'line') as Extract<Mark, { t: 'line' }>[]
+    expect(nodes).toHaveLength(new Set(data.net.edges.flatMap((e) => [e.source, e.target]).filter(Boolean)).size)
+    expect(links.length).toBeGreaterThan(nodes.length - 1)
+    for (const n of nodes) { expect(Number.isFinite(n.x) && Number.isFinite(n.y)).toBe(true); expect(n.x).toBeGreaterThan(-20); expect(n.x).toBeLessThan(W2 + 20) }
+    const moved = nodes.filter((n) => Math.hypot(((n.from as any).x ?? n.x) - n.x, ((n.from as any).y ?? n.y) - n.y) > 5)
+    expect(moved.length).toBeGreaterThan(nodes.length / 2)
+    // connected nodes end up closer than they started
+    const dist = (l: (typeof links)[number], from: boolean) => Math.hypot((from ? (l.from as any).x2 : l.x2) - (from ? (l.from as any).x1 : l.x1), (from ? (l.from as any).y2 : l.y2) - (from ? (l.from as any).y1 : l.y1))
+    expect(d3.mean(links, (l) => dist(l, false))!).toBeLessThan(d3.mean(links, (l) => dist(l, true))!)
+  })
+
+  it('the network changes size across loops', () => {
+    const counts = new Set([0, 1, 2, 3].map((c) => heroData(c).net.edges.length))
+    expect(counts.size).toBeGreaterThan(1)
+  })
+})
+
+describe('home animation: data that changes every loop', () => {
+  it('the budget tree keeps its three levels but changes its values and shape across loops', () => {
+    const shapes = new Set<string>()
+    const values = new Set<number>()
+    for (let c = 0; c < 8; c++) {
+      const root = d3.hierarchy(heroTree(c))
+      expect(root.height).toBe(3)
+      expect((heroTree(c).children ?? []).length).toBe(4)
+      shapes.add(root.leaves().map((l) => l.data.name + '/' + l.parent!.data.name).join())
+      values.add(root.sum((d) => d.value ?? 0).value!)
+    }
+    expect(shapes.size).toBeGreaterThan(1)
+    expect(values.size).toBeGreaterThan(4)
+    expect(heroTree(5)).toEqual(heroTree(5))
+  })
+
+  it('energy flows are re-drawn every loop yet always balance at every intermediate node', () => {
+    const totals = new Set<number>()
+    for (let c = 0; c < 10; c++) {
+      const edges = heroFlows(c)
+      const nodes = new Set(edges.flatMap((e) => [e.source, e.target]))
+      for (const n of ['전력', '직접 연소']) {
+        const inflow = d3.sum(edges.filter((e) => e.target === n), (e) => e.value)
+        const outflow = d3.sum(edges.filter((e) => e.source === n), (e) => e.value)
+        expect(outflow, `cycle ${c} ${n}`).toBe(inflow)
+        expect(nodes.has(n)).toBe(true)
+      }
+      expect(edges.every((e) => e.value > 0 && Number.isInteger(e.value))).toBe(true)
+      totals.add(d3.sum(edges.filter((e) => ['석탄', '천연가스', '원자력', '재생에너지', '석유'].includes(e.source)), (e) => e.value))
+    }
+    expect(totals.size).toBeGreaterThan(5)
   })
 })

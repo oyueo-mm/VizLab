@@ -1,6 +1,7 @@
 import type { ScaleBand, ScaleLinear } from 'd3'
 import { useState, type ReactNode } from 'react'
 import { tick as tickFormat } from '../../lib/format'
+import { dateTickFormat, dateTicks } from '../../stats/datetime'
 
 export interface Margin { top: number; right: number; bottom: number; left: number }
 
@@ -20,11 +21,16 @@ interface AxisProps {
   label?: string
   format?: (v: number) => string
   compact?: boolean
+  /** The domain is epoch milliseconds: ticks fall on calendar boundaries and labels are dates. */
+  date?: boolean
 }
 
-export function AxisBottom({ scale, grid = 0, ticks = 6, label, format = tickFormat, compact, y }: AxisProps & { y: number }) {
+export function AxisBottom({ scale, grid = 0, ticks = 6, label, format: customFormat, compact, y, date }: AxisProps & { y: number }) {
   const [r0, r1] = scale.range()
-  const values = scale.ticks(compact ? 3 : ticks)
+  const [d0, d1] = scale.domain()
+  const count = compact ? 3 : ticks
+  const values = date ? dateTicks(d0, d1, count) : scale.ticks(count)
+  const format = customFormat ?? (date ? dateTickFormat(d0, d1, count) : tickFormat)
   return (
     <g transform={`translate(0,${y})`} className="axis" aria-hidden="true">
       {grid > 0 && values.map((v) => <line key={`g${v}`} className="grid" x1={scale(v)} x2={scale(v)} y1={0} y2={-grid} />)}

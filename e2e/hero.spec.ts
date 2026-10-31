@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures'
 
-const STAGES = ['scatter', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'bar', 'grouped', 'stacked', 'stacked100', 'line', 'area', 'stream', 'treemap', 'sunburst', 'sankey']
+const STAGES = ['scatter', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'connected', 'bar', 'grouped', 'stacked', 'stacked100', 'pyramid', 'line', 'area', 'stream', 'horizon', 'treemap', 'sunburst', 'sankey', 'network']
 
 /** Records the time at which `data-stage` changes, in ms since the first call. */
 async function watchStages(page: import('@playwright/test').Page) {
@@ -27,15 +27,15 @@ test.describe('home animation', () => {
     expect(await marks.locator('*').count()).toBeGreaterThan(100)
   })
 
-  test('walks through all 16 charts and wraps around with new data', async ({ page }) => {
+  test('walks through all 20 charts and wraps around with new data', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('./')
     const demo = page.getByTestId('hero-demo')
     const marks = page.getByTestId('hero-marks')
     const sig: string[] = []
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 20; i++) {
       await expect(demo).toHaveAttribute('data-stage', STAGES[i])
-      await expect(page.getByTestId('hero-count')).toHaveText(`${i + 1} / 16`)
+      await expect(page.getByTestId('hero-count')).toHaveText(`${i + 1} / 20`)
       expect(await marks.locator('*').count(), STAGES[i]).toBeGreaterThan(8)
       sig.push(await marks.evaluate((g) => g.innerHTML.length.toString()))
       await page.getByTestId('hero-next').click()
@@ -44,22 +44,22 @@ test.describe('home animation', () => {
     await expect(demo).toHaveAttribute('data-stage', 'scatter')
     await expect(marks.locator('circle')).toHaveCount(140)
     await page.getByTestId('hero-prev').click()
-    await expect(demo).toHaveAttribute('data-stage', 'sankey')
-    expect(new Set(sig).size).toBeGreaterThan(8)
+    await expect(demo).toHaveAttribute('data-stage', 'network')
+    expect(new Set(sig).size).toBeGreaterThan(10)
   })
 
   test('each chart links to its own lab', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    const viz = ['scatter', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'bar', 'grouped-bar', 'stacked-bar', 'stacked-bar-100', 'line', 'area', 'streamgraph', 'treemap', 'sunburst', 'sankey']
+    const viz = ['scatter', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'connected-scatter', 'bar', 'grouped-bar', 'stacked-bar', 'stacked-bar-100', 'pyramid', 'line', 'area', 'streamgraph', 'horizon', 'treemap', 'sunburst', 'sankey', 'network']
     await page.goto('./')
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 20; i++) {
       await expect(page.getByTestId('hero-link')).toHaveAttribute('href', `#/viz/${viz[i]}`)
       await page.getByTestId('hero-next').click()
     }
     await page.getByTestId('hero-prev').click()
     await page.getByTestId('hero-link').click()
-    await expect(page).toHaveURL(/#\/viz\/sankey$/)
-    await expect(page.getByTestId('lab')).toHaveAttribute('data-viz', 'sankey')
+    await expect(page).toHaveURL(/#\/viz\/network$/)
+    await expect(page.getByTestId('lab')).toHaveAttribute('data-viz', 'network')
   })
 
   test('pauses while scrolled out of view and resumes when it is visible again', async ({ page }) => {
@@ -130,6 +130,66 @@ test.describe('home animation', () => {
     expect(stats.frames).toBeGreaterThan(200)
     expect(stats.p95).toBeLessThan(40)
     expect(stats.max).toBeLessThan(250)
+  })
+
+  test('looping through the charts repeatedly does not accumulate marks, nodes or listeners', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('./')
+    const marks = page.getByTestId('hero-marks')
+    const perStage: number[][] = Array.from({ length: 20 }, () => [])
+    for (let round = 0; round < 3; round++) {
+      for (let i = 0; i < 20; i++) {
+        await expect(page.getByTestId('hero-demo')).toHaveAttribute('data-stage', STAGES[i])
+        perStage[i].push(await marks.locator('*').count())
+        await page.getByTestId('hero-next').click()
+      }
+    }
+    // marks of a stage may vary a little with the new data of each loop, but they never pile up
+    for (let i = 0; i < 20; i++) expect(Math.max(...perStage[i]), STAGES[i]).toBeLessThan(Math.min(...perStage[i]) * 1.8 + 40)
+    const heap = await page.evaluate(() => document.querySelectorAll('[data-testid=hero-marks] *').length)
+    expect(heap).toBeLessThan(900)
+    // the demo is the only animated region: leaving the page removes every mark
+    await page.getByTestId('nav-compare').click()
+    await expect(page.getByTestId('hero-demo')).toHaveCount(0)
+  })
+
+  test('the new charts draw their own marks: connected path, pyramid bars, horizon bands and network nodes', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('./')
+    const marks = page.getByTestId('hero-marks')
+    const at = async (stage: string) => {
+      for (let i = 0; i < 20; i++) {
+        if ((await page.getByTestId('hero-demo').getAttribute('data-stage')) === stage) return
+        await page.getByTestId('hero-next').click()
+      }
+    }
+    await at('connected')
+    await expect(marks.locator('path')).toHaveCount(1)
+    await expect(marks.locator('circle')).toHaveCount(18)
+    await at('pyramid')
+    await expect(marks.locator('rect')).toHaveCount(36)
+    await at('horizon')
+    expect(await marks.locator('g').count()).toBe(18)
+    await at('network')
+    expect(await marks.locator('circle').count()).toBeGreaterThanOrEqual(14)
+    expect(await marks.locator('line').count()).toBeGreaterThan(14)
+    await expect(page.getByTestId('hero-link')).toHaveAttribute('href', '#/viz/network')
+  })
+
+  test('the hierarchy and flow data change from loop to loop', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('./')
+    const signature = async (stage: string) => {
+      for (let i = 0; i < 20; i++) {
+        if ((await page.getByTestId('hero-demo').getAttribute('data-stage')) === stage) break
+        await page.getByTestId('hero-next').click()
+      }
+      return page.getByTestId('hero-marks').evaluate((g) => Array.from(g.querySelectorAll('rect, path')).map((e) => e.getAttribute('width') ?? e.getAttribute('stroke-width') ?? '').join(','))
+    }
+    const first = await signature('sankey')
+    for (let i = 0; i < 20; i++) await page.getByTestId('hero-next').click()
+    await expect(page.getByTestId('hero-demo')).toHaveAttribute('data-stage', 'sankey')
+    expect(await signature('sankey')).not.toBe(first)
   })
 
   test('shows the controls without the old tab strip', async ({ page }) => {

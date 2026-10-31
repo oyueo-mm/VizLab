@@ -11,7 +11,7 @@ import { extent } from '../../stats/descriptive'
 import { roleColumn } from '../mapping'
 import type { ChartProps, ControlsProps, VizModule } from '../types'
 import { addValueAt, Rug } from './distShared'
-import { groupedValues } from './shared'
+import { groupedValues, markedValues } from './shared'
 
 export interface HistogramParams {
   rule: 'custom' | BinRule
@@ -36,7 +36,7 @@ export function histogramLayout(values: number[], params: Pick<HistogramParams, 
   return { k, width, edges }
 }
 
-function HistogramChart({ table, mapping, params, width, height, compact, onTableChange }: ChartProps<HistogramParams>) {
+function HistogramChart({ table, mapping, params, width, height, compact, onTableChange, linked }: ChartProps<HistogramParams>) {
   const valueCol = roleColumn(mapping, 'value')
   const groupCol = roleColumn(mapping, 'group')
   const groups = useMemo(() => groupedValues(table, valueCol, groupCol), [table, valueCol, groupCol])
@@ -49,6 +49,7 @@ function HistogramChart({ table, mapping, params, width, height, compact, onTabl
   const { tip, show, hide } = useTooltip()
 
   const layout = useMemo(() => histogramLayout(all, params), [all, params])
+  const marks = useMemo(() => markedValues(groups, linked?.rows ?? []), [groups, linked?.rows])
   const perGroup = useMemo(() => groups.map((g) => {
     const { bins } = binValues(g.values, layout.edges)
     // Normalise each group by its own n so densities stay comparable (each integrates to 1).
@@ -111,13 +112,18 @@ function HistogramChart({ table, mapping, params, width, height, compact, onTabl
               {g.bins.map((b, i) => {
                 const yTop = shown[gi]?.[i * 2] ?? geometry[gi][i * 2]
                 const yBottom = shown[gi]?.[i * 2 + 1] ?? geometry[gi][i * 2 + 1]
+                const last = i === g.bins.length - 1
+                const inBin = (v: number) => v >= b.x0 && (v < b.x1 || (last && v <= b.x1))
+                const marked = marks.some((q) => q.key === g.key && inBin(q.v))
                 return (
-                  <rect key={i} className="mark-bar" x={x(b.x0) + 0.5} width={Math.max(0, x(b.x1) - x(b.x0) - 1)} y={Math.min(yTop, yBottom)} height={Math.abs(yBottom - yTop)}
+                  <rect key={i} className="mark-bar" stroke={marked ? '#e07a3f' : undefined} strokeWidth={marked ? 2.5 : undefined} x={x(b.x0) + 0.5} width={Math.max(0, x(b.x1) - x(b.x0) - 1)} y={Math.min(yTop, yBottom)} height={Math.abs(yBottom - yTop)}
                     fill={color(g.key)} fillOpacity={opacity} data-count={b.count}
                     onPointerEnter={compact ? undefined : (e) => {
+                      const src = groups[gi]
+                      linked?.set(src.rows.filter((_, k) => inBin(src.values[k])))
                       const lp = localPoint(svgRef.current!, e)
                       show(lp.x, lp.y, <>{groupCol && <><b>{g.key}</b><br /></>}구간 [{fmt(b.x0)}, {fmt(b.x1)}{i === g.bins.length - 1 ? ']' : ')'}<br />개수 {b.count} · 상대도수 {pct(b.relative)}<br />밀도 {fmt(b.density, 4)}</>)
-                    }} onPointerLeave={hide} />
+                    }} onPointerLeave={() => { hide(); linked?.set(null) }} />
                 )
               })}
             </g>

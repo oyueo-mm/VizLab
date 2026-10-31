@@ -1,4 +1,4 @@
-import { House, LayoutGrid, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
+import { GitCompareArrows, House, LayoutGrid, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
 import { routeHref, type Route } from '../router'
 import { catalog, categories, inCategory } from '../viz/catalog'
 import { hasModule } from '../viz/charts'
@@ -58,6 +58,7 @@ export function Sidebar({ route, collapsed, onToggle, drawer, open, onClose }: P
         <nav id="sidebar-nav" className="sidebar-nav" aria-label="페이지">
           {item({ page: 'home' }, '홈', House, { testId: 'nav-home' })}
           {item({ page: 'catalog', category: 'all' }, '시각화 도감', LayoutGrid, { testId: 'nav-catalog' })}
+          {item({ page: 'compare' }, '시각화 비교', GitCompareArrows, { testId: 'nav-compare' })}
           <p className="nav-caption nav-label">카테고리</p>
           {categories.map((c) => {
             const count = catalog.filter((v) => inCategory(v, c.id) && hasModule(v.id)).length

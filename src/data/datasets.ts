@@ -1,4 +1,5 @@
 import { createRng, round, type Rng } from '../lib/random'
+import { datasetsV3 } from './datasetsV3'
 import type { Cell, Column, DataTable } from './table'
 
 export type DatasetId =
@@ -6,6 +7,8 @@ export type DatasetId =
   | 'pos-corr' | 'neg-corr' | 'dense' | 'timeseries' | 'categorical' | 'votes'
   | 'flowers' | 'cars' | 'players' | 'budget' | 'activity'
   | 'temps' | 'before-after' | 'cashflow' | 'streams' | 'league' | 'daily' | 'energy' | 'migration' | 'nutrition'
+  | 'visits-dated' | 'sensors' | 'ohlc' | 'forecast' | 'pca-students' | 'pyramid' | 'defects' | 'kpi' | 'stage-flow' | 'network' | 'folders'
+  | 'scores' | 'scores-imbalanced' | 'survey' | 'trajectory' | 'big-groups' | 'inventory'
 
 export interface DatasetSize { min: number; max: number; default: number; step: number; label: string }
 
@@ -20,6 +23,7 @@ export interface DatasetDef {
 
 const num = (name: string): Column => ({ name, type: 'number' })
 const cat = (name: string): Column => ({ name, type: 'category' })
+const date = (name: string): Column => ({ name, type: 'date' })
 const table = (columns: Column[], rows: Cell[][]): DataTable => ({ columns, rows })
 
 const sizes = (def: number, min = 10, max = 2000, step = 10, label = '표본 수'): DatasetSize => ({ default: def, min, max, step, label })
@@ -332,7 +336,7 @@ export const datasets: DatasetDef[] = [
         const weekend = dow === 0 ? -1800 : dow === 6 ? 1500 : 0
         rows.push([d.toISOString().slice(0, 10), Math.round(Math.max(300, 7600 + season + weekend + r.normal(0, 1900)))])
       }
-      return table([cat('날짜'), num('걸음 수')], rows)
+      return table([date('날짜'), num('걸음 수')], rows)
     },
   },
   {
@@ -368,6 +372,7 @@ export const datasets: DatasetDef[] = [
         ['복숭아', 39, 8.4, 1.5, 6.6, 190], ['파인애플', 50, 9.9, 1.4, 47.8, 109],
       ]),
   },
+  ...datasetsV3,
 ]
 
 export const datasetById = new Map(datasets.map((d) => [d.id, d]))

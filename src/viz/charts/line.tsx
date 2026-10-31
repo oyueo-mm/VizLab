@@ -9,8 +9,9 @@ import { useTween } from '../../hooks/motion'
 import { movingAverage } from '../../stats/descriptive'
 import { stackSeries } from '../../stats/stack'
 import { roleColumn } from '../mapping'
+import type { ColumnType } from '../../data/table'
 import type { ChartProps, ControlsProps, VizModule } from '../types'
-import { dragDigits, paddedDomain, pointRows, roundTo, uniqueGroups, type PointDatum } from './shared'
+import { dragDigits, isDateColumn, paddedDomain, pointRows, roundTo, uniqueGroups, xFormat, type PointDatum } from './shared'
 
 export type CurveName = 'linear' | 'monotone' | 'step' | 'natural' | 'basis'
 export const curves: Record<CurveName, d3.CurveFactory> = {
@@ -43,6 +44,8 @@ function LineChart({ table, mapping, params, setParams, width, height, compact, 
   const xCol = roleColumn(mapping, 'x')
   const yCol = roleColumn(mapping, 'y')
   const sCol = roleColumn(mapping, 'series')
+  const isDate = isDateColumn(table, xCol)
+  const fx = xFormat(isDate)
   const pts = useMemo(() => pointRows(table, xCol, yCol, sCol), [table, xCol, yCol, sCol])
   const all = useMemo(() => seriesOf(pts), [pts])
   const color = useMemo(() => categoryColor(all.map((s) => s.key)), [all])
@@ -91,7 +94,7 @@ function LineChart({ table, mapping, params, setParams, width, height, compact, 
     const i = d3.bisectCenter(xs, gx)
     const nx = xs[i]
     setHoverX(nx)
-    show(x(nx) + m.left, lp.y, <><b>{xCol} = {fmt(nx)}</b>{series.map((s) => {
+    show(x(nx) + m.left, lp.y, <><b>{xCol} = {fx(nx)}</b>{series.map((s) => {
       const p = s.pts.find((q) => q.x === nx)
       return p ? <span key={s.key}><br /><i className="tip-swatch" style={{ background: color(s.key) }} />{s.key || yCol}: {fmt(p.y)}</span> : null
     })}</>)
@@ -111,7 +114,7 @@ function LineChart({ table, mapping, params, setParams, width, height, compact, 
         <defs><clipPath id={clip}><rect x={-8} y={-8} width={iw + 16} height={ih + 16} /></clipPath></defs>
         <g transform={`translate(${m.left},${m.top})`}>
           <rect width={iw} height={ih} className="plot-bg" fill="transparent" />
-          <AxisBottom scale={x} y={ih} label={xCol} compact={compact} />
+          <AxisBottom scale={x} y={ih} label={xCol} compact={compact} date={isDate} />
           <AxisLeft scale={y} x={0} grid={iw} label={yCol} compact={compact} />
           {hoverX != null && <line className="crosshair" x1={x(hoverX)} x2={x(hoverX)} y1={0} y2={ih} />}
           <g clipPath={`url(#${clip})`}>
@@ -161,7 +164,7 @@ function LineControls({ params, setParams }: ControlsProps<LineParams>) {
 }
 
 const lineRoles = [
-  { key: 'x', label: 'X축 (시간·순서)', type: 'number' as const, required: true },
+  { key: 'x', label: 'X축 (날짜·시간·순서)', type: 'date' as const, accept: ['date', 'number'] as ColumnType[], required: true },
   { key: 'y', label: 'Y축 (값)', type: 'number' as const, required: true },
   { key: 'series', label: '계열', type: 'category' as const, auto: true },
 ]
@@ -170,7 +173,7 @@ const lineDefaults: LineParams = { curve: 'linear', points: true, ma: 1, zero: f
 
 export const lineModule: VizModule<LineParams> = {
   roles: lineRoles,
-  datasets: ['timeseries'],
+  datasets: ['timeseries', 'visits-dated', 'daily'],
   defaultParams: lineDefaults,
   Chart: LineChart,
   Controls: LineControls,
@@ -185,6 +188,8 @@ function AreaChart({ table, mapping, params, setParams, width, height, compact }
   const xCol = roleColumn(mapping, 'x')
   const yCol = roleColumn(mapping, 'y')
   const sCol = roleColumn(mapping, 'series')
+  const isDate = isDateColumn(table, xCol)
+  const fx = xFormat(isDate)
   const pts = useMemo(() => pointRows(table, xCol, yCol, sCol), [table, xCol, yCol, sCol])
   const all = useMemo(() => seriesOf(pts), [pts])
   const color = useMemo(() => categoryColor(all.map((s) => s.key)), [all])
@@ -227,14 +232,14 @@ function AreaChart({ table, mapping, params, setParams, width, height, compact }
           if (xv == null) return
           setHoverX(xv)
           const totals = d3.sum(series, (s) => s.pts.find((p) => p.x === xv)?.y ?? 0)
-          show(x(xv) + m.left, lp.y, <><b>{xCol} = {fmt(xv)}</b>{[...series].reverse().map((s) => {
+          show(x(xv) + m.left, lp.y, <><b>{xCol} = {fx(xv)}</b>{[...series].reverse().map((s) => {
             const v = s.pts.find((p) => p.x === xv)?.y ?? 0
             return <span key={s.key}><br /><i className="tip-swatch" style={{ background: color(s.key) }} />{s.key || yCol}: {fmt(v)}{series.length > 1 ? ` (${pct(totals ? v / totals : 0)})` : ''}</span>
           })}{series.length > 1 && <><br />합계: {fmt(totals)}</>}</>)
         }}
         onPointerLeave={() => { hide(); setHoverX(null) }}>
         <g transform={`translate(${m.left},${m.top})`}>
-          <AxisBottom scale={x} y={ih} label={xCol} compact={compact} />
+          <AxisBottom scale={x} y={ih} label={xCol} compact={compact} date={isDate} />
           {params.mode !== 'stream'
             ? <AxisLeft scale={y} x={0} grid={iw} label={params.mode === 'normalize' ? '비율' : yCol} compact={compact} format={params.mode === 'normalize' ? (v) => pct(v, 0) : undefined} />
             : <AxisLeft scale={y} x={0} grid={0} label={`${yCol} (기준선 이동)`} compact={compact} format={() => ''} />}
@@ -287,7 +292,7 @@ function AreaControls({ params, setParams }: ControlsProps<LineParams>) {
 
 export const areaModule: VizModule<LineParams> = {
   roles: lineRoles,
-  datasets: ['timeseries'],
+  datasets: ['timeseries', 'visits-dated'],
   defaultParams: { ...lineDefaults, curve: 'monotone' },
   Chart: AreaChart,
   Controls: AreaControls,

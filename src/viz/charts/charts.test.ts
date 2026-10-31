@@ -114,4 +114,22 @@ describe('router', () => {
     expect(routeHref({ page: 'viz', id: 'grouped-bar' })).toBe('#/viz/grouped-bar')
     expect(parseHash(routeHref({ page: 'catalog', category: 'timeseries' }))).toEqual({ page: 'catalog', category: 'timeseries' })
   })
+
+  it('keeps search text and data-type filters in the URL and restores them', () => {
+    const route = { page: 'catalog' as const, category: 'comparison' as const, q: '막대 chart', kinds: ['categorical' as const, 'timeseries' as const] }
+    const href = routeHref(route)
+    expect(href).toBe('#/catalog/comparison?q=%EB%A7%89%EB%8C%80+chart&t=categorical%2Ctimeseries')
+    expect(parseHash(href)).toEqual(route)
+    expect(parseHash('#/catalog?t=network')).toEqual({ page: 'catalog', category: 'all', kinds: ['network'] })
+    expect(parseHash('#/catalog?t=bogus,numeric')).toEqual({ page: 'catalog', category: 'all', kinds: ['numeric'] })
+    expect(parseHash('#/catalog?q=')).toEqual({ page: 'catalog', category: 'all' })
+    expect(routeHref({ page: 'catalog', category: 'all', q: '  ', kinds: [] })).toBe('#/catalog')
+  })
+
+  it('routes the comparison lab and its presets', () => {
+    expect(parseHash('#/compare')).toEqual({ page: 'compare' })
+    expect(parseHash('#/compare/xy')).toEqual({ page: 'compare', preset: 'xy' })
+    expect(routeHref({ page: 'compare', preset: 'time' })).toBe('#/compare/time')
+    expect(routeHref({ page: 'compare' })).toBe('#/compare')
+  })
 })

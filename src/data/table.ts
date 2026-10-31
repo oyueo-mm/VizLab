@@ -1,4 +1,6 @@
-export type ColumnType = 'number' | 'category'
+import { addMonths, formatISO, toTime } from '../stats/datetime'
+
+export type ColumnType = 'number' | 'category' | 'date'
 export type Cell = number | string | null
 
 export interface Column {
@@ -28,6 +30,8 @@ export function toNumber(cell: Cell): number | null {
 }
 
 export const toLabel = (cell: Cell) => (cell == null ? '' : String(cell))
+
+export { toTime }
 
 export function numbers(table: DataTable, name: string | null | undefined): (number | null)[] {
   const i = columnIndex(table, name)
@@ -88,12 +92,35 @@ export function templateRow(table: DataTable): Record<string, Cell> {
   const last = table.rows[table.rows.length - 1]
   table.columns.forEach((c, i) => {
     if (c.type === 'category') out[c.name] = last ? last[i] : ''
-    else {
+    else if (c.type === 'date') {
+      // Continue the date column with the spacing of its last two dates (month-aware for monthly data).
+      const times = table.rows.map((r) => toTime(r[i])).filter((v): v is number => v != null)
+      const [a, b] = [times[times.length - 2], times[times.length - 1]]
+      if (b == null) out[c.name] = '2024-01-01'
+      else if (a == null) out[c.name] = formatISO(b + 86400000)
+      else {
+        const monthly = new Date(a).getUTCDate() === new Date(b).getUTCDate() && b - a >= 27 * 86400000
+        out[c.name] = formatISO(monthly ? addMonths(b, Math.max(1, Math.round((b - a) / (30.44 * 86400000)))) : b + (b - a || 86400000))
+      }
+    } else {
       const vals = table.rows.map((r) => toNumber(r[i])).filter((v): v is number => v != null)
       out[c.name] = vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 100) / 100 : 0
     }
   })
   return out
+}
+
+/** Count of cells in date columns that are not real calendar dates. */
+export function invalidDateCells(table: DataTable) {
+  let count = 0
+  table.columns.forEach((c, i) => {
+    if (c.type !== 'date') return
+    for (const r of table.rows) {
+      const cell = r[i]
+      if (cell !== null && cell !== '' && toTime(cell) === null) count++
+    }
+  })
+  return count
 }
 
 /** Count of cells in numeric columns that are not valid numbers. */

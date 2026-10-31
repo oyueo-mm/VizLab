@@ -9,7 +9,7 @@ import { ecdf, ecdfAt, normalCdf } from '../../stats/ecdf'
 import { roleColumn } from '../mapping'
 import type { ChartProps, ControlsProps, VizModule } from '../types'
 import { addValueAt, Rug } from './distShared'
-import { groupedValues, paddedDomain } from './shared'
+import { groupedValues, paddedDomain, markedValues, rowsNear } from './shared'
 
 export interface EcdfParams {
   complementary: boolean
@@ -26,7 +26,7 @@ export function stepPath(steps: { x: number; p: number }[], x: (v: number) => nu
   return `${d}H${x(x1)}`
 }
 
-function EcdfChart({ table, mapping, params, width, height, compact, onTableChange }: ChartProps<EcdfParams>) {
+function EcdfChart({ table, mapping, params, width, height, compact, onTableChange, linked }: ChartProps<EcdfParams>) {
   const valueCol = roleColumn(mapping, 'value')
   const groupCol = roleColumn(mapping, 'group')
   const groups = useMemo(() => groupedValues(table, valueCol, groupCol), [table, valueCol, groupCol])
@@ -57,8 +57,9 @@ function EcdfChart({ table, mapping, params, width, height, compact, onTableChan
           const lp = localPoint(svgRef.current!, e)
           const v = x.invert(lp.x - m.left)
           setProbe(v >= x0 && v <= x1 ? v : null)
+          linked?.set(v >= x0 && v <= x1 ? rowsNear(groups, v, (x1 - x0) * 0.012) : null)
         }}
-        onPointerLeave={() => setProbe(null)}
+        onPointerLeave={() => { setProbe(null); linked?.set(null) }}
         onPointerUp={(e) => { if (editable) { const t = addValueAt(e, svgRef.current!, m, iw, ih, x, table, valueCol, groupCol, groups[0]?.key); if (t) onTableChange!(t) } }}>
         <g transform={`translate(${m.left},${m.top})`}>
           <rect width={iw} height={ih} className="plot-bg" fill="transparent" />
@@ -94,6 +95,11 @@ function EcdfChart({ table, mapping, params, width, height, compact, onTableChan
           )}
           <AxisBottom scale={x} y={ih} label={valueCol} compact={compact} />
           {params.showRug && !compact && <Rug groups={groups} x={x} y={ih} color={color} editable={editable} table={table} onTableChange={onTableChange} />}
+          {markedValues(groups, linked?.rows ?? []).slice(0, 400).map((q) => {
+            const s = series.find((t) => t.key === q.key) ?? series[0]
+            const p = ecdfAt(s.steps, q.v)
+            return <circle key={q.row} cx={x(q.v)} cy={y(flip ? 1 - p : p)} r={4.5} fill="#e07a3f" stroke="#fff" strokeWidth={1.5} pointerEvents="none" data-testid="linked-mark" />
+          })}
         </g>
       </svg>
       {!compact && (

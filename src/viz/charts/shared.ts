@@ -1,7 +1,18 @@
 import * as d3 from 'd3'
-import { columnIndex, toLabel, toNumber, uniqueLabels, type DataTable } from '../../data/table'
+import { columnIndex, toLabel, toNumber, toTime, uniqueLabels, type DataTable } from '../../data/table'
+import { fmt } from '../../lib/format'
+import { formatTime } from '../../stats/datetime'
 
 export interface PointDatum { i: number; x: number; y: number; group: string; size: number | null }
+
+/** True when the column holds dates (its values are read as epoch milliseconds). */
+export const isDateColumn = (table: DataTable, col: string | null | undefined) => table.columns.find((c) => c.name === col)?.type === 'date'
+
+/** X value of a cell: epoch milliseconds for date columns, the plain number otherwise. */
+export const xOfCell = (cell: unknown, date: boolean) => (date ? toTime(cell) : toNumber(cell as number | string | null))
+
+/** Formats an x value for tooltips and readouts (date text for date columns). */
+export const xFormat = (date: boolean) => (v: number) => (date ? formatTime(v) : fmt(v))
 
 /** Rows with finite x and y, keeping their original row index for editing. */
 export function pointRows(table: DataTable, xCol: string | null, yCol: string | null, groupCol?: string | null, sizeCol?: string | null): PointDatum[] {
@@ -10,9 +21,10 @@ export function pointRows(table: DataTable, xCol: string | null, yCol: string | 
   const gi = columnIndex(table, groupCol)
   const si = columnIndex(table, sizeCol)
   if (xi < 0 || yi < 0) return []
+  const date = table.columns[xi].type === 'date'
   const out: PointDatum[] = []
   table.rows.forEach((r, i) => {
-    const x = toNumber(r[xi])
+    const x = xOfCell(r[xi], date)
     const y = toNumber(r[yi])
     if (x == null || y == null) return
     out.push({ i, x, y, group: gi >= 0 ? toLabel(r[gi]) : '', size: si >= 0 ? toNumber(r[si]) : null })
@@ -86,6 +98,22 @@ export function crossTab(table: DataTable, catCol: string | null, groupCol: stri
   }
   const rows = (c: string, g: string) => rowsOf.get(`${c}\u0000${g}`) ?? []
   return { cats, groups, value, rows }
+}
+
+/** Table rows whose value lies within `radius` of v, across all groups (the observations a hover position stands for). */
+export function rowsNear(groups: readonly ValueGroup[], v: number, radius: number): number[] {
+  const out: number[] = []
+  for (const g of groups) g.values.forEach((x, k) => { if (Math.abs(x - v) <= radius) out.push(g.rows[k]) })
+  return out
+}
+
+/** Values (and their group) of the observations that another chart is highlighting. */
+export function markedValues(groups: readonly ValueGroup[], rows: readonly number[]): { v: number; key: string; row: number }[] {
+  if (!rows.length) return []
+  const want = new Set(rows)
+  const out: { v: number; key: string; row: number }[] = []
+  for (const g of groups) g.values.forEach((v, k) => { if (want.has(g.rows[k])) out.push({ v, key: g.key, row: g.rows[k] }) })
+  return out
 }
 
 export const uniqueGroups = (pts: readonly { group: string }[]) => uniqueLabels(pts.map((p) => p.group))

@@ -19,7 +19,7 @@ export interface HexbinParams {
   spray: number
 }
 
-function HexbinChart({ table, mapping, params, width, height, compact, onTableChange }: ChartProps<HexbinParams>) {
+function HexbinChart({ table, mapping, params, width, height, compact, onTableChange, linked }: ChartProps<HexbinParams>) {
   const xCol = roleColumn(mapping, 'x')
   const yCol = roleColumn(mapping, 'y')
   const pts = useMemo(() => pointRows(table, xCol, yCol), [table, xCol, yCol])
@@ -28,6 +28,7 @@ function HexbinChart({ table, mapping, params, width, height, compact, onTableCh
   const ih = Math.max(10, height - m.top - m.bottom)
   const svgRef = useRef<SVGSVGElement>(null)
   const [hover, setHover] = useState<string | null>(null)
+  const linkedSet = useMemo(() => new Set(linked?.rows ?? []), [linked?.rows])
   const { tip, show, hide } = useTooltip()
   const clipId = useSvgId('hex-clip')
   const x = useMemo(() => d3.scaleLinear().domain(paddedDomain(pts.map((p) => p.x), 0.03)).range([0, iw]), [pts, iw])
@@ -81,12 +82,13 @@ function HexbinChart({ table, mapping, params, width, height, compact, onTableCh
               const key = `${b.x.toFixed(1)},${b.y.toFixed(1)}`
               return (
                 <path key={key} className="mark-hex" d={hex} transform={`translate(${b.x},${b.y})`} fill={fill(b.points.length)}
-                  stroke={hover === key ? '#111827' : '#ffffff'} strokeWidth={hover === key ? 1.5 : 0.5} data-count={b.points.length}
+                  stroke={hover === key || b.points.some((q) => linkedSet.has(q.i)) ? (hover === key ? '#111827' : '#e07a3f') : '#ffffff'} strokeWidth={hover === key || b.points.some((q) => linkedSet.has(q.i)) ? 1.8 : 0.5} data-count={b.points.length}
                   onPointerEnter={compact ? undefined : (e) => {
                     setHover(key)
+                    linked?.set(b.points.map((q) => q.i))
                     const lp = localPoint(svgRef.current!, e)
                     show(lp.x, lp.y, <><b>{b.points.length}개</b><br />중심 {xCol} ≈ {fmt(x.invert(b.x))}<br />중심 {yCol} ≈ {fmt(y.invert(b.y))}</>)
-                  }} />
+                  }} onPointerLeave={() => linked?.set(null)} />
               )
             })}
             {params.showPoints && !compact && pts.slice(0, 5000).map((p) => <circle key={p.i} cx={x(p.x)} cy={y(p.y)} r={1.2} className="hex-point" />)}

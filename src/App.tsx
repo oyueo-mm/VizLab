@@ -11,6 +11,8 @@ import { hasModule } from './viz/charts'
 
 // The lab (panels, data editor, chart modules) loads on first visit to a chart.
 const LabPage = lazy(() => import('./lab/LabPage'))
+// The comparison lab is a separate chunk, loaded the first time it is opened.
+const ComparePage = lazy(() => import('./compare/ComparePage'))
 
 export default function App() {
   const [route, navigate] = useRoute()
@@ -46,7 +48,8 @@ export default function App() {
         )}
         <main id="main" ref={main} tabIndex={-1} className="page" inert={drawer && drawerOpen}>
           {route.page === 'home' && <Home />}
-          {route.page === 'catalog' && <Catalog category={route.category} navigate={navigate} />}
+          {route.page === 'catalog' && <Catalog category={route.category} query={route.q ?? ''} kinds={route.kinds ?? []} navigate={navigate} />}
+          {route.page === 'compare' && <Suspense fallback={<div className="lab-loading" aria-busy="true" />}><ComparePage preset={route.preset} navigate={navigate} /></Suspense>}
           {route.page === 'viz' && (known
             ? <Suspense fallback={<div className="lab-loading" aria-busy="true" />}><LabPage key={route.id} id={route.id} /></Suspense>
             : (

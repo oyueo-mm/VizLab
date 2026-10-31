@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { mean, standardDeviation } from '../stats/descriptive'
 import { formatCsv, parseCsv } from './csv'
 import { datasets, generateDataset } from './datasets'
-import { appendRow, invalidNumericCells, numbers, removeRows, setCell, templateRow, toNumber, type DataTable } from './table'
+import { appendRow, invalidNumericCells, numbers, removeRows, setCell, templateRow, toNumber, toTime, type DataTable } from './table'
 import { createRng } from '../lib/random'
 
 describe('seeded random generator', () => {
@@ -32,7 +32,10 @@ describe('dataset library', () => {
       for (const row of t.rows) {
         expect(row.length).toBe(t.columns.length)
         row.forEach((cell, i) => {
+          // Sparse on purpose: history rows have no forecast; a network row without a target only declares a node.
+          if ((d.id === 'forecast' || d.id === 'network') && cell === null) return
           if (t.columns[i].type === 'number') expect(typeof cell === 'number' && Number.isFinite(cell), `${d.id}.${t.columns[i].name}`).toBe(true)
+          else if (t.columns[i].type === 'date') expect(toTime(cell), `${d.id}.${t.columns[i].name}`).not.toBeNull()
           else expect(typeof cell).toBe('string')
         })
       }

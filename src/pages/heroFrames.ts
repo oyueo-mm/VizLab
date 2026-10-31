@@ -1,4 +1,5 @@
 import * as d3 from 'd3'
+import { allocate } from '../data/datasetsV3'
 import { generateDataset } from '../data/datasets'
 import { columnIndex, toLabel, toNumber } from '../data/table'
 import { colorAt } from '../lib/colors'
@@ -7,13 +8,15 @@ import { boxStats } from '../stats/boxplot'
 import { ecdf, ecdfAt } from '../stats/ecdf'
 import { buildTree, type TreeNode } from '../stats/hierarchy'
 import { binValues, equalEdges } from '../stats/histogram'
+import { horizonLayers } from '../stats/horizon'
 import { kde, kdeGrid, silvermanBandwidth } from '../stats/kde'
+import { buildNetwork, layoutNetwork, type ForceOptions } from '../stats/network'
 import { collectFlows, sankeyLayout } from '../stats/sankey'
 import { stackRows } from '../stats/stack'
 
 // ─── stages ──────────────────────────────────────────────────────────────────
 
-export type HeroGroup = 'dist' | 'compare' | 'time' | 'hierarchy' | 'flow'
+export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network'
 
 export const heroStages = [
   { key: 'scatter', label: '산점도', viz: 'scatter', group: 'dist' },
@@ -22,16 +25,20 @@ export const heroStages = [
   { key: 'ecdf', label: 'ECDF 플롯', viz: 'ecdf', group: 'dist' },
   { key: 'box', label: '박스 플롯', viz: 'box', group: 'dist' },
   { key: 'violin', label: '바이올린 플롯', viz: 'violin', group: 'dist' },
+  { key: 'connected', label: '연결 산점도', viz: 'connected-scatter', group: 'path' },
   { key: 'bar', label: '막대그래프', viz: 'bar', group: 'compare' },
   { key: 'grouped', label: '그룹 막대그래프', viz: 'grouped-bar', group: 'compare' },
   { key: 'stacked', label: '누적 막대그래프', viz: 'stacked-bar', group: 'compare' },
   { key: 'stacked100', label: '100% 누적 막대그래프', viz: 'stacked-bar-100', group: 'compare' },
+  { key: 'pyramid', label: '인구 피라미드', viz: 'pyramid', group: 'pyramid' },
   { key: 'line', label: '선그래프', viz: 'line', group: 'time' },
   { key: 'area', label: '영역 그래프', viz: 'area', group: 'time' },
   { key: 'stream', label: '스트림그래프', viz: 'streamgraph', group: 'time' },
+  { key: 'horizon', label: '호라이즌 차트', viz: 'horizon', group: 'time' },
   { key: 'treemap', label: '트리맵', viz: 'treemap', group: 'hierarchy' },
   { key: 'sunburst', label: '선버스트 차트', viz: 'sunburst', group: 'hierarchy' },
   { key: 'sankey', label: '생키 다이어그램', viz: 'sankey', group: 'flow' },
+  { key: 'network', label: '네트워크 그래프', viz: 'network', group: 'network' },
 ] as const
 export type HeroStage = (typeof heroStages)[number]['key']
 
@@ -82,10 +89,55 @@ export function heroSample(cycle: number) {
 
 export interface HeroData {
   dist: { xs: number[]; ys: number[] }
+  path: { pts: [number, number][] }
+  pyramid: { ages: string[]; left: number[]; right: number[] }
+  net: { edges: { source: string; target: string; weight: number | null; group: string; row: number }[] }
   compare: { cats: string[]; series: string[]; value: (c: string, s: string) => number }
   time: { months: number[]; keys: string[]; value: (k: string, m: number) => number }
   tree: TreeNode
   flows: ReturnType<typeof collectFlows>['edges']
+}
+
+/**
+ * Budget tree whose leaf values (and which leaves exist) change with every loop. Each department keeps at least two items,
+ * so it is always a real three-level hierarchy; the values go through the same buildTree the lab uses.
+ */
+export function heroTree(cycle: number): TreeNode {
+  const rng = createRng(4000 + cycle * 104729)
+  const budget = generateDataset('budget')
+  const kept = budget.rows.filter((r, i) => {
+    const sameDept = budget.rows.filter((q) => q[1] === r[1]).length
+    return sameDept <= 2 || cycle === 0 || rng() > 0.18 || i % 7 === 0
+  })
+  const rows = kept.map((r) => [r[0], r[1], r[2], Math.max(2, Math.round((r[3] as number) * (0.55 + 1.1 * rng())))])
+  return buildTree({ columns: budget.columns, rows }, ['부문', '부서', '항목'], '예산').tree
+}
+
+/**
+ * Energy flows with new proportions each loop. Every source is split among its routes and every intermediate node passes on exactly
+ * what it received (integer parts that add up, via largest-remainder), so the Sankey stays balanced.
+ */
+export function heroFlows(cycle: number): HeroData['flows'] {
+  const rng = createRng(9000 + cycle * 7727)
+  const amount = (lo: number, hi: number) => Math.round(lo + (hi - lo) * rng())
+  const coal = amount(20, 60)
+  const gas = amount(25, 55)
+  const nuclear = amount(15, 45)
+  const renew = amount(8, 40)
+  const oil = amount(30, 65)
+  const [gasPower, gasHeat] = allocate(gas, [0.25 + 0.5 * rng(), 0.25 + 0.5 * rng()])
+  const [oilPower, oilHeat] = allocate(oil, [0.05 + 0.1 * rng(), 0.9])
+  const power = coal + gasPower + nuclear + renew + oilPower
+  const heat = gasHeat + oilHeat
+  const [home, shop, industry, loss] = allocate(power, [0.2 + 0.1 * rng(), 0.2 + 0.1 * rng(), 0.3 + 0.2 * rng(), 0.08 + 0.1 * rng()])
+  const [hIndustry, hTransport, hHome] = allocate(heat, [0.2 + 0.2 * rng(), 0.35 + 0.25 * rng(), 0.1 + 0.1 * rng()])
+  const triples: [string, string, number][] = [
+    ['석탄', '전력', coal], ['천연가스', '전력', gasPower], ['천연가스', '직접 연소', gasHeat], ['원자력', '전력', nuclear], ['재생에너지', '전력', renew],
+    ['석유', '전력', oilPower], ['석유', '직접 연소', oilHeat],
+    ['전력', '가정', home], ['전력', '상업', shop], ['전력', '산업', industry], ['전력', '손실', loss],
+    ['직접 연소', '산업', hIndustry], ['직접 연소', '수송', hTransport], ['직접 연소', '가정', hHome],
+  ]
+  return collectFlows(triples.filter((t) => t[2] > 0).map(([source, target, value], row) => ({ source, target, value, row }))).edges
 }
 
 /** Every group draws from the app's own dataset generators; the cycle changes the seeded ones. */
@@ -115,16 +167,21 @@ export function heroData(cycle: number): HeroData {
     if (!months.includes(m)) months.push(m)
     tv.set(`${k}|${m}`, toNumber(r[ti[2]]) ?? 0)
   }
-  const budget = generateDataset('budget')
-  const energy = generateDataset('energy')
-  const [si, di, vi] = [0, 1, 2].map((c) => columnIndex(energy, ['출발', '도착', '양'][c]))
-  const flows = collectFlows(energy.rows.map((r, row) => ({ source: toLabel(r[si]), target: toLabel(r[di]), value: toNumber(r[vi]), row }))).edges
+  const traj = generateDataset('trajectory', seed, 18)
+  const pyr = generateDataset('pyramid', seed)
+  const age = pyr.rows.map((r) => toLabel(r[0]))
+  // The age structure drifts from loop to loop (young-heavy to ageing) so the pyramid is not the same shape twice.
+  const drift = (i: number) => 1 + 0.35 * Math.sin(cycle * 1.7) * ((i - 8.5) / 8.5)
+  const net = generateDataset('network', seed, 14 + (cycle % 4) * 2)
   return {
     dist: heroSample(cycle),
+    path: { pts: traj.rows.map((r) => [toNumber(r[0])!, toNumber(r[1])!] as [number, number]) },
+    pyramid: { ages: age, left: pyr.rows.map((r, i) => (toNumber(r[1]) ?? 0) * drift(i)), right: pyr.rows.map((r, i) => (toNumber(r[2]) ?? 0) * drift(i)) },
+    net: { edges: net.rows.map((r, row) => ({ source: toLabel(r[0]), target: toLabel(r[1]), weight: toNumber(r[2]), group: toLabel(r[3]), row })) },
     compare: { cats, series, value: (c, s) => cmp.get(`${c}|${s}`) ?? 0 },
     time: { months, keys, value: (k, m) => tv.get(`${k}|${m}`) ?? 0 },
-    tree: buildTree(budget, ['부문', '부서', '항목'], '예산').tree,
-    flows,
+    tree: heroTree(cycle),
+    flows: heroFlows(cycle),
   }
 }
 
@@ -281,6 +338,7 @@ export function timeFrame(stage: HeroStage, data: HeroData['time'], w: number, h
   const max = d3.max(keys, (k) => d3.max(months, (m) => value(k, m))) ?? 1
   const yv = d3.scaleLinear().domain([0, max * 1.08]).range([base, top])
   const marks: Mark[] = []
+  if (stage === 'horizon') return horizonFrame(data, w, h, x, yv)
   if (stage === 'stream') {
     const rows = months.map((m) => Object.fromEntries(keys.map((k) => [k, value(k, m)])))
     const layers = stackRows(keys, rows, 'wiggle', 'insideOut')
@@ -352,11 +410,120 @@ export function flowFrame(edges: HeroData['flows'], w: number, h: number): Mark[
   return marks
 }
 
+
+// ─── time-series horizon: the same three series folded into coloured bands ───
+
+const HORIZON_BANDS = 3
+
+function shade(base: string, k: number) {
+  return d3.interpolateRgb('#ffffff', base)(0.3 + (0.7 * k) / (HORIZON_BANDS - 1))
+}
+
+function horizonFrame(data: HeroData['time'], w: number, h: number, x: d3.ScaleLinear<number, number>, yv: d3.ScaleLinear<number, number>): Mark[] {
+  const { months, keys, value } = data
+  const base = h - PAD.b
+  const top = PAD.t
+  const gap = 8
+  const stripH = (base - top - gap * (keys.length - 1)) / keys.length
+  const marks: Mark[] = []
+  const biggest = Math.max(1e-9, ...keys.map((k) => d3.max(months, (m) => Math.abs(value(k, m) - d3.mean(months, (mm) => value(k, mm))!)) ?? 0))
+  keys.forEach((k, ki) => {
+    const mean = d3.mean(months, (m) => value(k, m))!
+    const layers = horizonLayers(months.map((m) => value(k, m)), mean, HORIZON_BANDS, biggest)
+    const bottom = top + (ki + 1) * stripH + ki * gap
+    // Each band starts as the original area of its series, then settles into its slice of the strip.
+    const origin = months.map((m) => [x(m), base, yv(value(k, m))] as [number, number, number])
+    const sides: [string, number[][], string][] = [['p', layers.pos, colorAt(2)], ['n', layers.neg, colorAt(6)]]
+    for (const [tag, bandsOf, hue] of sides) {
+      bandsOf.forEach((vals, b) => {
+        marks.push({ t: 'band', k: `hz:${k}:${tag}${b}`, pts: months.map((m, i) => [x(m), bottom, bottom - vals[i] * stripH] as [number, number, number]), fill: shade(hue, b), stroke: shade(hue, b), fo: 1, so: 0, sw: 0, o: 1, from: { pts: origin, fo: 0.3, o: 0.6 } })
+      })
+    }
+    marks.push(seg(`hz:base:${k}`, PAD.l + 4, bottom + 0.5, w - PAD.r - 4, bottom + 0.5, GRID, 1))
+  })
+  return [...marks, ...axisX('t', x, base, [months[0], months[Math.floor(months.length / 3)], months[Math.floor((months.length * 2) / 3)], months[months.length - 1]].map((m) => [m, `${m}월`] as [number, string]), w)]
+}
+
+// ─── connected scatter: points appear in order and the path is drawn through them ───
+
+export function pathFrame(data: HeroData['path'], w: number, h: number): Mark[] {
+  const { pts } = data
+  const base = h - PAD.b
+  const x = d3.scaleLinear().domain(d3.extent(pts, (p) => p[0]) as [number, number]).nice().range([PAD.l + 8, w - PAD.r - 8])
+  const y = d3.scaleLinear().domain(d3.extent(pts, (p) => p[1]) as [number, number]).nice().range([base - 8, PAD.t + 8])
+  const xy = pts.map((p) => [x(p[0]), y(p[1])] as [number, number])
+  const marks: Mark[] = [{ t: 'poly', k: 'cs:path', pts: xy, closed: false, fill: CLEAR, stroke: TEAL, fo: 0, so: 0.7, sw: 2.2, o: 1, from: { pts: xy.map(() => xy[0]), so: 0, o: 0 } }]
+  xy.forEach(([px, py], i) => {
+    const t = i / Math.max(1, xy.length - 1)
+    marks.push(circle(`cs:p${i}`, px, py, i === xy.length - 1 ? 6 : 4.4, d3.interpolateYlGnBu(0.3 + 0.65 * t), 1))
+  })
+  return [...marks, ...axisX('cs', (v) => x(v), base, x.ticks(4).map((v) => [v, String(v)] as [number, string]), w)]
+}
+
+// ─── population pyramid: two groups grow out from the centre line ───
+
+export function pyramidFrame(data: HeroData['pyramid'], w: number, h: number): Mark[] {
+  const { ages, left, right } = data
+  const base = h - PAD.b
+  const top = PAD.t
+  const cx = w / 2
+  const half = Math.max(1e-9, d3.max([...left, ...right]) ?? 1)
+  const x = d3.scaleLinear().domain([0, half]).range([0, (w - PAD.l - PAD.r) / 2 - 4])
+  const band = d3.scaleBand().domain(ages.map((_, i) => String(i))).range([base, top]).padding(0.14)
+  const marks: Mark[] = []
+  ages.forEach((_, i) => {
+    const y0 = band(String(i)) ?? 0
+    marks.push(rect(`py:l${i}`, cx - x(left[i]), y0, x(left[i]), band.bandwidth(), colorAt(2), 1, { r: 1.5, from: { x: cx, w: 0, o: 0.2 } }))
+    marks.push(rect(`py:r${i}`, cx, y0, x(right[i]), band.bandwidth(), colorAt(1), 1, { r: 1.5, from: { w: 0, o: 0.2 } }))
+  })
+  marks.push(seg('py:axis', cx, top - 2, cx, base + 2, '#8a9692', 1.2))
+  marks.push(text('py:tl', cx - 8, top + 6, '남', 'end'), text('py:tr', cx + 8, top + 6, '여', 'start'))
+  return marks
+}
+
+// ─── network: nodes start in a spiral and the force simulation settles them ───
+
+const netCache = new Map<string, Map<string, { x: number; y: number }>>()
+
+export function networkFrame(data: HeroData['net'], w: number, h: number): Mark[] {
+  const net = buildNetwork(data.edges)
+  const opts: ForceOptions = { width: w - 40, height: h - 40, linkDistance: Math.min(w, h) / 6, linkStrength: 1, charge: Math.min(w, h) * 0.45, gravity: 0.07, radius: 6 }
+  const key = `${net.nodes.map((n) => n.id).join()}|${net.links.length}|${Math.round(w)}x${Math.round(h)}`
+  let settled = netCache.get(key)
+  if (!settled) {
+    settled = layoutNetwork(net, opts, 320)
+    netCache.set(key, settled)
+    if (netCache.size > 8) netCache.delete(netCache.keys().next().value!)
+  }
+  // Start scattered over the whole canvas (seeded by the node names, so a loop is reproducible); the forces then pull linked nodes together.
+  const rng = createRng(net.nodes.reduce((h, n) => (h * 31 + n.id.charCodeAt(0)) >>> 0, 17))
+  const start = new Map(net.nodes.map((n) => [n.id, { x: rng() * opts.width, y: rng() * opts.height }]))
+  const groups = [...new Set(net.nodes.map((n) => n.group))]
+  const pos = (m: Map<string, { x: number; y: number }>, id: string) => ({ x: (m.get(id)?.x ?? 0) + 20, y: (m.get(id)?.y ?? 0) + 20 })
+  const marks: Mark[] = []
+  net.links.forEach((l) => {
+    const a = pos(settled!, l.source)
+    const b = pos(settled!, l.target)
+    const sa = pos(start, l.source)
+    const sb = pos(start, l.target)
+    marks.push({ t: 'line', k: `nw:l:${l.source}>${l.target}`, x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: '#9aa3a0', sw: 1 + Math.min(2.4, l.weight * 0.5), o: 0.7, from: { x1: sa.x, y1: sa.y, x2: sb.x, y2: sb.y, o: 0 } })
+  })
+  net.nodes.forEach((n) => {
+    const p = pos(settled!, n.id)
+    const s = pos(start, n.id)
+    marks.push({ t: 'circle', k: `nw:n:${n.id}`, x: p.x, y: p.y, r: 5 + Math.min(7, n.degree * 0.9), fill: colorAt(Math.max(0, groups.indexOf(n.group))), o: 1, from: { x: s.x, y: s.y, r: 2, o: 0.2 } })
+  })
+  return marks
+}
+
 /** All marks of one stage. */
 export function buildFrame(stage: HeroStage, data: HeroData, w: number, h: number): Mark[] {
   const group = heroStages.find((s) => s.key === stage)!.group
   switch (group) {
     case 'dist': return distFrame(stage, data.dist, w, h)
+    case 'path': return pathFrame(data.path, w, h)
+    case 'pyramid': return pyramidFrame(data.pyramid, w, h)
+    case 'network': return networkFrame(data.net, w, h)
     case 'compare': return compareFrame(stage, data.compare, w, h)
     case 'time': return timeFrame(stage, data.time, w, h)
     case 'hierarchy': return hierarchyFrame(stage, data.tree, w, h)

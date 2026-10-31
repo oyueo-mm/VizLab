@@ -8,7 +8,7 @@ import { fmt } from '../../lib/format'
 import { rankValues, type TieMethod } from '../../stats/rank'
 import { roleColumn } from '../mapping'
 import type { ChartProps, ControlsProps, VizModule } from '../types'
-import { pointRows } from './shared'
+import { isDateColumn, pointRows, xFormat } from './shared'
 
 export interface BumpParams {
   tie: TieMethod
@@ -68,6 +68,8 @@ export function tieOffsets(ranks: (number | null)[][], dot: number, step: number
 
 function BumpChart({ table, mapping, params, setParams, width, height, compact }: ChartProps<BumpParams>) {
   const xCol = roleColumn(mapping, 'x')
+  const isDate = isDateColumn(table, xCol)
+  const fx = xFormat(isDate)
   const yCol = roleColumn(mapping, 'y')
   const sCol = roleColumn(mapping, 'series')
   const pts = useMemo(() => pointRows(table, xCol, yCol, sCol), [table, xCol, yCol, sCol])
@@ -91,7 +93,7 @@ function BumpChart({ table, mapping, params, setParams, width, height, compact }
   const flat = useMemo(() => target.map((r) => r.map((v) => (v == null ? -1 : v))), [target])
   const shown = useTween(flat, { snapKey: `${iw}x${ih}${model.keys.length}${model.times.length}`, enabled: !compact })
 
-  if (!xCol || !yCol || !sCol) return <ChartMessage>시점(숫자형), 값, 계열 열을 모두 선택하세요.</ChartMessage>
+  if (!xCol || !yCol || !sCol) return <ChartMessage>시점(날짜 또는 숫자), 값, 계열 열을 모두 선택하세요.</ChartMessage>
   if (!pts.length || model.keys.length < 2) return <ChartMessage>순위를 매기려면 계열이 2개 이상 필요합니다.</ChartMessage>
   const curve = params.curve === 'bump' ? d3.curveBumpX : params.curve === 'monotone' ? d3.curveMonotoneX : d3.curveLinear
   const active = hover ?? (params.highlight || null)
@@ -105,7 +107,7 @@ function BumpChart({ table, mapping, params, setParams, width, height, compact }
         aria-label={`범프 차트: ${model.keys.length}개 ${sCol}의 ${xCol}에 따른 ${yCol} 순위 변화`} onPointerLeave={() => { hide(); setHover(null) }}>
         <g transform={`translate(${m.left},${m.top})`}>
           {!compact && model.times.map((t) => <line key={t} className="grid" x1={px(t)} x2={px(t)} y1={0} y2={ih} stroke="#eef1f0" />)}
-          {!compact && <AxisBottom scale={model.times.length > 1 ? x : d3.scaleLinear().domain([0, 1]).range([0, iw])} y={ih} label={xCol} ticks={Math.min(10, model.times.length)} format={(v) => fmt(v)} />}
+          {!compact && <AxisBottom scale={model.times.length > 1 ? x : d3.scaleLinear().domain([0, 1]).range([0, iw])} y={ih} label={xCol} ticks={Math.min(10, model.times.length)} format={isDate ? undefined : (v) => fmt(v)} date={isDate} />}
           {model.keys.map((k, ki) => {
             const ys = shown[ki] ?? flat[ki]
             const segs: [number, number][][] = []
@@ -130,7 +132,7 @@ function BumpChart({ table, mapping, params, setParams, width, height, compact }
                   return (
                     <g key={t}>
                       <circle cx={px(t)} cy={yy} r={params.dot} fill="#fff" stroke={c} strokeWidth={2.4}
-                        onPointerEnter={(e) => { const lp = localPoint(svgRef.current!, e); show(lp.x, lp.y, <><b>{k}</b> · {xCol} {fmt(t)}<br />순위 {fmt(r, 1)}위<br />{yCol}: {fmt(model.values[ki][ti])}</>) }} onPointerLeave={hide} />
+                        onPointerEnter={(e) => { const lp = localPoint(svgRef.current!, e); show(lp.x, lp.y, <><b>{k}</b> · {xCol} {fx(t)}<br />순위 {fmt(r, 1)}위<br />{yCol}: {fmt(model.values[ki][ti])}</>) }} onPointerLeave={hide} />
                       {params.rankLabels && params.dot >= 8 && <text className="bump-rank" x={px(t)} y={yy} dy="0.35em" textAnchor="middle">{Number.isInteger(r) ? r : r.toFixed(1)}</text>}
                     </g>
                   )
@@ -184,7 +186,7 @@ function BumpControls({ params, setParams, table, mapping }: ControlsProps<BumpP
 
 export const bumpModule: VizModule<BumpParams> = {
   roles: [
-    { key: 'x', label: '시점 (숫자형)', type: 'number', required: true },
+    { key: 'x', label: '시점 (날짜 또는 숫자)', type: 'date', accept: ['date', 'number'], required: true },
     { key: 'y', label: '값 (순위의 기준)', type: 'number', required: true },
     { key: 'series', label: '계열', type: 'category', required: true },
   ],

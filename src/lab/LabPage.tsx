@@ -1,7 +1,8 @@
 import { Database, Maximize2, Minimize2, MousePointerClick, PanelRightClose, PanelRightOpen, Redo2, RotateCcw, SlidersHorizontal, Undo2, X } from 'lucide-react'
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { ChartBoundary } from '../components/ChartBoundary'
 import { useStoredState } from '../hooks/storage'
+import { useFullscreen } from '../hooks/useFullscreen'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import { useSize } from '../hooks/useSize'
 import { routeHref } from '../router'
@@ -17,35 +18,6 @@ type Tab = 'settings' | 'data'
 
 // KaTeX is only needed once the details section is opened.
 const Details = lazy(() => import('./Details'))
-
-function useFullscreen<T extends HTMLElement>() {
-  const ref = useRef<T>(null)
-  const [full, setFull] = useState(false)
-  const [fallback, setFallback] = useState(false)
-  useEffect(() => {
-    const onChange = () => setFull(document.fullscreenElement === ref.current)
-    document.addEventListener('fullscreenchange', onChange)
-    return () => document.removeEventListener('fullscreenchange', onChange)
-  }, [])
-  useEffect(() => {
-    if (!fallback) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFallback(false) }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [fallback])
-  const toggle = useCallback(async () => {
-    if (document.fullscreenElement) { await document.exitFullscreen(); return }
-    if (fallback) { setFallback(false); return }
-    try {
-      if (!ref.current?.requestFullscreen) throw new Error('unsupported')
-      await ref.current.requestFullscreen()
-    } catch {
-      // iOS Safari and embedded frames: expand within the page instead.
-      setFallback(true)
-    }
-  }, [fallback])
-  return { ref, expanded: full || fallback, fallback, toggle }
-}
 
 /** Loads the chart implementation, then shows the lab. */
 export default function LabPage({ id }: { id: string }) {

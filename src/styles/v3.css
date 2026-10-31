@@ -1,0 +1,117 @@
+/* v0.3 additions: catalog filters, new chart marks and the comparison lab. Same tokens and spacing as index.css. */
+
+/* ── Catalog filters ─────────────────────────────────────── */
+.filter-groups { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.filter-groups .filter-chips { margin-bottom: 0; }
+.filter-label { display: inline-flex; align-items: center; min-height: 34px; padding-right: 4px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.result-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; min-height: 28px; font-size: 13.5px; color: var(--text-body); }
+.result-bar b { font-variant-numeric: tabular-nums; color: var(--text); }
+.result-bar small { margin-left: 10px; font-size: 12.5px; color: var(--muted); }
+.link-btn { display: inline-flex; align-items: center; gap: 4px; min-height: 28px; padding: 0 8px; border-radius: 6px; font-size: 13px; font-weight: 600; color: var(--accent); }
+.link-btn:hover { background: var(--accent-soft); }
+.filter-toggle { margin-bottom: 12px; }
+.filter-count { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; }
+
+/* ── Shared small controls used by the new panels ────────── */
+.chart-warning { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--danger); background: var(--danger-soft); border-top: 1px solid #f3c9d0; }
+.issue-list { margin: 0 0 8px; padding-left: 18px; font-size: 12.5px; color: var(--text-body); }
+.issue-list li + li { margin-top: 3px; }
+.inline-add { display: flex; gap: 6px; }
+.inline-add input { flex: 1; min-width: 0; }
+.field-pair-stack { display: flex; flex-direction: column; gap: 10px; }
+.net-list { margin: 4px 0 8px; font-size: 13px; }
+.net-list summary { cursor: pointer; min-height: 30px; display: flex; align-items: center; color: var(--text-body); font-weight: 600; }
+.net-list ul { list-style: none; margin: 4px 0 0; padding: 0; max-height: 200px; overflow-y: auto; }
+.net-list li { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 2px 4px 2px 8px; border-bottom: 1px solid var(--line); }
+.net-list li small { color: var(--muted); margin-left: 4px; }
+.flow-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+.cat-chips ul, .cat-chips-list { list-style: none; margin: 4px 0 8px; padding: 0; display: flex; flex-wrap: wrap; gap: 5px; }
+.cat-chips li, .cat-chips-list li { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px 2px 9px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: 12.5px; }
+.field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.andrews-terms { margin: 4px 0 0; padding-left: 20px; font-size: 12.5px; color: var(--text-body); }
+.crosstab-wrap { overflow-x: auto; margin-bottom: 8px; }
+.crosstab { border-collapse: collapse; font-size: 12.5px; width: 100%; }
+.crosstab th, .crosstab td { padding: 3px 4px; border: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; }
+.crosstab thead th, .crosstab tbody th { background: var(--surface-muted); font-weight: 600; text-align: left; white-space: nowrap; }
+.crosstab input { width: 64px; max-width: 100%; border: 0; background: transparent; text-align: right; font: inherit; padding: 2px 2px; }
+.crosstab input:focus { outline: 2px solid var(--accent-mid); border-radius: 3px; }
+.crosstab-total { color: var(--muted); }
+
+/* ── New chart marks ─────────────────────────────────────── */
+.kde2d-fill, .kde2d-line { pointer-events: none; }
+.cs-point.is-draggable, .pyr-bar.is-draggable, .pareto-bar.is-draggable, .bullet-bar.is-draggable, .bullet-target.is-draggable, .candle .is-draggable { cursor: grab; }
+.cs-point { transition: r .12s; }
+.cs-label { font-size: 11px; fill: var(--text-body); paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
+.biplot-axis { stroke: #cfd6d3; stroke-width: 1; stroke-dasharray: 3 3; }
+.biplot-label { font-size: 12px; font-weight: 600; fill: #c4602a; paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
+.biplot-arrow { cursor: help; }
+.andrews-curve { cursor: pointer; transition: stroke-opacity .12s; }
+.lv-box { transition: fill-opacity .12s; }
+.lv-box:hover { stroke-width: 1.8; }
+.pyr-bar:hover, .pareto-bar:hover, .bullet-bar:hover { filter: brightness(.92); }
+.mosaic-label { font-size: 11.5px; font-weight: 600; pointer-events: none; }
+.mosaic-cell rect { transition: stroke-width .1s; }
+.net-svg { touch-action: none; cursor: grab; }
+.net-svg:active { cursor: grabbing; }
+.net-node circle { cursor: grab; transition: stroke-width .1s; }
+.net-link { pointer-events: none; }
+.net-label { font-size: 11.5px; font-weight: 600; fill: var(--text); paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
+.arc-link { transition: stroke-opacity .12s; }
+.alluvial-link { transition: fill-opacity .12s; cursor: pointer; }
+.fan-band { pointer-events: none; }
+.cal-scroll { -webkit-overflow-scrolling: touch; }
+.chart-actions button + button { margin-left: 2px; }
+
+/* ── Comparison lab ──────────────────────────────────────── */
+.compare { max-width: 1680px; margin: 0 auto; padding: 28px clamp(16px, 2.4vw, 40px) 56px; }
+.compare-head h1 { margin: 0; font-size: 26px; letter-spacing: -0.03em; }
+.compare-sub { margin: 6px 0 16px; font-size: 14px; color: var(--muted); }
+.preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.compare-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 18px; padding: 10px 12px; margin-bottom: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-muted); }
+.compare-data-name { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600; }
+.compare-data-name small { font-weight: 400; color: var(--muted); }
+.compare-size { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-body); }
+.compare-size input { width: 130px; }
+.compare-size output { min-width: 40px; font-variant-numeric: tabular-nums; }
+.compare-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.compare-toolbar .toggle-field { margin: 0; }
+.compare-data { display: flex; flex-direction: column; gap: 10px; max-width: 760px; margin: 0 0 16px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); }
+.compare-data-head { display: flex; align-items: center; justify-content: space-between; }
+.compare-grid-wrap { container-type: inline-size; }
+.compare-grid { display: grid; gap: 16px; grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr)); align-items: start; }
+.compare-grid.panes-2 { --cols: 2; }
+.compare-grid.panes-3 { --cols: 3; }
+@container (max-width: 1180px) {
+  .compare-grid.panes-3 { --cols: 2; }
+  .compare-grid.panes-3 > :nth-child(3) { grid-column: 1 / -1; }
+}
+@container (max-width: 760px) {
+  .compare-grid.panes-2, .compare-grid.panes-3 { --cols: 1; }
+  .compare-grid.panes-3 > :nth-child(3) { grid-column: auto; }
+}
+.compare-pane { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; overflow: hidden; }
+.compare-pane:fullscreen, .compare-pane.is-expanded { position: fixed; inset: 0; z-index: 70; border-radius: 0; border: 0; overflow-y: auto; }
+.compare-pane.is-expanded .pane-chart, .compare-pane:fullscreen .pane-chart { height: calc(100dvh - 130px); min-height: 320px; }
+.pane-head { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 12px; border-bottom: 1px solid var(--line); }
+.pane-letter { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); font-size: 12.5px; font-weight: 700; }
+.pane-select { flex: 1; min-width: 0; }
+.pane-select select { width: 100%; }
+.pane-tools { display: flex; align-items: center; }
+.pane-tools .icon-btn { width: 32px; height: 32px; }
+.pane-tools .icon-btn[aria-pressed=true] { background: var(--accent-soft); color: var(--accent); }
+.pane-chart { position: relative; height: 340px; }
+.pane-settings { max-height: 460px; overflow-y: auto; padding: 4px 14px 12px; border-top: 1px solid var(--line); }
+.compare-foot { display: flex; align-items: center; gap: 7px; margin: 18px 0 0; font-size: 12.5px; color: var(--muted); }
+
+@media (max-width: 760px) {
+  .chart-legend { max-width: 54%; }
+  .chart-readout { max-width: 44%; }
+  .compare { padding-top: 18px; }
+  .compare-head h1 { font-size: 22px; }
+  .preset-row { flex-wrap: nowrap; overflow-x: auto; margin-inline: -4px; padding: 2px 4px 6px; scrollbar-width: thin; }
+  .preset-row .chip { flex: none; }
+  .compare-actions { margin-left: 0; }
+  .pane-chart { height: 300px; }
+  .filter-groups .filter-chips { overflow-x: visible; }
+}
+.type-badge.is-date { background: #e8e4f6; color: #5a43a0; }

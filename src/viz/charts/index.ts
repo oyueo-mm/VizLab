@@ -49,6 +49,27 @@ const loaders: Record<string, Loader> = {
   chord: () => import('./chord').then((m) => m.chordModule),
   dendrogram: () => import('./dendrogram').then((m) => m.dendrogramModule),
   ci: () => import('./ci').then((m) => m.ciModule),
+  // v0.3
+  kde2d: () => import('./kde2d').then((m) => m.kde2dModule),
+  pp: () => import('./pp').then((m) => m.ppModule),
+  'letter-value': () => import('./letterValue').then((m) => m.letterValueModule),
+  'connected-scatter': () => import('./connectedScatter').then((m) => m.connectedScatterModule),
+  'pca-biplot': () => import('./pcaBiplot').then((m) => m.pcaBiplotModule),
+  andrews: () => import('./andrews').then((m) => m.andrewsModule),
+  pyramid: () => import('./pyramid').then((m) => m.pyramidModule),
+  pareto: () => import('./pareto').then((m) => m.paretoModule),
+  bullet: () => import('./bullet').then((m) => m.bulletModule),
+  step: () => import('./step').then((m) => m.stepModule),
+  candlestick: () => import('./candlestick').then((m) => m.candlestickModule),
+  horizon: () => import('./horizon').then((m) => m.horizonModule),
+  mosaic: () => import('./mosaic').then((m) => m.mosaicModule),
+  icicle: () => import('./icicle').then((m) => m.icicleModule),
+  network: () => import('./network').then((m) => m.networkModule),
+  arc: () => import('./arc').then((m) => m.arcModule),
+  alluvial: () => import('./alluvial').then((m) => m.alluvialModule),
+  roc: () => import('./roc').then((m) => m.rocModule),
+  pr: () => import('./pr').then((m) => m.prModule),
+  fan: () => import('./fan').then((m) => m.fanModule),
 }
 
 export const hasModule = (id: string) => Object.prototype.hasOwnProperty.call(loaders, id)

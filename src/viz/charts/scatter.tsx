@@ -24,7 +24,7 @@ export interface ScatterParams {
 
 const defaults: ScatterParams = { size: 5, opacity: 0.75, regression: false, maxRadius: 26, sizeMode: 'area', hidden: [] }
 
-function PointChart({ table, mapping, params, setParams, width, height, compact, onTableChange, bubble }: ChartProps<ScatterParams> & { bubble?: boolean }) {
+function PointChart({ table, mapping, params, setParams, width, height, compact, onTableChange, bubble, linked }: ChartProps<ScatterParams> & { bubble?: boolean }) {
   const xCol = roleColumn(mapping, 'x')
   const yCol = roleColumn(mapping, 'y')
   const colorCol = roleColumn(mapping, 'color')
@@ -37,6 +37,7 @@ function PointChart({ table, mapping, params, setParams, width, height, compact,
   const iw = Math.max(10, width - m.left - m.right)
   const ih = Math.max(10, height - m.top - m.bottom)
   const [selected, setSelected] = useState<number[]>([])
+  const linkedSet = useMemo(() => new Set(linked?.rows ?? []), [linked?.rows])
   const [dragging, setDragging] = useState(false)
   const locked = useRef<{ x: [number, number]; y: [number, number] } | null>(null)
   const drag = useRef<{ i: number; moved: boolean } | null>(null)
@@ -158,15 +159,17 @@ function PointChart({ table, mapping, params, setParams, width, height, compact,
             {order.map((p, k) => {
               const g = shown[k] ?? geometry[k]
               const sel = selected.includes(p.i)
+              const hot = linkedSet.has(p.i)
               return (
                 <circle key={p.i} data-i={p.i} className={`mark-point ${sel ? 'is-selected' : ''}`} cx={g[0]} cy={g[1]} r={Math.max(0, g[2])}
-                  fill={color(p.group)} fillOpacity={params.opacity} stroke={sel ? '#111827' : bubble ? '#fff' : 'none'} strokeWidth={sel ? 2 : 0.8}
+                  fill={hot ? '#e07a3f' : color(p.group)} fillOpacity={hot ? 1 : params.opacity} stroke={hot ? '#111827' : sel ? '#111827' : bubble ? '#fff' : 'none'} strokeWidth={hot || sel ? 2 : 0.8}
                   onPointerEnter={compact ? undefined : (e) => {
                     if (drag.current) return
+                    linked?.set([p.i])
                     const lp = localPoint(svgRef.current!, e)
                     show(lp.x, lp.y, <><b>{p.group || `행 ${p.i + 1}`}</b><br />{xCol}: {fmt(p.x)}<br />{yCol}: {fmt(p.y)}{sizeCol && <><br />{sizeCol}: {fmt(p.size)}</>}</>)
                   }}
-                  onPointerLeave={hide} />
+                  onPointerLeave={() => { hide(); linked?.set(null) }} />
               )
             })}
           </g>
