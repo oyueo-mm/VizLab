@@ -327,7 +327,7 @@ input[type=range]:disabled { cursor: default; }
 .chart-tooltip { position: absolute; z-index: 20; pointer-events: none; max-width: 240px; padding: 8px 10px; border-radius: 8px; background: rgba(22, 30, 27, .94); color: #fff; font-size: 12.5px; line-height: 1.55; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .chart-tooltip b { font-weight: 650; }
 .tip-swatch { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: 1px; }
-.chart-legend { position: absolute; left: 62px; top: -2px; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; max-width: calc(100% - 340px); font-size: 12.5px; }
+.chart-legend { position: absolute; left: 62px; top: -2px; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; max-width: calc(100% - 410px); font-size: 12.5px; }
 .legend-title { color: var(--muted); margin-right: 4px; font-weight: 600; }
 .legend-item { display: inline-flex; align-items: center; gap: 6px; min-height: 26px; padding: 0 7px; border-radius: 6px; color: var(--text-body); }
 button.legend-item:hover { background: var(--hover); }
