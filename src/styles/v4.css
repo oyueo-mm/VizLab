@@ -1,0 +1,26 @@
+/* ── v0.4: maps, zoom controls and the special-purpose charts ───────────────── */
+.map-svg { touch-action: none; cursor: grab; user-select: none; }
+.map-svg:active { cursor: grabbing; }
+.map-svg [data-nodrag] { touch-action: none; }
+.map-region { transition: fill-opacity .12s; }
+.map-region:hover { fill-opacity: .82; }
+.map-zoom { position: absolute; left: 8px; top: 8px; display: flex; flex-direction: column; gap: 4px; padding: 4px; border-radius: 9px; background: rgba(255, 255, 255, .94); border: 1px solid var(--line-strong); z-index: 2; }
+.map-zoom .icon-btn { width: 32px; height: 32px; }
+.map-zoom .icon-btn:disabled { opacity: .35; }
+.size-legend-svg { pointer-events: none; }
+.tile-svg text { font-family: inherit; }
+.gantt-axis { position: relative; }
+.gantt-scroll { scrollbar-width: thin; }
+.ref-line { shape-rendering: crispEdges; }
+.chart-actions [data-testid$="-add"] { background: var(--surface-muted); color: var(--text); border: 1px solid var(--line-strong); }
+.chart-actions span[data-testid="flame-crumb"] { max-width: 46vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chart-actions button[data-testid^="flame-"] { background: var(--surface-muted); color: var(--text); }
+.map-dots { shape-rendering: geometricPrecision; }
+@media (max-width: 760px) {
+  .map-zoom { top: auto; bottom: 8px; left: 8px; flex-direction: row; }
+  .map-zoom .icon-btn { width: 40px; height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) { .map-region { transition: none; } }
+/* Legends sit over the chart area; they must not swallow hover or drag aimed at the marks underneath (only toggle buttons stay clickable). */
+.chart-legend { pointer-events: none; }
+.chart-legend button { pointer-events: auto; }

@@ -5,6 +5,7 @@ import { useSize } from '../hooks/useSize'
 import { routeHref } from '../router'
 import { MarkEngine } from './heroEngine'
 import { buildFrame, heroData, heroStages } from './heroFrames'
+import { heroGeoReady, loadHeroGeo } from './heroFramesV4'
 
 export { heroStages } from './heroFrames'
 export type { HeroStage } from './heroFrames'
@@ -25,10 +26,19 @@ export function HeroDemo() {
   const engine = useRef<MarkEngine | null>(null)
   const last = useRef<{ w: number; h: number } | null>(null)
   const stage = heroStages[index]
+  const [geoReady, setGeoReady] = useState(heroGeoReady())
   const width = size.width || 560
   const height = Math.max(260, Math.min(420, width * 0.68))
   const data = useMemo(() => heroData(cycle), [cycle])
   const running = inView && tabVisible && !reduced
+
+  // The map shapes are a separate chunk: fetch them a few stages before the map comes up (never at page load).
+  useEffect(() => {
+    if (geoReady || index < heroStages.findIndex((s) => s.group === 'geo') - 5) return
+    let live = true
+    void loadHeroGeo().then(() => { if (live) setGeoReady(true) }).catch(() => {})
+    return () => { live = false }
+  }, [index, geoReady])
 
   // Pause when the chart is off-screen or the tab is hidden.
   useEffect(() => {
@@ -60,7 +70,7 @@ export function HeroDemo() {
     const resized = !last.current || last.current.w !== width || last.current.h !== height
     last.current = { w: width, h: height }
     engine.current.setFrame(buildFrame(stage.key, data, width, height), resized || reduced || !running ? 0 : MOVE_MS, width)
-  }, [stage.key, data, width, height, reduced, running])
+  }, [stage.key, data, width, height, reduced, running, geoReady])
 
   useEffect(() => () => { engine.current?.destroy(); engine.current = null }, [])
 

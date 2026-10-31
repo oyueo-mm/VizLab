@@ -1,10 +1,13 @@
 import * as d3 from 'd3'
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { MOVE_MS, STAGE_MS } from './HeroDemo'
+import { bundleCurve, heroGeoValue, loadHeroGeo, resample } from './heroFramesV4'
 import { buildFrame, heroData, heroFlows, heroSample, heroStages, heroTree, HERO_N, type HeroStage, type Mark } from './heroFrames'
 
 const W = 560
 const H = 380
+
+beforeAll(async () => { await loadHeroGeo() })
 
 describe('home animation timing', () => {
   it('shows each chart for about 1.8 s with a 0.5–0.65 s morph', () => {
@@ -20,12 +23,12 @@ describe('home animation frames', () => {
   const frame = (s: HeroStage, d = data) => buildFrame(s, d, W, H)
   const numbers = (m: Mark): number[] => Object.values(m).flatMap((v) => (typeof v === 'number' ? [v] : Array.isArray(v) && typeof v[0] !== 'string' ? (v as any[]).flat().filter((x) => typeof x === 'number') : []))
 
-  it('has 20 distinct stages, each drawn from real engines', () => {
-    expect(heroStages.length).toBe(20)
-    expect(new Set(heroStages.map((s) => s.key)).size).toBe(20)
-    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(20)
-    expect(heroStages.map((s) => s.group)).toEqual([...Array(6).fill('dist'), 'path', ...Array(4).fill('compare'), 'pyramid', ...Array(4).fill('time'), ...Array(2).fill('hierarchy'), 'flow', 'network'])
-    expect(heroStages.map((s) => s.viz)).toEqual(expect.arrayContaining(['connected-scatter', 'pyramid', 'network', 'horizon']))
+  it('has 24 distinct stages, each drawn from real engines', () => {
+    expect(heroStages.length).toBe(24)
+    expect(new Set(heroStages.map((s) => s.key)).size).toBe(24)
+    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(24)
+    expect(heroStages.map((s) => s.group)).toEqual([...Array(6).fill('dist'), 'path', ...Array(4).fill('compare'), 'pyramid', ...Array(4).fill('time'), ...Array(2).fill('hierarchy'), 'flame', 'flow', 'network', 'bundle', 'geo', 'meta'])
+    expect(heroStages.map((s) => s.viz)).toEqual(expect.arrayContaining(['connected-scatter', 'pyramid', 'network', 'horizon', 'choropleth', 'forest', 'flame', 'edge-bundling']))
   })
 
   it('builds finite, uniquely keyed marks for every stage', () => {
@@ -257,5 +260,74 @@ describe('home animation: data that changes every loop', () => {
       totals.add(d3.sum(edges.filter((e) => ['석탄', '천연가스', '원자력', '재생에너지', '석유'].includes(e.source)), (e) => e.value))
     }
     expect(totals.size).toBeGreaterThan(5)
+  })
+})
+
+describe('home animation: v0.4 stages', () => {
+  const frame = (s: HeroStage, cycle = 0) => buildFrame(s, heroData(cycle), W, H)
+
+  it('choropleth colours regions by quantile classes of a real metric that changes each loop', () => {
+    const polys = frame('choropleth').filter((m) => m.t === 'poly') as Extract<Mark, { t: 'poly' }>[]
+    expect(polys.length).toBeGreaterThan(120)
+    expect(new Set(polys.map((p) => p.fill)).size).toBeGreaterThanOrEqual(5)
+    for (const p of polys) for (const [x, y] of p.pts) { expect(Number.isFinite(x) && Number.isFinite(y)).toBe(true); expect(x).toBeGreaterThan(-30); expect(x).toBeLessThan(W + 30); expect(y).toBeGreaterThan(-30); expect(y).toBeLessThan(H + 30) }
+    const fills = (c: number) => (frame('choropleth', c).filter((m) => m.t === 'poly') as Extract<Mark, { t: 'poly' }>[]).map((p) => `${p.k}:${p.fill}`).join()
+    expect(fills(0)).not.toBe(fills(1))
+    // 50 million people on 1,000,000 km² with a GDP of 100,000 million dollars
+    expect(heroGeoValue(0, 5e7, 1e5, 1e6)).toBeCloseTo(50, 6)
+    expect(heroGeoValue(1, 5e7, 1e5, 1e6)).toBeCloseTo(2000, 6)
+    expect(heroGeoValue(2, 5e7, 1e5, 1e6)).toBeCloseTo(50, 6)
+    expect(heroGeoValue(1, 5e7, undefined, 1e6)).toBeNull()
+  })
+
+  it('forest plot has one interval and box per study plus a pooled diamond, and the studies change every loop', () => {
+    const marks = frame('forest')
+    const boxes = marks.filter((m) => m.k.startsWith('fr:b'))
+    expect(boxes.length).toBe(9)
+    expect(marks.filter((m) => m.k.startsWith('fr:l')).length).toBe(9)
+    const pooled = marks.find((m) => m.k === 'fr:pool') as Extract<Mark, { t: 'poly' }>
+    expect(pooled.pts).toHaveLength(4)
+    expect(pooled.pts[0][0]).toBeLessThan(pooled.pts[1][0])
+    expect(pooled.pts[1][0]).toBeLessThan(pooled.pts[2][0])
+    expect(frame('forest', 1).filter((m) => m.k.startsWith('fr:b')).length).toBe(11)
+  })
+
+  it('flame graph block widths are proportional to the cost and children sit inside their parent', () => {
+    const rects = frame('flame').filter((m) => m.t === 'rect' && m.k.startsWith('fl:') && !m.k.startsWith('fl:t:')) as Extract<Mark, { t: 'rect' }>[]
+    expect(rects.length).toBeGreaterThan(15)
+    const root = rects.find((r) => r.k === 'fl:root')!
+    const main = rects.find((r) => r.k === 'fl:main')!
+    expect(main.w).toBeLessThanOrEqual(root.w + 1)
+    expect(main.y).toBeLessThan(root.y)
+    // a child never extends beyond its parent
+    for (const r of rects) {
+      const parent = r.k.includes(';') ? rects.find((q) => q.k === r.k.slice(0, r.k.lastIndexOf(';'))) : r.k === 'fl:root' ? undefined : rects.find((q) => q.k === 'fl:root')
+      if (parent) { expect(r.x).toBeGreaterThanOrEqual(parent.x - 0.5); expect(r.x + r.w).toBeLessThanOrEqual(parent.x + parent.w + 1.5) }
+    }
+  })
+
+  it('edge bundling starts from straight edges and ends on curves with the same number of points', () => {
+    const edges = frame('bundle').filter((m) => m.t === 'poly') as Extract<Mark, { t: 'poly' }>[]
+    expect(edges.length).toBeGreaterThan(15)
+    let bent = 0
+    for (const e of edges) {
+      const from = (e.from as { pts?: [number, number][] }).pts!
+      expect(e.pts.length).toBe(from.length)
+      const [a, b] = [e.pts[0], e.pts[e.pts.length - 1]]
+      const chord = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1
+      const dev = (pts: [number, number][]) => Math.max(...pts.map((p) => Math.abs((b[0] - a[0]) * (a[1] - p[1]) - (a[0] - p[0]) * (b[1] - a[1])) / chord))
+      expect(dev(from)).toBeLessThan(1.5)
+      if (dev(e.pts) > 3) bent++
+    }
+    expect(bent).toBeGreaterThan(edges.length / 2)
+  })
+
+  it('resample keeps the end points and spaces points evenly; bundle β = 0 is the straight chord', () => {
+    const line = resample([[0, 0], [10, 0], [10, 10]], 5)
+    expect(line[0]).toEqual([0, 0])
+    expect(line[4][0]).toBeCloseTo(10, 6); expect(line[4][1]).toBeCloseTo(10, 6)
+    expect(line[2][0]).toBeCloseTo(10, 6)
+    const curve = bundleCurve([[0, 0], [30, 60], [60, 0], [100, 40]], 0)
+    for (const [x, y] of curve) expect(Math.abs(y - 0.4 * x)).toBeLessThan(2.5)
   })
 })

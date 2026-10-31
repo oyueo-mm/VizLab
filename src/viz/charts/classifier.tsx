@@ -53,13 +53,15 @@ interface PanelProps {
   params: ClassifierParams
   base: number
   onPick: (p: CurvePoint) => void
+  /** Curve points of the observations marked in another chart (comparison lab). */
+  marks: CurvePoint[]
   hoverTip: (px: number, py: number, p: CurvePoint | null) => void
   svg: React.RefObject<SVGSVGElement | null>
   ox: number
   oy: number
 }
 
-function Panel({ kind, points, current, w, h, compact, params, base, onPick, hoverTip, svg, ox, oy }: PanelProps) {
+function Panel({ kind, points, current, w, h, compact, params, base, onPick, marks, hoverTip, svg, ox, oy }: PanelProps) {
   const x = d3.scaleLinear().domain([0, 1]).range([0, w])
   const y = d3.scaleLinear().domain([0, 1]).range([h, 0])
   const px = (p: CurvePoint) => (kind === 'roc' ? p.fpr : p.recall)
@@ -89,6 +91,7 @@ function Panel({ kind, points, current, w, h, compact, params, base, onPick, hov
           <line x1={x(0)} x2={cx} y1={cy} y2={cy} stroke="#121816" strokeDasharray="3 3" strokeWidth={1} aria-hidden="true" />
         </>
       )}
+      {marks.map((p, i) => <circle key={i} data-testid={`${kind}-linked`} cx={x(px(p))} cy={y(py(p))} r={compact ? 2.5 : 5} fill="none" stroke="#121816" strokeWidth={2} aria-hidden="true" />)}
       <circle cx={cx} cy={cy} r={compact ? 3 : 6.5} fill="#e07a3f" stroke="#fff" strokeWidth={2} data-testid={`${kind}-current`} data-x={px(current).toFixed(4)} data-y={py(current).toFixed(4)} />
       {!compact && (
         <rect width={w} height={h} fill="transparent" style={{ cursor: 'crosshair' }} data-testid={`${kind}-hit`}
@@ -100,7 +103,7 @@ function Panel({ kind, points, current, w, h, compact, params, base, onPick, hov
   )
 }
 
-export function ClassifierChart({ kind, table, mapping, params, setParams, width, height, compact }: ChartProps<ClassifierParams> & { kind: 'roc' | 'pr' }) {
+export function ClassifierChart({ kind, table, mapping, params, setParams, width, height, compact, linked }: ChartProps<ClassifierParams> & { kind: 'roc' | 'pr' }) {
   const { data, badLabels } = useMemo(() => scoredRows(table, mapping), [table, mapping])
   const issue = useMemo(() => curveIssue(data), [data])
   const points = useMemo(() => (issue ? [] : curvePoints(data)), [data, issue])
@@ -111,6 +114,13 @@ export function ClassifierChart({ kind, table, mapping, params, setParams, width
   const { tip, show, hide } = useTooltip()
   const m = margins(compact, compact ? {} : { right: 22 })
 
+  // Observations marked elsewhere sit on the curve at the threshold equal to their own score; hovering a curve point marks the observations tied at that threshold.
+  const marks = useMemo(() => {
+    if (!linked?.rows.length || compact) return []
+    const rows = new Set(linked.rows)
+    const scores = [...new Set(data.filter((d) => rows.has(d.row)).map((d) => d.score))].slice(0, 60)
+    return scores.map((sc) => pointAt(data, sc))
+  }, [linked?.rows, data, compact])
   if (!roleColumn(mapping, 'score') || !roleColumn(mapping, 'label')) return <ChartMessage>예측 점수와 실제 레이블(0/1) 열을 선택하세요.</ChartMessage>
   if (issue) return <ChartMessage>{issue}<small>데이터 탭에서 레이블을 확인하세요.</small></ChartMessage>
   const current = pointAt(data, threshold)
@@ -127,11 +137,12 @@ export function ClassifierChart({ kind, table, mapping, params, setParams, width
   const auc = rocAuc(points)
   const ap = averagePrecision(points)
   const showTip = (which: 'roc' | 'pr') => (px: number, py: number, p: CurvePoint | null) => {
-    if (!p) { hide(); return }
+    if (!p) { hide(); linked?.set(null); return }
+    linked?.set(p.threshold === Infinity ? null : data.filter((d) => d.score === p.threshold).map((d) => d.row))
     show(px, py, <><b>임계값 ≥ {p.threshold === Infinity ? '∞ (모두 음성)' : fmt(p.threshold, 3)}</b><br />{which === 'roc' ? <>TPR {fmt(p.tpr, 3)} · FPR {fmt(p.fpr, 3)}</> : <>Precision {fmt(p.precision, 3)} · Recall {fmt(p.recall, 3)}</>}<br />TP {p.tp} · FP {p.fp} · FN {p.fn} · TN {p.tn}<br />클릭해 임계값으로 지정</>)
   }
   const pick = (p: CurvePoint) => setParams({ threshold: p.threshold === Infinity ? hi + (hi - lo) * 0.001 : p.threshold })
-  const common = { points, current, compact, params, base, onPick: pick, svg: svgRef, h: size, w: size }
+  const common = { points, current, compact, params, base, onPick: pick, marks, svg: svgRef, h: size, w: size }
 
   return (
     <div className="chart-root">

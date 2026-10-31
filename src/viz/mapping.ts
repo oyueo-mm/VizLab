@@ -28,14 +28,24 @@ export function autoMapping(roles: readonly RoleSpec[], table: DataTable, previo
   for (const role of roles) {
     if (role.key in out) continue
     // Preferred type first, then the other accepted types, each in column order.
-    const free = roleTypes(role).flatMap((t) => table.columns.filter((c) => c.type === t && !used.has(c.name)).map((c) => c.name))
+    let free = roleTypes(role).flatMap((t) => table.columns.filter((c) => c.type === t && !used.has(c.name)).map((c) => c.name))
+    // A name hint (alternatives separated by "|") moves matching columns to the front without changing the order of the rest.
+    if (role.prefer) {
+      const hints = role.prefer.toLowerCase().split('|')
+      const hit = (n: string) => hints.some((h) => n.toLowerCase().includes(h))
+      free = [...free.filter(hit), ...free.filter((n) => !hit(n))]
+    }
     if (role.multiple) {
       const pick = free.slice(0, role.multiple.max ?? free.length)
       out[role.key] = pick
       pick.forEach((n) => used.add(n))
-    } else if (role.required || role.auto) {
-      out[role.key] = free[0] ?? null
-      if (free[0]) used.add(free[0])
+    } else if (role.required || role.auto || role.prefer) {
+      // An optional role with a name hint is only filled by a column that matches the hint, so it never swallows an unrelated column.
+      const optionalHint = !role.required && role.prefer
+      const hints = optionalHint ? role.prefer!.toLowerCase().split('|') : []
+      const pick = optionalHint ? free.find((n) => hints.some((h) => n.toLowerCase().includes(h))) : free[0]
+      out[role.key] = pick ?? null
+      if (pick) used.add(pick)
     } else out[role.key] = null
   }
   return out
@@ -49,8 +59,21 @@ const TYPES: ColumnType[] = ['number', 'category', 'date']
  * accepts "date or number" correctly shares columns with a role that needs a number.
  */
 export function incompatibility(roles: readonly RoleSpec[], table: DataTable): string | null {
+  return incompatibilityFromSlots(slotsOf(roles), table)
+}
+
+/** A required column slot of a chart: the column types that can fill it. */
+export type Slot = ColumnType[]
+
+/** The required slots of a chart's roles (a multi-column role contributes its minimum count). */
+export const slotsOf = (roles: readonly RoleSpec[]): Slot[] => roles.filter((r) => r.required).flatMap((r) => Array.from({ length: r.multiple ? r.multiple.min : 1 }, () => roleTypes(r)))
+
+/**
+ * The structural check on its own, from slots only — no chart module is needed, so the comparison lab can judge every chart's
+ * compatibility with the shared table before that chart's code has been loaded (see viz/needs.ts).
+ */
+export function incompatibilityFromSlots(slots: readonly Slot[], table: DataTable): string | null {
   if (!table.rows.length) return '데이터 행이 없습니다.'
-  const slots = roles.filter((r) => r.required).flatMap((r) => Array.from({ length: r.multiple ? r.multiple.min : 1 }, () => roleTypes(r)))
   for (let mask = 1; mask < 1 << TYPES.length; mask++) {
     const set = TYPES.filter((_, i) => mask & (1 << i))
     const need = slots.filter((s) => s.every((t) => set.includes(t))).length

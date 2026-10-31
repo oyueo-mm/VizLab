@@ -14,7 +14,8 @@ import type { VizModule } from './types'
 const V1 = ['scatter', 'bubble', 'hexbin', 'pairplot', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'strip', 'bar', 'grouped-bar', 'stacked-bar', 'line', 'area', 'pie', 'treemap', 'heatmap', 'parallel', 'radar']
 const V2 = ['ridgeline', 'raincloud', 'beeswarm', 'qq', 'lollipop', 'dumbbell', 'slope', 'waterfall', 'stacked-bar-100', 'waffle', 'stacked-area', 'streamgraph', 'bump', 'calendar', 'sunburst', 'pack', 'sankey', 'chord', 'dendrogram', 'ci']
 const V3 = ['kde2d', 'pp', 'letter-value', 'connected-scatter', 'pca-biplot', 'andrews', 'pyramid', 'pareto', 'bullet', 'step', 'candlestick', 'horizon', 'mosaic', 'icicle', 'network', 'arc', 'alluvial', 'roc', 'pr', 'fan']
-const ALL = [...V1, ...V2, ...V3]
+const V4 = ['choropleth', 'symbol-map', 'dot-density', 'geo-hexbin', 'flow-map', 'tile-grid', 'dorling', 'forest', 'bland-altman', 'calibration', 'control', 'funnel-plot', 'gantt', 'funnel', 'marimekko', 'flame', 'adjacency', 'edge-bundling', 'bipartite', 'hive']
+const ALL = [...V1, ...V2, ...V3, ...V4]
 
 let modules: Record<string, VizModule>
 beforeAll(async () => { modules = await loadAllModules() })
@@ -23,9 +24,9 @@ const render = (id: string, table: DataTable, mapping: Record<string, any>, para
   renderToStaticMarkup(createElement(modules[id].Chart, { table, mapping, params, setParams: () => {}, width: 640, height: 420, compact }))
 
 describe('visualization registry', () => {
-  it('lists the 20 v0.1, 20 v0.2 and 20 v0.3 charts (60), each with an implementation and content', () => {
-    expect(catalog.length).toBe(60)
-    expect(new Set(catalog.map((c) => c.id)).size).toBe(60)
+  it('lists the 20 v0.1, 20 v0.2, 20 v0.3 and 20 v0.4 charts (80), each with an implementation and content', () => {
+    expect(catalog.length).toBe(80)
+    expect(new Set(catalog.map((c) => c.id)).size).toBe(80)
     expect([...catalog.map((c) => c.id)].sort()).toEqual([...ALL].sort())
     expect(moduleIds.sort()).toEqual([...ALL].sort())
     for (const meta of catalog) {
@@ -45,7 +46,7 @@ describe('visualization registry', () => {
 
   it('has no empty category and every new chart is reachable from a category', () => {
     for (const c of categories) expect(catalog.filter((v) => inCategory(v, c.id)).length, c.id).toBeGreaterThan(0)
-    expect(categories.map((c) => c.id)).toEqual(['distribution', 'relationship', 'comparison', 'timeseries', 'composition', 'multivariate', 'hierarchy', 'uncertainty'])
+    expect(categories.map((c) => c.id)).toEqual(['distribution', 'relationship', 'comparison', 'timeseries', 'composition', 'multivariate', 'hierarchy', 'uncertainty', 'geo', 'network', 'special'])
   })
 
   it('uses datasets that exist and fit every chart by default', () => {
@@ -86,7 +87,7 @@ describe('visualization registry', () => {
   })
 
   it('survives broken data without throwing (empty table, text in numeric cells, missing numbers)', () => {
-    for (const id of [...V2, ...V3]) {
+    for (const id of [...V2, ...V3, ...V4]) {
       const mod = modules[id]
       const s = initialLabState(id, mod)
       const empty: DataTable = { columns: s.table.columns, rows: [] }
@@ -122,20 +123,21 @@ describe('visualization registry', () => {
 
 describe('home animation stages', () => {
   it('only shows charts that exist in the catalog', () => {
-    expect(heroStages.length).toBe(20)
+    expect(heroStages.length).toBe(24)
     for (const s of heroStages) expect(vizById.has(s.viz) && hasModule(s.viz), s.viz).toBe(true)
-    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(20)
+    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(24)
   })
 })
 
+const ids = (kinds: Parameters<typeof searchCatalog>[3], q = '', c: Parameters<typeof searchCatalog>[1] = 'all') => searchCatalog(q, c, catalog, kinds).map((v) => v.id)
+
 describe('data-type filter', () => {
-  const ids = (kinds: Parameters<typeof searchCatalog>[3], q = '', c: Parameters<typeof searchCatalog>[1] = 'all') => searchCatalog(q, c, catalog, kinds).map((v) => v.id)
 
   it('every chart declares at least one valid data kind and every kind has charts', () => {
     const valid = new Set(dataKinds.map((k) => k.id))
     for (const m of catalog) { expect(m.dataKinds.length, m.id).toBeGreaterThan(0); for (const k of m.dataKinds) expect(valid.has(k), `${m.id}:${k}`).toBe(true) }
     for (const k of dataKinds) expect(ids([k.id]).length, k.id).toBeGreaterThan(3)
-    expect(dataKinds.map((k) => k.name)).toEqual(['수치형', '범주형', '시계열', '다변량', '계층형', '네트워크·흐름형'])
+    expect(dataKinds.map((k) => k.name)).toEqual(['수치형', '범주형', '시계열', '다변량', '계층형', '네트워크·흐름형', '지리공간'])
   })
 
   it('time-series filtering keeps date/time charts and drops the others', () => {
@@ -149,7 +151,7 @@ describe('data-type filter', () => {
     expect(ids(['network'])).toEqual(expect.arrayContaining(['network', 'arc', 'alluvial', 'sankey', 'chord']))
     expect(ids(['hierarchical'], '', 'hierarchy')).toEqual(expect.arrayContaining(['sunburst', 'pack', 'icicle']))
     expect(ids(['hierarchical'], '', 'hierarchy')).not.toContain('network')
-    expect(ids(['timeseries'], '', 'uncertainty')).toEqual(['fan'])
+    expect(ids(['timeseries'], '', 'uncertainty')).toEqual(['fan', 'control'])
     expect(ids(['timeseries'], '캔들')).toEqual(['candlestick'])
     expect(ids(['numeric', 'timeseries'], 'plot')).toEqual(expect.arrayContaining(['step', 'kde2d']))
     expect(ids(['multivariate'], '', 'multivariate')).toEqual(expect.arrayContaining(['pca-biplot', 'andrews', 'parallel']))
@@ -157,7 +159,35 @@ describe('data-type filter', () => {
   })
 
   it('an empty selection means no data-type restriction', () => {
-    expect(ids([])).toHaveLength(60)
+    expect(ids([])).toHaveLength(80)
+  })
+})
+
+describe('v0.4 catalog', () => {
+  it('has 7 geospatial, 5 statistics, 4 special and 4 network charts reachable from their categories', () => {
+    const inCat = (c: Parameters<typeof inCategory>[1]) => catalog.filter((v) => inCategory(v, c)).map((v) => v.id)
+    expect(inCat('geo').sort()).toEqual(['choropleth', 'dorling', 'dot-density', 'flow-map', 'geo-hexbin', 'symbol-map', 'tile-grid'])
+    expect(inCat('uncertainty')).toEqual(expect.arrayContaining(['forest', 'bland-altman', 'calibration', 'control', 'funnel-plot']))
+    expect(inCat('special').sort()).toEqual(['flame', 'funnel', 'gantt', 'marimekko'])
+    expect(inCat('network')).toEqual(expect.arrayContaining(['adjacency', 'edge-bundling', 'bipartite', 'hive', 'network', 'arc', 'sankey', 'chord', 'alluvial']))
+  })
+
+  it('the geospatial data-type filter and search find the new charts', () => {
+    expect(ids(['geospatial']).sort()).toEqual(expect.arrayContaining(['choropleth', 'symbol-map', 'dot-density', 'geo-hexbin', 'flow-map', 'tile-grid', 'dorling']))
+    expect(searchCatalog('지도').map((v) => v.id)).toEqual(expect.arrayContaining(['choropleth', 'tile-grid']))
+    expect(searchCatalog('cartogram').map((v) => v.id)).toContain('dorling')
+    expect(searchCatalog('meta').map((v) => v.id)).toEqual(expect.arrayContaining(['forest', 'funnel-plot']))
+    expect(searchCatalog('flamegraph').map((v) => v.id)).toContain('flame')
+    expect(searchCatalog('퍼널').map((v) => v.id)).toEqual(expect.arrayContaining(['funnel', 'funnel-plot']))
+  })
+
+  it('every new chart lists real datasets and the first one is its default', () => {
+    for (const id of V4) {
+      const mod = modules[id]
+      expect(mod.datasets.length, id).toBeGreaterThan(0)
+      expect(mod.hint?.length, id).toBeGreaterThan(10)
+      expect(mod.Controls, id).toBeDefined()
+    }
   })
 })
 
@@ -171,7 +201,7 @@ describe('catalog search', () => {
   })
 
   it('finds every new chart by its Korean and English names', () => {
-    for (const id of [...V2, ...V3]) {
+    for (const id of [...V2, ...V3, ...V4]) {
       const m = vizById.get(id)!
       expect(searchCatalog(m.name).map((v) => v.id), `ko ${id}`).toContain(id)
       expect(searchCatalog(m.nameEn).map((v) => v.id), `en ${id}`).toContain(id)

@@ -4,6 +4,8 @@ import { cloneTable } from '../data/table'
 import { vizById } from '../viz/catalog'
 import { loadAllModules } from '../viz/charts'
 import type { VizModule } from '../viz/types'
+import { incompatibilityFromSlots } from '../viz/mapping'
+import { needs } from '../viz/needs'
 import { compareIssue, MAX_PANES, paneMapping, presets } from './presets'
 import { stateForPreset } from './state'
 
@@ -13,10 +15,12 @@ beforeAll(async () => { modules = await loadAllModules() })
 const issueFor = (viz: string, table = generateDataset('normal'), remembered = {}) => compareIssue(modules[viz], table, paneMapping(modules[viz], table, remembered))
 
 describe('recommended comparison presets', () => {
-  it('has the seven requested combinations of two or three charts', () => {
+  it('has the v0.3 combinations and the v0.4 geo, agreement, calibration, network and mosaic ones', () => {
     expect(presets.map((p) => p.charts)).toEqual([
       ['histogram', 'kde', 'ecdf'], ['box', 'violin', 'raincloud'], ['scatter', 'hexbin', 'kde2d'], ['bar', 'lollipop', 'bullet'],
       ['line', 'area', 'step'], ['treemap', 'sunburst', 'icicle'], ['roc', 'pr'],
+      ['roc', 'pr', 'calibration'], ['choropleth', 'symbol-map', 'bar'], ['choropleth', 'tile-grid', 'dorling'], ['scatter', 'bland-altman'],
+      ['network', 'adjacency'], ['network', 'bipartite'], ['mosaic', 'marimekko'],
     ])
     for (const p of presets) { expect(p.charts.length).toBeLessThanOrEqual(MAX_PANES); expect(p.charts.length).toBeGreaterThanOrEqual(2) }
   })
@@ -57,6 +61,26 @@ describe('data compatibility between a chart and the shared data', () => {
     const t = generateDataset('pos-corr', 3, 60)
     for (const ok of ['scatter', 'histogram', 'kde2d', 'hexbin', 'pca-biplot', 'box']) expect(issueFor(ok, t), ok).toBeNull()
     for (const bad of ['candlestick', 'alluvial', 'step-nope']) if (modules[bad]) expect(issueFor(bad, t), bad).toBeTruthy()
+  })
+
+  it('geo charts keep the region id ↔ value mapping, so a map and an ordinary chart read the same rows', () => {
+    const t = generateDataset('kr-regions', 7)
+    const map = paneMapping(modules.choropleth, t)
+    const tile = paneMapping(modules['tile-grid'], t)
+    const bar = paneMapping(modules.bar, t)
+    expect(map.region).toBe('ID')
+    expect(tile.region).toBe(map.region)
+    expect(map.value).toBe(tile.value)
+    expect(bar.value).toBe(map.value)
+    // a map cannot be drawn from a table that has no category column for the region id
+    expect(issueFor('choropleth', generateDataset('normal'))).toMatch(/범주형/)
+    expect(issueFor('choropleth', t)).toBeNull()
+  })
+
+  it('judges compatibility of every chart before its module is loaded (static slots)', () => {
+    const t = generateDataset('votes')
+    for (const id of ['scatter', 'bland-altman', 'calibration', 'gantt', 'adjacency']) expect(incompatibilityFromSlots(needs[id], t), id).toBeTruthy()
+    expect(incompatibilityFromSlots(needs.bar, t)).toBeNull()
   })
 
   it('reports required columns that contain only missing values', () => {

@@ -1,5 +1,6 @@
 import { createRng, round, type Rng } from '../lib/random'
 import { datasetsV3 } from './datasetsV3'
+import { datasetsV4 } from './datasetsV4'
 import type { Cell, Column, DataTable } from './table'
 
 export type DatasetId =
@@ -9,6 +10,8 @@ export type DatasetId =
   | 'temps' | 'before-after' | 'cashflow' | 'streams' | 'league' | 'daily' | 'energy' | 'migration' | 'nutrition'
   | 'visits-dated' | 'sensors' | 'ohlc' | 'forecast' | 'pca-students' | 'pyramid' | 'defects' | 'kpi' | 'stage-flow' | 'network' | 'folders'
   | 'scores' | 'scores-imbalanced' | 'survey' | 'trajectory' | 'big-groups' | 'inventory'
+  | 'kr-regions' | 'world-regions' | 'kr-flows' | 'world-flows' | 'geo-points' | 'studies' | 'studies-biased' | 'paired' | 'risk-model' | 'process' | 'process-counts'
+  | 'conversion' | 'process-flow' | 'projects' | 'market' | 'profile' | 'affiliations' | 'modules'
 
 export interface DatasetSize { min: number; max: number; default: number; step: number; label: string }
 
@@ -373,6 +376,7 @@ export const datasets: DatasetDef[] = [
       ]),
   },
   ...datasetsV3,
+  ...datasetsV4,
 ]
 
 export const datasetById = new Map(datasets.map((d) => [d.id, d]))

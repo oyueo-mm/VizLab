@@ -13,8 +13,9 @@ import { Related } from '../lab/Related'
 import { routeHref, type Route } from '../router'
 import { dateFormats, type DateFormat } from '../stats/datetime'
 import { categories, vizById } from '../viz/catalog'
-import { getLoadedModule, useVizModule } from '../viz/charts'
-import { incompatibility } from '../viz/mapping'
+import { useVizModule } from '../viz/charts'
+import { incompatibilityFromSlots } from '../viz/mapping'
+import { needs } from '../viz/needs'
 import { compareIssue, MAX_PANES, paneMapping, presetById, presets } from './presets'
 import { useCompareState, type CompareActions, type CompareState, type PaneState } from './state'
 
@@ -51,8 +52,8 @@ function Pane({ index, pane, state, actions, canRemove, linkedRows, setLinked, o
             {categories.map((c) => (
               <optgroup key={c.id} label={c.name}>
                 {[...vizById.values()].filter((v) => v.category === c.id).map((v) => {
-                  const loaded = getLoadedModule(v.id)
-                  const reason = loaded && v.id !== pane.viz ? incompatibility(loaded.roles, state.table) : null
+                  // Judged from the static slot table, so every chart is flagged before its code has been loaded.
+                  const reason = v.id !== pane.viz && needs[v.id] ? incompatibilityFromSlots(needs[v.id], state.table) : null
                   return <option key={v.id} value={v.id} title={reason ?? undefined}>{v.name}{reason ? ' — 이 데이터와 맞지 않음' : ''}</option>
                 })}
               </optgroup>

@@ -199,13 +199,29 @@ export const datasetsV3: DatasetDef[] = [
   },
   {
     id: 'network', name: '네트워크 노드·간선', description: '세 모임으로 나뉜 가상 인맥 네트워크입니다. 같은 모임끼리 더 자주 이어지고 모임 사이는 드물게 연결됩니다. 연결 대상이 비어 있는 행은 연결이 없는 노드입니다.',
-    size: sizes(18, 6, 80, 2, '노드 수'),
+    size: sizes(18, 6, 3000, 2, '노드 수'),
     generate: (seed, n) => {
       const r = createRng(seed)
       const groups = ['A팀', 'B팀', 'C팀']
       const members = Array.from({ length: n }, (_, i) => ({ name: NAMES[i % NAMES.length] + (i >= NAMES.length ? String(Math.floor(i / NAMES.length) + 1) : ''), group: groups[i % 3] }))
       const rows: Cell[][] = []
       const hasOut = new Set<string>()
+      if (n > 80) {
+        // Large graphs: each node links to a few members of its own group and rarely to another group (O(n·k), not O(n²)).
+        const byGroup = groups.map((g) => members.filter((m) => m.group === g))
+        for (let i = 0; i < n; i++) {
+          const mine = byGroup[i % 3]
+          for (let k = 0; k < 3; k++) {
+            const other = r() < 0.07 ? byGroup[r.int(0, 2)] : mine
+            const to = other[r.int(0, other.length - 1)]
+            if (to.name === members[i].name) continue
+            rows.push([members[i].name, to.name, 1 + r.int(0, 4), members[i].group])
+            hasOut.add(members[i].name)
+          }
+        }
+        for (const m of members) if (!hasOut.has(m.name)) rows.push([m.name, null, null, m.group])
+        return table([cat('출발'), cat('도착'), num('가중치'), cat('출발 그룹')], rows)
+      }
       for (let i = 0; i < n; i++) {
         for (let j = i + 1; j < n; j++) {
           const same = members[i].group === members[j].group

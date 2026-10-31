@@ -13,10 +13,11 @@ import { kde, kdeGrid, silvermanBandwidth } from '../stats/kde'
 import { buildNetwork, layoutNetwork, type ForceOptions } from '../stats/network'
 import { collectFlows, sankeyLayout } from '../stats/sankey'
 import { stackRows } from '../stats/stack'
+import { bundlingFrame, choroplethFrame, flameFrame, forestFrame } from './heroFramesV4'
 
 // ─── stages ──────────────────────────────────────────────────────────────────
 
-export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network'
+export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network' | 'geo' | 'meta' | 'flame' | 'bundle'
 
 export const heroStages = [
   { key: 'scatter', label: '산점도', viz: 'scatter', group: 'dist' },
@@ -37,8 +38,12 @@ export const heroStages = [
   { key: 'horizon', label: '호라이즌 차트', viz: 'horizon', group: 'time' },
   { key: 'treemap', label: '트리맵', viz: 'treemap', group: 'hierarchy' },
   { key: 'sunburst', label: '선버스트 차트', viz: 'sunburst', group: 'hierarchy' },
+  { key: 'flame', label: '플레임 그래프', viz: 'flame', group: 'flame' },
   { key: 'sankey', label: '생키 다이어그램', viz: 'sankey', group: 'flow' },
   { key: 'network', label: '네트워크 그래프', viz: 'network', group: 'network' },
+  { key: 'bundle', label: '계층형 에지 번들링', viz: 'edge-bundling', group: 'bundle' },
+  { key: 'choropleth', label: '코로플레스 지도', viz: 'choropleth', group: 'geo' },
+  { key: 'forest', label: '포레스트 플롯', viz: 'forest', group: 'meta' },
 ] as const
 export type HeroStage = (typeof heroStages)[number]['key']
 
@@ -88,6 +93,7 @@ export function heroSample(cycle: number) {
 }
 
 export interface HeroData {
+  cycle: number
   dist: { xs: number[]; ys: number[] }
   path: { pts: [number, number][] }
   pyramid: { ages: string[]; left: number[]; right: number[] }
@@ -174,6 +180,7 @@ export function heroData(cycle: number): HeroData {
   const drift = (i: number) => 1 + 0.35 * Math.sin(cycle * 1.7) * ((i - 8.5) / 8.5)
   const net = generateDataset('network', seed, 14 + (cycle % 4) * 2)
   return {
+    cycle,
     dist: heroSample(cycle),
     path: { pts: traj.rows.map((r) => [toNumber(r[0])!, toNumber(r[1])!] as [number, number]) },
     pyramid: { ages: age, left: pyr.rows.map((r, i) => (toNumber(r[1]) ?? 0) * drift(i)), right: pyr.rows.map((r, i) => (toNumber(r[2]) ?? 0) * drift(i)) },
@@ -524,6 +531,10 @@ export function buildFrame(stage: HeroStage, data: HeroData, w: number, h: numbe
     case 'path': return pathFrame(data.path, w, h)
     case 'pyramid': return pyramidFrame(data.pyramid, w, h)
     case 'network': return networkFrame(data.net, w, h)
+    case 'geo': return choroplethFrame(data.cycle, w, h)
+    case 'meta': return forestFrame(data.cycle, w, h)
+    case 'flame': return flameFrame(data.cycle, w, h)
+    case 'bundle': return bundlingFrame(data.cycle, w, h)
     case 'compare': return compareFrame(stage, data.compare, w, h)
     case 'time': return timeFrame(stage, data.time, w, h)
     case 'hierarchy': return hierarchyFrame(stage, data.tree, w, h)

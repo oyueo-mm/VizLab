@@ -16,17 +16,17 @@ async function editCell(page: import('@playwright/test').Page, label: string, va
   await input.press('Enter')
 }
 
-test.describe('catalog: 60 charts and data-type filters', () => {
+test.describe('catalog: 80 charts and data-type filters', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('./#/catalog')
     await page.evaluate(() => localStorage.clear())
     await page.reload()
   })
 
-  test('lists 60 charts and every card opens a working lab', async ({ page }) => {
+  test('lists 80 charts and every card opens a working lab', async ({ page }) => {
     const cards = page.getByTestId('catalog-grid').locator('.viz-card')
-    await expect(cards).toHaveCount(60)
-    await expect(page.getByTestId('result-count')).toContainText('60')
+    await expect(cards).toHaveCount(80)
+    await expect(page.getByTestId('result-count')).toContainText('80')
     for (const id of NEW) await expect(page.getByTestId(`card-${id}`)).toBeVisible()
     await page.getByTestId('card-fan').scrollIntoViewIfNeeded()
     await expect(page.getByTestId('preview-fan').locator('svg')).toBeVisible()
@@ -47,8 +47,10 @@ test.describe('catalog: 60 charts and data-type filters', () => {
     await expect.poll(async () => cards.count()).toBeGreaterThan(ts)
     await page.getByTestId('kind-hierarchical').click()
     await page.getByTestId('chip-uncertainty').click()
-    await expect(cards).toHaveCount(1)
+    // fan chart and the v0.4 control chart (a time-ordered process chart)
+    await expect(cards).toHaveCount(2)
     await expect(page.getByTestId('card-fan')).toBeVisible()
+    await expect(page.getByTestId('card-control')).toBeVisible()
     await page.getByTestId('chip-all').click()
     await page.getByTestId('catalog-search').fill('캔들')
     await expect(cards).toHaveCount(1)
@@ -80,7 +82,7 @@ test.describe('catalog: 60 charts and data-type filters', () => {
     await expect(cards).toHaveCount(n)
     await page.getByTestId('filter-reset').click()
     await expect(page).toHaveURL(/#\/catalog$/)
-    await expect(cards).toHaveCount(60)
+    await expect(cards).toHaveCount(80)
     await expect(page.getByTestId('filter-reset')).toHaveCount(0)
   })
 
@@ -89,7 +91,7 @@ test.describe('catalog: 60 charts and data-type filters', () => {
     await page.getByTestId('catalog-search').fill('히스토그램')
     await expect(page.getByTestId('catalog-empty')).toBeVisible()
     await page.getByTestId('empty-reset').click()
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(60)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(80)
   })
 })
 
@@ -616,6 +618,8 @@ test.describe('comparison lab', () => {
   for (const [preset, charts] of [
     ['distribution', ['histogram', 'kde', 'ecdf']], ['groups', ['box', 'violin', 'raincloud']], ['xy', ['scatter', 'hexbin', 'kde2d']], ['bars', ['bar', 'lollipop', 'bullet']],
     ['time', ['line', 'area', 'step']], ['hierarchy', ['treemap', 'sunburst', 'icicle']], ['classifier', ['roc', 'pr']],
+    ['calibration', ['roc', 'pr', 'calibration']], ['geo-symbol', ['choropleth', 'symbol-map', 'bar']], ['geo-tile', ['choropleth', 'tile-grid', 'dorling']], ['agreement', ['scatter', 'bland-altman']],
+    ['network-matrix', ['network', 'adjacency']], ['bipartite', ['network', 'bipartite']], ['mekko', ['mosaic', 'marimekko']],
   ] as const) {
     test(`preset ${preset} draws every chart from the same data`, async ({ page }) => {
       await page.getByTestId(`preset-${preset}`).click()

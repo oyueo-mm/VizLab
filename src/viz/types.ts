@@ -3,9 +3,9 @@ import type { DatasetId } from '../data/datasets'
 import type { ColumnType, DataTable } from '../data/table'
 
 /** Kinds of data a chart can show, used by the catalog's data-type filter (independent of the category). */
-export type DataKind = 'numeric' | 'categorical' | 'timeseries' | 'multivariate' | 'hierarchical' | 'network'
+export type DataKind = 'numeric' | 'categorical' | 'timeseries' | 'multivariate' | 'hierarchical' | 'network' | 'geospatial'
 
-export type CategoryId = 'distribution' | 'relationship' | 'comparison' | 'timeseries' | 'composition' | 'multivariate' | 'hierarchy' | 'uncertainty'
+export type CategoryId = 'distribution' | 'relationship' | 'comparison' | 'timeseries' | 'composition' | 'multivariate' | 'hierarchy' | 'uncertainty' | 'geo' | 'network' | 'special'
 
 /** A visual channel the chart needs (x, y, color, …) and what kind of column can fill it. */
 export interface RoleSpec {
@@ -20,6 +20,11 @@ export interface RoleSpec {
   multiple?: { min: number; max?: number }
   /** Fill optional roles automatically when a suitable column exists. */
   auto?: boolean
+  /**
+   * Auto-mapping prefers a column whose name contains one of these texts (alternatives separated by "|"). On an optional role this is also
+   * the only way the role is filled automatically: an optional role never takes a column that does not match the hint.
+   */
+  prefer?: string
 }
 
 export type Mapping = Record<string, string | string[] | null>

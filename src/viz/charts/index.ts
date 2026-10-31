@@ -70,6 +70,27 @@ const loaders: Record<string, Loader> = {
   roc: () => import('./roc').then((m) => m.rocModule),
   pr: () => import('./pr').then((m) => m.prModule),
   fan: () => import('./fan').then((m) => m.fanModule),
+  // v0.4
+  choropleth: () => import('./choropleth').then((m) => m.choroplethModule),
+  'symbol-map': () => import('./symbolMap').then((m) => m.symbolMapModule),
+  'dot-density': () => import('./dotDensity').then((m) => m.dotDensityModule),
+  'flow-map': () => import('./flowMap').then((m) => m.flowMapModule),
+  'tile-grid': () => import('./tileGrid').then((m) => m.tileGridModule),
+  dorling: () => import('./dorling').then((m) => m.dorlingModule),
+  forest: () => import('./forest').then((m) => m.forestModule),
+  'funnel-plot': () => import('./funnelPlot').then((m) => m.funnelPlotModule),
+  'bland-altman': () => import('./blandAltman').then((m) => m.blandAltmanModule),
+  calibration: () => import('./calibration').then((m) => m.calibrationModule),
+  control: () => import('./control').then((m) => m.controlModule),
+  gantt: () => import('./gantt').then((m) => m.ganttModule),
+  funnel: () => import('./funnelChart').then((m) => m.funnelChartModule),
+  marimekko: () => import('./marimekko').then((m) => m.marimekkoModule),
+  flame: () => import('./flame').then((m) => m.flameModule),
+  adjacency: () => import('./adjacency').then((m) => m.adjacencyModule),
+  bipartite: () => import('./bipartite').then((m) => m.bipartiteModule),
+  hive: () => import('./hive').then((m) => m.hiveModule),
+  'edge-bundling': () => import('./edgeBundling').then((m) => m.edgeBundlingModule),
+  'geo-hexbin': () => import('./geoHexbin').then((m) => m.geoHexbinModule),
 }
 
 export const hasModule = (id: string) => Object.prototype.hasOwnProperty.call(loaders, id)

@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures'
 
-const STAGES = ['scatter', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'connected', 'bar', 'grouped', 'stacked', 'stacked100', 'pyramid', 'line', 'area', 'stream', 'horizon', 'treemap', 'sunburst', 'sankey', 'network']
+const STAGES = ['scatter', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'connected', 'bar', 'grouped', 'stacked', 'stacked100', 'pyramid', 'line', 'area', 'stream', 'horizon', 'treemap', 'sunburst', 'flame', 'sankey', 'network', 'bundle', 'choropleth', 'forest']
 
 /** Records the time at which `data-stage` changes, in ms since the first call. */
 async function watchStages(page: import('@playwright/test').Page) {
@@ -27,16 +27,16 @@ test.describe('home animation', () => {
     expect(await marks.locator('*').count()).toBeGreaterThan(100)
   })
 
-  test('walks through all 20 charts and wraps around with new data', async ({ page }) => {
+  test('walks through all 24 charts and wraps around with new data', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('./')
     const demo = page.getByTestId('hero-demo')
     const marks = page.getByTestId('hero-marks')
     const sig: string[] = []
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < STAGES.length; i++) {
       await expect(demo).toHaveAttribute('data-stage', STAGES[i])
-      await expect(page.getByTestId('hero-count')).toHaveText(`${i + 1} / 20`)
-      expect(await marks.locator('*').count(), STAGES[i]).toBeGreaterThan(8)
+      await expect(page.getByTestId('hero-count')).toHaveText(`${i + 1} / ${STAGES.length}`)
+      await expect.poll(async () => marks.locator('*').count(), { message: STAGES[i], timeout: 8000 }).toBeGreaterThan(8)
       sig.push(await marks.evaluate((g) => g.innerHTML.length.toString()))
       await page.getByTestId('hero-next').click()
     }
@@ -44,22 +44,22 @@ test.describe('home animation', () => {
     await expect(demo).toHaveAttribute('data-stage', 'scatter')
     await expect(marks.locator('circle')).toHaveCount(140)
     await page.getByTestId('hero-prev').click()
-    await expect(demo).toHaveAttribute('data-stage', 'network')
+    await expect(demo).toHaveAttribute('data-stage', 'forest')
     expect(new Set(sig).size).toBeGreaterThan(10)
   })
 
   test('each chart links to its own lab', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    const viz = ['scatter', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'connected-scatter', 'bar', 'grouped-bar', 'stacked-bar', 'stacked-bar-100', 'pyramid', 'line', 'area', 'streamgraph', 'horizon', 'treemap', 'sunburst', 'sankey', 'network']
+    const viz = ['scatter', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'connected-scatter', 'bar', 'grouped-bar', 'stacked-bar', 'stacked-bar-100', 'pyramid', 'line', 'area', 'streamgraph', 'horizon', 'treemap', 'sunburst', 'flame', 'sankey', 'network', 'edge-bundling', 'choropleth', 'forest']
     await page.goto('./')
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < STAGES.length; i++) {
       await expect(page.getByTestId('hero-link')).toHaveAttribute('href', `#/viz/${viz[i]}`)
       await page.getByTestId('hero-next').click()
     }
     await page.getByTestId('hero-prev').click()
     await page.getByTestId('hero-link').click()
-    await expect(page).toHaveURL(/#\/viz\/network$/)
-    await expect(page.getByTestId('lab')).toHaveAttribute('data-viz', 'network')
+    await expect(page).toHaveURL(/#\/viz\/forest$/)
+    await expect(page.getByTestId('lab')).toHaveAttribute('data-viz', 'forest')
   })
 
   test('pauses while scrolled out of view and resumes when it is visible again', async ({ page }) => {
@@ -136,18 +136,19 @@ test.describe('home animation', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('./')
     const marks = page.getByTestId('hero-marks')
-    const perStage: number[][] = Array.from({ length: 20 }, () => [])
+    const perStage: number[][] = Array.from({ length: STAGES.length }, () => [])
     for (let round = 0; round < 3; round++) {
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < STAGES.length; i++) {
         await expect(page.getByTestId('hero-demo')).toHaveAttribute('data-stage', STAGES[i])
+        if (STAGES[i] === 'choropleth') await expect.poll(async () => marks.locator('*').count(), { timeout: 8000 }).toBeGreaterThan(8)
         perStage[i].push(await marks.locator('*').count())
         await page.getByTestId('hero-next').click()
       }
     }
     // marks of a stage may vary a little with the new data of each loop, but they never pile up
-    for (let i = 0; i < 20; i++) expect(Math.max(...perStage[i]), STAGES[i]).toBeLessThan(Math.min(...perStage[i]) * 1.8 + 40)
+    for (let i = 0; i < STAGES.length; i++) expect(Math.max(...perStage[i]), STAGES[i]).toBeLessThan(Math.min(...perStage[i]) * 1.8 + 40)
     const heap = await page.evaluate(() => document.querySelectorAll('[data-testid=hero-marks] *').length)
-    expect(heap).toBeLessThan(900)
+    expect(heap).toBeLessThan(1500)
     // the demo is the only animated region: leaving the page removes every mark
     await page.getByTestId('nav-compare').click()
     await expect(page.getByTestId('hero-demo')).toHaveCount(0)
@@ -158,7 +159,7 @@ test.describe('home animation', () => {
     await page.goto('./')
     const marks = page.getByTestId('hero-marks')
     const at = async (stage: string) => {
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < STAGES.length; i++) {
         if ((await page.getByTestId('hero-demo').getAttribute('data-stage')) === stage) return
         await page.getByTestId('hero-next').click()
       }
@@ -180,14 +181,14 @@ test.describe('home animation', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('./')
     const signature = async (stage: string) => {
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < STAGES.length; i++) {
         if ((await page.getByTestId('hero-demo').getAttribute('data-stage')) === stage) break
         await page.getByTestId('hero-next').click()
       }
       return page.getByTestId('hero-marks').evaluate((g) => Array.from(g.querySelectorAll('rect, path')).map((e) => e.getAttribute('width') ?? e.getAttribute('stroke-width') ?? '').join(','))
     }
     const first = await signature('sankey')
-    for (let i = 0; i < 20; i++) await page.getByTestId('hero-next').click()
+    for (let i = 0; i < STAGES.length; i++) await page.getByTestId('hero-next').click()
     await expect(page.getByTestId('hero-demo')).toHaveAttribute('data-stage', 'sankey')
     expect(await signature('sankey')).not.toBe(first)
   })

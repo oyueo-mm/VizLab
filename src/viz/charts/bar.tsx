@@ -33,7 +33,7 @@ export function sortCategories(cats: string[], value: (c: string) => number, sor
   return out
 }
 
-function BarChart({ table, mapping, params, width, height, compact, onTableChange }: ChartProps<BarParams>) {
+function BarChart({ table, mapping, params, width, height, compact, onTableChange, linked }: ChartProps<BarParams>) {
   const catCol = roleColumn(mapping, 'category')
   const valueCol = roleColumn(mapping, 'value')
   const tab = useMemo(() => crossTab(table, catCol, null, valueCol, (v) => aggregate(v, params.agg)), [table, catCol, valueCol, params.agg])
@@ -63,6 +63,7 @@ function BarChart({ table, mapping, params, width, height, compact, onTableChang
     [values.join(','), v.domain()[0], v.domain()[1], iw, ih, horizontal])
   const shown = useTween(geometry, { snapKey: `${iw}x${ih}${horizontal}${cats.join()}`, enabled: !compact && !dragging })
 
+  const marked = new Set(linked?.rows ?? [])
   if (!catCol || !valueCol) return <ChartMessage>범주와 값 열을 선택하세요.</ChartMessage>
   if (!cats.length) return <ChartMessage>그릴 범주가 없습니다.</ChartMessage>
   const editable = !!onTableChange && !compact && params.agg !== 'count'
@@ -105,17 +106,20 @@ function BarChart({ table, mapping, params, width, height, compact, onTableChang
             const end = shown[i]?.[0] ?? geometry[i][0]
             const fill = params.colorful ? colorAt(i) : '#2a8c82'
             const single = tab.rows(c, '').length === 1
+            const rowsOf = tab.rows(c, '')
+            const hot = rowsOf.some((r) => marked.has(r))
             const rect = horizontal
               ? { x: Math.min(base, end), width: Math.abs(end - base), y: pos, height: band.bandwidth() }
               : { x: pos, width: band.bandwidth(), y: Math.min(base, end), height: Math.abs(end - base) }
             return (
               <g key={c} className="marks">
-                <rect className={`mark-bar ${editable && single ? 'is-draggable' : ''}`} data-cat={c} {...rect} fill={fill} rx={2}
+                <rect className={`mark-bar ${editable && single ? 'is-draggable' : ''}`} data-cat={c} {...rect} fill={fill} rx={2} stroke={hot ? '#121816' : 'none'} strokeWidth={hot ? 2 : 0}
                   onPointerEnter={compact ? undefined : (e) => {
                     if (drag.current) return
+                    linked?.set(rowsOf)
                     const lp = localPoint(svgRef.current!, e)
                     show(lp.x, lp.y, <><b>{c}</b><br />{aggOptions.find((a) => a.value === params.agg)?.label}: {fmt(values[i])}<br />행 {tab.rows(c, '').length}개{editable && single ? ' · 끝을 드래그해 수정' : ''}</>)
-                  }} onPointerLeave={hide} />
+                  }} onPointerLeave={() => { hide(); linked?.set(null) }} />
                 {params.labels && !compact && (horizontal
                   ? <text className="bar-label" x={Math.max(base, end) + 5} y={pos + band.bandwidth() / 2} dy="0.35em">{fmt(values[i])}</text>
                   : <text className="bar-label" x={pos + band.bandwidth() / 2} y={Math.min(base, end) - 6} textAnchor="middle">{fmt(values[i])}</text>)}
