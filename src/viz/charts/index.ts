@@ -135,6 +135,18 @@ const loaders: Record<string, Loader> = {
   cusum: () => import('./modelCharts').then((m) => m.cusumModule),
   'lift-gain': () => import('./modelCharts').then((m) => m.gainLiftModule),
   'pit-histogram': () => import('./modelCharts').then((m) => m.pitModule),
+  'surface-3d': () => import('./scienceCharts').then((m) => m.surface3dModule),
+  'scatter-3d': () => import('./scienceCharts').then((m) => m.scatter3dModule),
+  'phase-portrait': () => import('./scienceCharts').then((m) => m.phasePortraitModule),
+  bifurcation: () => import('./scienceCharts').then((m) => m.bifurcationModule),
+  spectrogram: () => import('./scienceCharts').then((m) => m.spectrogramModule),
+  scalogram: () => import('./scienceCharts').then((m) => m.scalogramModule),
+  'recurrence-plot': () => import('./scienceCharts').then((m) => m.recurrenceModule),
+  ternary: () => import('./polarCharts').then((m) => m.ternaryModule),
+  'wind-rose': () => import('./polarCharts').then((m) => m.windRoseModule),
+  'polar-plot': () => import('./polarCharts').then((m) => m.polarModule),
+  'polar-heatmap': () => import('./polarCharts').then((m) => m.polarHeatmapModule),
+  delaunay: () => import('./polarCharts').then((m) => m.delaunayModule),
   lisa: () => import('./spatialStatsCharts').then((m) => m.lisaModule),
 }
 

@@ -19,11 +19,11 @@ import { projectedShapes, regionRows, useRegionStage } from './regionKit'
 
 /** 3D maps drawn with the in-house orbit camera: terrain mesh, prism (extruded region) map and the space-time cube. */
 
-type ViewParams = { yaw: number; pitch: number; zoom: number }
-const viewOf = (p: ViewParams): View3 => ({ yaw: p.yaw, pitch: p.pitch, zoom: p.zoom })
+export type ViewParams = { yaw: number; pitch: number; zoom: number }
+export const viewOf = (p: ViewParams): View3 => ({ yaw: p.yaw, pitch: p.pitch, zoom: p.zoom })
 const seq = (Object.keys(schemes) as ColorScheme[]).filter((k) => !schemes[k].diverging).map((k) => ({ value: k, label: schemes[k].name }))
 
-function ViewControls<P extends ViewParams>({ params, setParams }: { params: P; setParams: (p: Partial<P>) => void }) {
+export function ViewControls<P extends ViewParams>({ params, setParams }: { params: P; setParams: (p: Partial<P>) => void }) {
   return (
     <ControlGroup title="시점">
       <Slider label="회전 (방위)" value={params.yaw} min={-180} max={180} onChange={(yaw) => setParams({ yaw } as Partial<P>)} format={(v) => `${v}°`} testId="ctl-yaw" />
@@ -36,7 +36,7 @@ function ViewControls<P extends ViewParams>({ params, setParams }: { params: P; 
 }
 
 /** Cube wireframe plus labelled corners, drawn in SVG above the 3D canvas. */
-function Frame3D({ proj, box, labels }: { proj: ReturnType<typeof makeProjector>; box: { x: [number, number]; y: [number, number]; z: [number, number] }; labels?: { at: V3; text: string; anchor?: 'start' | 'middle' | 'end' }[] }) {
+export function Frame3D({ proj, box, labels }: { proj: ReturnType<typeof makeProjector>; box: { x: [number, number]; y: [number, number]; z: [number, number] }; labels?: { at: V3; text: string; anchor?: 'start' | 'middle' | 'end' }[] }) {
   const edges = boxEdges(box)
   const centre = proj([(box.x[0] + box.x[1]) / 2, (box.y[0] + box.y[1]) / 2, (box.z[0] + box.z[1]) / 2]).depth
   return (
@@ -47,7 +47,7 @@ function Frame3D({ proj, box, labels }: { proj: ReturnType<typeof makeProjector>
   )
 }
 
-const canvasFor = (ref: React.RefObject<HTMLCanvasElement | null>, width: number, height: number) => {
+export const canvasFor = (ref: React.RefObject<HTMLCanvasElement | null>, width: number, height: number) => {
   const cv = ref.current
   if (!cv) return null
   const dpr = Math.min(2, typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1)
