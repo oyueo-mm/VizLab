@@ -115,7 +115,7 @@ function invertSmall(a: number[][]): number[][] | null {
 export function chiSquareSf(x: number, df: number): number {
   if (x <= 0) return 1
   const a = df / 2, xx = x / 2
-  const lg = (z: number): number => { const c = [76.18009172947146, -86.50532032941677, 24.01409824083091, -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5]; let y = z, t = z + 5.5; t -= (z + 0.5) * Math.log(t); let s = 1.000000000190015; for (const cj of c) s += cj / ++y; return -t + Math.log((2.5066282746310005 * s) / z) }
+  const lg = (z: number): number => { const c = [76.18009172947146, -86.5053203294168, 24.01409824083091, -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5]; let y = z, t = z + 5.5; t -= (z + 0.5) * Math.log(t); let s = 1.000000000190015; for (const cj of c) s += cj / ++y; return -t + Math.log((2.50662827463100 * s) / z) }
   if (xx < a + 1) {
     let sum = 1 / a, term = sum
     for (let n = 1; n < 500; n++) { term *= xx / (a + n); sum += term; if (Math.abs(term) < Math.abs(sum) * 1e-14) break }

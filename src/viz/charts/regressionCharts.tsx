@@ -50,7 +50,7 @@ function useDiag(data: RegData, params: DiagParams): { fit: OlsFit | null; diag:
       return { fit, diag: fit ? diagnostics(fit) : null, fitted, resid: data.y.map((v, i) => v - fitted[i]), manual }
     }
     return { fit, diag: fit ? diagnostics(fit) : null, fitted: fit?.fitted ?? [], resid: fit?.residuals ?? [], manual }
-  }, [data, params.degree, params.mode, params.a, params.b])
+  }, [data, params])
 }
 
 function DiagControls({ params, setParams, table, mapping, children }: ControlsProps<DiagParams> & { children?: React.ReactNode }) {

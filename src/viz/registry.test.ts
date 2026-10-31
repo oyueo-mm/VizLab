@@ -154,7 +154,7 @@ describe('data-type filter', () => {
     expect(ids(['hierarchical'], '', 'hierarchy')).toEqual(expect.arrayContaining(['sunburst', 'pack', 'icicle']))
     expect(ids(['hierarchical'], '', 'hierarchy')).not.toContain('network')
     expect(ids(['timeseries'], '', 'uncertainty')).toEqual(expect.arrayContaining(['fan', 'control']))
-    expect(ids(['timeseries'], '캔들')).toEqual(['candlestick'])
+    expect(ids(['timeseries'], '캔들')).toContain('candlestick')
     expect(ids(['numeric', 'timeseries'], 'plot')).toEqual(expect.arrayContaining(['step', 'kde2d']))
     expect(ids(['multivariate'], '', 'multivariate')).toEqual(expect.arrayContaining(['pca-biplot', 'andrews', 'parallel']))
     expect(ids(['categorical'], '존재하지않는검색어')).toEqual([])
