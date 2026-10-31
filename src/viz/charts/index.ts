@@ -123,6 +123,18 @@ const loaders: Record<string, Loader> = {
   'terrain-3d': () => import('./geo3dCharts').then((m) => m.terrain3dModule),
   'prism-map': () => import('./geo3dCharts').then((m) => m.prismMapModule),
   'space-time-cube': () => import('./geo3dCharts').then((m) => m.spaceTimeCubeModule),
+  'residual-plot': () => import('./regressionCharts').then((m) => m.residualModule),
+  'scale-location': () => import('./regressionCharts').then((m) => m.scaleLocationModule),
+  'influence-plot': () => import('./regressionCharts').then((m) => m.influenceModule),
+  'coefficient-plot': () => import('./regressionCharts').then((m) => m.coefficientModule),
+  'partial-dependence': () => import('./regressionCharts').then((m) => m.pdpModule),
+  'kaplan-meier': () => import('./survivalCharts').then((m) => m.kaplanMeierModule),
+  'nelson-aalen': () => import('./survivalCharts').then((m) => m.nelsonAalenModule),
+  bootstrap: () => import('./modelCharts').then((m) => m.bootstrapModule),
+  ewma: () => import('./modelCharts').then((m) => m.ewmaModule),
+  cusum: () => import('./modelCharts').then((m) => m.cusumModule),
+  'lift-gain': () => import('./modelCharts').then((m) => m.gainLiftModule),
+  'pit-histogram': () => import('./modelCharts').then((m) => m.pitModule),
   lisa: () => import('./spatialStatsCharts').then((m) => m.lisaModule),
 }
 

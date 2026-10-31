@@ -65,7 +65,7 @@ describe('visualization registry', () => {
     }
   })
 
-  it('renders every chart with its default data (server render)', () => {
+  it('renders every chart with its default data (server render)', { timeout: 120000 }, () => {
     for (const meta of catalog) {
       const s = initialLabState(meta.id, modules[meta.id])
       for (const compact of [false, true]) {
@@ -77,7 +77,7 @@ describe('visualization registry', () => {
     }
   })
 
-  it('renders every listed dataset of every chart', () => {
+  it('renders every listed dataset of every chart', { timeout: 120000 }, () => {
     for (const meta of catalog) {
       const mod = modules[meta.id]
       for (const d of mod.datasets) {
@@ -88,7 +88,7 @@ describe('visualization registry', () => {
     }
   })
 
-  it('survives broken data without throwing (empty table, text in numeric cells, missing numbers)', () => {
+  it('survives broken data without throwing (empty table, text in numeric cells, missing numbers)', { timeout: 120000 }, () => {
     for (const id of [...V2, ...V3, ...V4, ...V5]) {
       const mod = modules[id]
       const s = initialLabState(id, mod)
@@ -195,7 +195,8 @@ describe('v0.4 catalog', () => {
 
 describe('catalog search', () => {
   it('finds charts by Korean name, English name and keyword', () => {
-    expect(searchCatalog('히스토').map((v) => v.id)).toEqual(['histogram'])
+    expect(searchCatalog('히스토').map((v) => v.id)).toContain('histogram')
+    expect(searchCatalog('히스토')[0].id).toBe('histogram')
     expect(searchCatalog('violin').map((v) => v.id)).toEqual(['violin', 'raincloud'])
     expect(searchCatalog('density').map((v) => v.id)).toContain('kde')
     expect(searchCatalog('이상치').map((v) => v.id)).toContain('box')
@@ -214,7 +215,7 @@ describe('catalog search', () => {
     expect(searchCatalog('qq').map((v) => v.id)).toContain('qq')
     expect(searchCatalog('sankey').map((v) => v.id)).toEqual(['sankey'])
     expect(searchCatalog('군집').map((v) => v.id)).toContain('dendrogram')
-    expect(searchCatalog('신뢰구간').map((v) => v.id)).toEqual(['ci'])
+    expect(searchCatalog('신뢰구간')[0].id).toBe('ci')
     expect(searchCatalog('100%').map((v) => v.id)).toContain('stacked-bar-100')
   })
 

@@ -14,6 +14,7 @@ export type DatasetId =
   | 'kr-regions' | 'world-regions' | 'kr-flows' | 'world-flows' | 'geo-points' | 'studies' | 'studies-biased' | 'paired' | 'risk-model' | 'process' | 'process-counts'
   | 'conversion' | 'process-flow' | 'projects' | 'market' | 'profile' | 'affiliations' | 'modules'
   | 'terrain-hills' | 'temp-stations' | 'raster-grid' | 'wind-sources' | 'gps-tracks' | 'spatial-values' | 'kr-indicators' | 'kr-composition' | 'world-continents' | 'buffer-features' | 'tissot-grid'
+  | 'regression-demo' | 'survival-trial' | 'process-shift' | 'forecast-overconfident' | 'forecast-calibrated'
 
 export interface DatasetSize { min: number; max: number; default: number; step: number; label: string }
 
