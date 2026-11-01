@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { VizModule } from '../types'
+import { loadersV6 } from './loadersV6'
 
 type Loader = () => Promise<VizModule>
 
@@ -179,6 +180,7 @@ const loaders: Record<string, Loader> = {
   biofabric: () => import('./netCharts').then((m) => m.fabricModule),
   'radial-tree': () => import('./netCharts').then((m) => m.radialTreeModule),
   lisa: () => import('./spatialStatsCharts').then((m) => m.lisaModule),
+  ...loadersV6,
 }
 
 export const hasModule = (id: string) => Object.prototype.hasOwnProperty.call(loaders, id)

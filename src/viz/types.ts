@@ -5,7 +5,7 @@ import type { ColumnType, DataTable } from '../data/table'
 /** Kinds of data a chart can show, used by the catalog's data-type filter (independent of the category). */
 export type DataKind = 'numeric' | 'categorical' | 'timeseries' | 'multivariate' | 'hierarchical' | 'network' | 'geospatial'
 
-export type CategoryId = 'distribution' | 'relationship' | 'comparison' | 'timeseries' | 'composition' | 'multivariate' | 'hierarchy' | 'uncertainty' | 'geo' | 'network' | 'special' | 'science' | 'bio' | 'finance'
+export type CategoryId = 'distribution' | 'relationship' | 'comparison' | 'timeseries' | 'composition' | 'multivariate' | 'hierarchy' | 'uncertainty' | 'geo' | 'network' | 'special' | 'science' | 'bio' | 'finance' | 'ml'
 
 /** A visual channel the chart needs (x, y, color, …) and what kind of column can fill it. */
 export interface RoleSpec {

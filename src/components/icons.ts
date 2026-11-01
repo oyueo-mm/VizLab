@@ -1,4 +1,4 @@
-import { Atom, ChartArea, ChartColumn, ChartLine, ChartNetwork, ChartPie, ChartScatter, Dna, Landmark, Map, Network, Puzzle, Sigma, Waypoints, type LucideIcon } from 'lucide-react'
+import { Atom, BrainCircuit, ChartArea, ChartColumn, ChartLine, ChartNetwork, ChartPie, ChartScatter, Dna, Landmark, Map, Network, Puzzle, Sigma, Waypoints, type LucideIcon } from 'lucide-react'
 import type { CategoryId } from '../viz/types'
 
 export const categoryIcons: Record<CategoryId, LucideIcon> = {
@@ -16,4 +16,5 @@ export const categoryIcons: Record<CategoryId, LucideIcon> = {
   science: Atom,
   bio: Dna,
   finance: Landmark,
+  ml: BrainCircuit,
 }

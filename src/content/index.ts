@@ -8,6 +8,7 @@ import { hierarchyV2, timeseriesV2, uncertaintyV2 } from './timeHierarchyV2'
 import { contentV3 } from './v3'
 import { contentV4 } from './v4'
 import { contentV5 } from './v5'
+import { contentV6 } from './v6'
 import type { VizContent } from './types'
 
 export type { Formula, VizContent } from './types'
@@ -15,5 +16,5 @@ export type { Formula, VizContent } from './types'
 export const content: Record<string, VizContent> = {
   ...relationship, ...distribution, ...comparison, ...timeseries, ...composition, ...multivariate,
   ...distributionV2, ...comparisonV2, ...compositionV2, ...timeseriesV2, ...hierarchyV2, ...uncertaintyV2,
-  ...contentV3, ...contentV4, ...contentV5,
+  ...contentV3, ...contentV4, ...contentV5, ...contentV6,
 }

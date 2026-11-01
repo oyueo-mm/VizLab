@@ -1,4 +1,5 @@
 import { catalogV5 } from './catalogV5'
+import { catalogV6 } from './catalogV6'
 import type { CategoryId, DataKind, VizMeta } from './types'
 
 export interface CategoryDef {
@@ -22,6 +23,7 @@ export const categories: CategoryDef[] = [
   { id: 'science', name: '과학·수학', description: '함수, 신호, 동역학, 3차원 좌표의 시각화' },
   { id: 'bio', name: '생물정보학', description: '유전체, 발현, 서열, 계통의 시각화 (합성 데이터)' },
   { id: 'finance', name: '금융·경제', description: '가격 변환 차트, 위험, 금리, 호가의 시각화 (합성 데이터)' },
+  { id: 'ml', name: '기계학습·AI', description: '모델 평가, 해석, 차원 축소, 신경망의 시각화 (브라우저에서 실제 학습)' },
 ]
 
 export interface SubcategoryDef { id: string; name: string }
@@ -41,6 +43,7 @@ export const subcategories: Partial<Record<CategoryId, SubcategoryDef[]>> = {
   bio: [{ id: 'omics', name: '발현·연관' }, { id: 'sequence', name: '서열·계통' }, { id: 'genome', name: '유전체 구조' }],
   finance: [{ id: 'price', name: '가격 변환' }, { id: 'risk', name: '위험·수익' }, { id: 'market', name: '시장 구조' }],
   network: [{ id: 'graph', name: '그래프' }, { id: 'sets', name: '집합' }, { id: 'tree', name: '계층' }],
+  ml: [{ id: 'eval', name: '모델 평가' }, { id: 'explain', name: '모델 해석' }, { id: 'embed', name: '차원 축소·군집' }, { id: 'neural', name: '신경망' }],
 }
 
 export const subcategoryName = (category: CategoryId, sub: string | undefined) => subcategories[category]?.find((x) => x.id === sub)?.name
@@ -164,7 +167,7 @@ const catalogV14: VizMeta[] = [
   { id: 'hive', name: '하이브 플롯', nameEn: 'Hive Plot', category: 'network', dataKinds: ['network'], keywords: ['축 배치', '결정적 레이아웃', '노드 속성', 'hive plot', 'hive', 'rule-based layout'], summary: '노드의 속성으로 어느 축에, 축의 어디에 놓일지 규칙으로 정하고 연결을 곡선으로 이어, 같은 데이터가 늘 같은 모양이 되는 네트워크 그림입니다.', related: ['network', 'arc', 'adjacency'] },
 ]
 
-export const catalog: VizMeta[] = [...catalogV14, ...catalogV5]
+export const catalog: VizMeta[] = [...catalogV14, ...catalogV5, ...catalogV6]
 
 export const vizById = new Map(catalog.map((v) => [v.id, v]))
 
