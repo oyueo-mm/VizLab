@@ -39,4 +39,15 @@ export const loadersV6: Record<string, Loader> = {
   'cumulative-incidence': () => import('./survivalExtraCharts').then((m) => m.cifModule),
   'joint-distribution': () => import('./distCharts').then((m) => m.jointModule),
   'return-level': () => import('./distCharts').then((m) => m.returnLevelModule),
+  // physics, chemistry, mathematics
+  'mandelbrot-set': () => import('./fractalCharts').then((m) => m.mandelbrotModule),
+  'julia-set': () => import('./fractalCharts').then((m) => m.juliaModule),
+  'newton-fractal': () => import('./fractalCharts').then((m) => m.newtonModule),
+  'domain-coloring': () => import('./fractalCharts').then((m) => m.domainModule),
+  'strange-attractor': () => import('./dynamicsCharts').then((m) => m.attractorModule),
+  'poincare-section': () => import('./dynamicsCharts').then((m) => m.poincareModule),
+  'radial-distribution': () => import('./condensedCharts').then((m) => m.rdfModule),
+  'band-structure': () => import('./condensedCharts').then((m) => m.bandModule),
+  'density-of-states': () => import('./condensedCharts').then((m) => m.dosModule),
+  'phase-diagram': () => import('./condensedCharts').then((m) => m.phaseModule),
 }
