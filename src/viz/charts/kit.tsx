@@ -240,12 +240,13 @@ export function HeatGrid(p: HeatProps) {
   const n = rows.length, m = cols.length
   const maxRow = Math.max(0, ...rows.map((r) => r.length)), maxCol = Math.max(0, ...cols.map((r) => r.length))
   const every = p.labelEvery ?? 1
+  const cw0 = (width - (compact ? 12 : 140)) / Math.max(1, m)
   const left = compact ? 6 : Math.min(120, 22 + Math.min(10, maxRow) * 7.2) + (p.rowTitle ? 14 : 0)
-  const top = compact ? 6 : 52 + (maxCol > 4 && m > 8 ? Math.min(60, maxCol * 4.5) : 0)
+  const top = compact ? 6 : 52 + (maxCol >= 2 && m > 6 && cw0 < maxCol * 10.5 + 4 ? Math.min(70, maxCol * 8) : 0)
   const aw = Math.max(20, width - left - (compact ? 6 : p.rightPad ?? 24)), ah = Math.max(20, height - top - (compact ? 6 : p.bottomPad ?? 30))
   let cw = aw / Math.max(1, m), ch = ah / Math.max(1, n)
   if (p.square) { cw = ch = Math.min(cw, ch) }
-  const rotate = !compact && cw < maxCol * 7 + 4
+  const rotate = !compact && cw < maxCol * 10.5 + 4
   return (
     <div className="chart-root">
       <svg ref={stage.svgRef} width={width} height={height} className="chart-svg" role="img" data-testid="chart-svg" aria-label={p.title} onPointerLeave={stage.hide}>

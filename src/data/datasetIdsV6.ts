@@ -7,3 +7,4 @@ export type DatasetIdV6 =
   | 'scalar-metaballs' | 'scalar-orbital' | 'scalar-gyroid' | 'vector-abc' | 'vector-dipole' | 'tensor-dti'
   | 'mol-water' | 'mol-ammonia' | 'mol-methane' | 'mol-ethene' | 'mol-benzene' | 'mol-ethane' | 'mol-co2'
   | 'crystal-nacl' | 'crystal-cu' | 'crystal-fe' | 'crystal-diamond' | 'crystal-cscl' | 'crystal-mg'
+  | 'geo-field-iso' | 'geo-field-aniso' | 'events-spacetime' | 'case-control'

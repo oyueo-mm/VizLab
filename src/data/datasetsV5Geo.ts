@@ -31,7 +31,7 @@ const inPoly = (x: number, y: number, poly: readonly [number, number][]) => {
   }
   return inside
 }
-const onLand = (lon: number, lat: number) => inPoly(lon, lat, MAINLAND) || Math.hypot((lon - 126.55) * 0.82, lat - 33.4) < 0.28
+export const onLand = (lon: number, lat: number) => inPoly(lon, lat, MAINLAND) || Math.hypot((lon - 126.55) * 0.82, lat - 33.4) < 0.28
 
 const elevation = hillsHeight(KOREA_HILLS)
 /** Smooth synthetic annual-mean temperature (°C): colder to the north and on high ground. */

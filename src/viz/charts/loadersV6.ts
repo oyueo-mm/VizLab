@@ -56,4 +56,12 @@ export const loadersV6: Record<string, Loader> = {
   'tensor-glyph': () => import('./field3dCharts').then((m) => m.tensorModule),
   'molecule-viewer': () => import('./chemCharts').then((m) => m.moleculeModule),
   'crystal-lattice': () => import('./chemCharts').then((m) => m.crystalModule),
+  // geostatistics
+  'moran-scatterplot': () => import('./geoStatCharts').then((m) => m.moranScatterModule),
+  semivariogram: () => import('./geoStatCharts').then((m) => m.variogramModule),
+  'directional-variogram': () => import('./geoStatCharts').then((m) => m.directionalModule),
+  'kriging-map': () => import('./geoStatCharts').then((m) => m.krigingModule),
+  'space-time-kde': () => import('./geoStatCharts').then((m) => m.spaceTimeModule),
+  'od-matrix-map': () => import('./geoStatCharts').then((m) => m.odModule),
+  'density-ratio-map': () => import('./geoStatCharts').then((m) => m.ratioModule),
 }

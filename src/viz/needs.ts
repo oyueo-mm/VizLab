@@ -222,4 +222,11 @@ export const needs: Record<string, Slot[]> = {
   'tensor-glyph': [['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number']],
   'molecule-viewer': [['category'], ['number'], ['number'], ['number']],
   'crystal-lattice': [['category'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number']],
+  'moran-scatterplot': [['number'], ['number'], ['number']],
+  'semivariogram': [['number'], ['number'], ['number']],
+  'directional-variogram': [['number'], ['number'], ['number']],
+  'kriging-map': [['number'], ['number'], ['number']],
+  'space-time-kde': [['number'], ['number'], ['number']],
+  'od-matrix-map': [['category'], ['category'], ['number'], ['number'], ['number'], ['number'], ['number']],
+  'density-ratio-map': [['number'], ['number'], ['category']],
 }
