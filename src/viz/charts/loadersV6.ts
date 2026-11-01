@@ -64,4 +64,15 @@ export const loadersV6: Record<string, Loader> = {
   'space-time-kde': () => import('./geoStatCharts').then((m) => m.spaceTimeModule),
   'od-matrix-map': () => import('./geoStatCharts').then((m) => m.odModule),
   'density-ratio-map': () => import('./geoStatCharts').then((m) => m.ratioModule),
+  // finance
+  'efficient-frontier': () => import('./finance2Charts').then((m) => m.frontierModule),
+  'risk-return-scatter': () => import('./finance2Charts').then((m) => m.riskReturnModule),
+  'iv-smile': () => import('./finance2Charts').then((m) => m.ivSmileModule),
+  'iv-surface': () => import('./finance2Charts').then((m) => m.ivSurfaceModule),
+  'order-flow-footprint': () => import('./finance2Charts').then((m) => m.footprintModule),
+  'order-book-heatmap': () => import('./finance2Charts').then((m) => m.bookHeatmapModule),
+  'event-study-car': () => import('./finance2Charts').then((m) => m.eventModule),
+  'var-es-distribution': () => import('./finance2Charts').then((m) => m.varModule),
+  'risk-contribution': () => import('./finance2Charts').then((m) => m.riskContribModule),
+  'yield-surface': () => import('./finance2Charts').then((m) => m.yieldSurfaceModule),
 }

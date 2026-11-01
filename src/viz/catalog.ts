@@ -42,7 +42,7 @@ export const subcategories: Partial<Record<CategoryId, SubcategoryDef[]>> = {
     { id: 'surface3d', name: '3차원' }, { id: 'dynamics', name: '동역학' }, { id: 'signal', name: '신호·주파수' }, { id: 'polar', name: '극좌표·삼각' }, { id: 'mesh', name: '기하' }, { id: 'fractal', name: '프랙탈·복소평면' }, { id: 'field3d', name: '3차원 장' }, { id: 'materials', name: '분자·결정·물성' },
   ],
   bio: [{ id: 'omics', name: '발현·연관' }, { id: 'sequence', name: '서열·계통' }, { id: 'genome', name: '유전체 구조' }],
-  finance: [{ id: 'price', name: '가격 변환' }, { id: 'risk', name: '위험·수익' }, { id: 'market', name: '시장 구조' }],
+  finance: [{ id: 'price', name: '가격 변환' }, { id: 'risk', name: '위험·수익' }, { id: 'market', name: '시장 구조' }, { id: 'portfolio', name: '포트폴리오' }, { id: 'options', name: '옵션·변동성' }],
   network: [{ id: 'graph', name: '그래프' }, { id: 'sets', name: '집합' }, { id: 'tree', name: '계층' }],
   ml: [{ id: 'eval', name: '모델 평가' }, { id: 'explain', name: '모델 해석' }, { id: 'embed', name: '차원 축소·군집' }, { id: 'neural', name: '신경망' }],
 }

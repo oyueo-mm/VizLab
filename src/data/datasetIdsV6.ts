@@ -8,3 +8,4 @@ export type DatasetIdV6 =
   | 'mol-water' | 'mol-ammonia' | 'mol-methane' | 'mol-ethene' | 'mol-benzene' | 'mol-ethane' | 'mol-co2'
   | 'crystal-nacl' | 'crystal-cu' | 'crystal-fe' | 'crystal-diamond' | 'crystal-cscl' | 'crystal-mg'
   | 'geo-field-iso' | 'geo-field-aniso' | 'events-spacetime' | 'case-control'
+  | 'asset-returns' | 'option-chain' | 'trade-footprint' | 'book-snapshots' | 'event-returns' | 'pnl-fat' | 'yield-history'
