@@ -9,3 +9,4 @@ export type DatasetIdV6 =
   | 'crystal-nacl' | 'crystal-cu' | 'crystal-fe' | 'crystal-diamond' | 'crystal-cscl' | 'crystal-mg'
   | 'geo-field-iso' | 'geo-field-aniso' | 'events-spacetime' | 'case-control'
   | 'asset-returns' | 'option-chain' | 'trade-footprint' | 'book-snapshots' | 'event-returns' | 'pnl-fat' | 'yield-history'
+  | 'dag-release' | 'flow-supply' | 'flow-grid' | 'net-hubs' | 'net-communities'

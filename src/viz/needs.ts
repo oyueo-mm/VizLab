@@ -239,4 +239,9 @@ export const needs: Record<string, Slot[]> = {
   'var-es-distribution': [['number']],
   'risk-contribution': [['number'], ['number']],
   'yield-surface': [['date', 'number'], ['number'], ['number'], ['number']],
+  'spectral-embedding': [['category'], ['category']],
+  'dag-layout': [['category'], ['category']],
+  'max-flow': [['category'], ['category'], ['number']],
+  'rich-club': [['category'], ['category']],
+  'community-blockmodel': [['category'], ['category']],
 }

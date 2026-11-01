@@ -75,4 +75,10 @@ export const loadersV6: Record<string, Loader> = {
   'var-es-distribution': () => import('./finance2Charts').then((m) => m.varModule),
   'risk-contribution': () => import('./finance2Charts').then((m) => m.riskContribModule),
   'yield-surface': () => import('./finance2Charts').then((m) => m.yieldSurfaceModule),
+  // network
+  'spectral-embedding': () => import('./graphCharts2').then((m) => m.spectralModule),
+  'dag-layout': () => import('./graphCharts2').then((m) => m.dagModule),
+  'max-flow': () => import('./graphCharts2').then((m) => m.flowModule),
+  'rich-club': () => import('./graphCharts2').then((m) => m.richClubModule),
+  'community-blockmodel': () => import('./graphCharts2').then((m) => m.blockModule),
 }
