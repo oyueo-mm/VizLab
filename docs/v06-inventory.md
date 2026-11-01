@@ -1,6 +1,6 @@
 # VizLab v0.6 기법 목록 (inventory)
 
-기준: v0.5 최종 커밋 `7131ea9`, 167종. 상태는 **검증된 것만** “구현 및 검증 완료”로 적습니다. 검증 = 단위 테스트(계산) + 서버 렌더 + 브라우저 딥링크·새로고침·콘솔 오류 0.
+기준: v0.5 최종 커밋 `7131ea9`, 167종. 상태는 **검증된 것만** “구현 및 검증 완료”로 적습니다. 검증 = 단위 테스트(계산) + 서버 렌더(빈 데이터·텍스트 셀·null 포함) + 브라우저 스크린샷 점검. 브라우저 딥링크·새로고침 e2e는 마지막 배치에서 한꺼번에 추가합니다(해당 열의 “e2e”).
 
 상태 표기: 후보 / 조사 완료 / 구현 중 / 구현 및 검증 완료 / 기존 차트에 통합 / 보류 / 미구현
 
@@ -8,46 +8,35 @@
 
 | ID | 이름 | 상태 | 비고 |
 | --- | --- | --- | --- |
-| A01 | 유전체 트랙 Genome Browser Tracks | 후보 | |
+| A01 | 유전체 트랙 | 후보 | |
 | A02 | Circos Plot | 후보 | |
-| A03 | Parallel Sets | 후보 | 올루비얼·평행좌표와의 차이(범주 축 사이 리본 + 차원 순서 조작)를 구현할 수 있으면 독립 |
-| A04 | Force-Directed Edge Bundling | 후보 | FDEB(Holten & van Wijk) |
+| A03 | Parallel Sets | 후보 | 올루비얼·평행좌표와의 차이(범주 축 + 차원 순서 조작)로 독립 가능한지 구현 시 판단 |
+| A04 | Force-Directed Edge Bundling | 후보 | |
 | A05 | Voronoi Treemap | 후보 | |
 | A06 | Viewshed Map | 후보 | |
 | A07 | Watershed Map | 후보 | |
 | A08 | 3D Globe | 후보 | WebGL 검토 |
 
-## 기계학습·AI (ML01–ML18)
+## 구현 및 검증 완료 (49종, `catalog id`)
 
-모두 브라우저에서 실제로 학습·계산합니다(`src/stats/ml.ts`, 단위 테스트 `src/stats/v6ml.test.ts` 24개).
+| 분야 | 개수 | 항목 |
+| --- | --- | --- |
+| 기계학습·AI (ML01–ML18) | 18 | `confusion-matrix`, `decision-boundary`, `learning-curve`, `validation-curve`, `hyperparam-landscape`, `silhouette-plot`, `tsne`, `umap`, `decision-tree`, `ice-plot`, `ale-plot`, `shap-summary`, `shap-waterfall`, `permutation-importance`, `nn-training`, `loss-landscape`(2D 등고선만), `attention-map`(학습되지 않은 가중치임을 화면에 명시), `activation-flow` |
+| 통계·시계열·베이지안 (ST01–ST15) | 15 | `acf-plot`, `pacf-plot`, `ccf-plot`, `stl`, `seasonal-subseries`, `lag-plot`, `mcmc-trace`, `prior-posterior`, `posterior-predictive`, `mcmc-rank`, `sbc-rank`, `hazard-plot`, `cumulative-incidence`, `joint-distribution`, `return-level` |
+| 물리·수학 (PHY01–PHY16) | 16 | `mandelbrot-set`, `julia-set`, `newton-fractal`, `domain-coloring`, `strange-attractor`, `poincare-section`, `radial-distribution`, `band-structure`, `density-of-states`, `phase-diagram`, `isosurface`, `volume-rendering`, `vector-field-3d`, `tensor-glyph`, `molecule-viewer`, `crystal-lattice` |
 
-| ID | 이름 | catalog id | 계산 | 상태 |
-| --- | --- | --- | --- | --- |
-| ML01 | 혼동행렬 | `confusion-matrix` | kNN·로지스틱·트리·NB·MLP, 5겹 out-of-fold, P/R/F1 | 구현 및 검증 완료 |
-| ML02 | 결정 경계 | `decision-boundary` | 격자 전체에 학습된 모델 예측, 검증 점 분리 | 구현 및 검증 완료 |
-| ML03 | 학습 곡선 | `learning-curve` | 층화 k겹, 학습 크기별 훈련·검증 점수 | 구현 및 검증 완료 |
-| ML04 | 검증 곡선 | `validation-curve` | 하이퍼파라미터별 교차검증 | 구현 및 검증 완료 |
-| ML05 | 하이퍼파라미터 탐색 지형도 | `hyperparam-landscape` | 두 하이퍼파라미터 격자 교차검증 | 구현 및 검증 완료 |
-| ML06 | 실루엣 플롯 | `silhouette-plot` | 정확한 쌍거리 실루엣(손계산 일치), k-평균(재시작 6회) | 구현 및 검증 완료 |
-| ML07 | t-SNE | `tsne` | 정확한 t-SNE(퍼플렉서티 이분법, 모멘텀·이득·과장), KL·신뢰도 | 구현 및 검증 완료 |
-| ML08 | UMAP | `umap` | 정확한 kNN, 퍼지 단체 집합, a·b 곡선 맞춤(umap-learn과 일치), PCA 초기화, SGD | 구현 및 검증 완료 (단순판: 스펙트럴 초기화·근사 이웃 없음) |
-| ML09 | ICE | `ice-plot` | 랜덤 포레스트 + 격자 예측, c-ICE | 구현 및 검증 완료 |
-| ML10 | ALE | `ale-plot` | Apley–Zhao 분위수 구간·누적·중심화 | 구현 및 검증 완료 |
-| ML11 | SHAP Summary | `shap-summary` | 정확한 interventional 샤플리(p≤6), 합산 불변량 | 구현 및 검증 완료 |
-| ML12 | SHAP Waterfall | `shap-waterfall` | 위와 동일, 가법 분해 | 구현 및 검증 완료 |
-| ML13 | Permutation Importance | `permutation-importance` | 열 섞기 R² 감소, 70/30 분할 | 구현 및 검증 완료 |
-| ML14 | 결정 트리 | `decision-tree` | CART 지니, 노드·경로 | 구현 및 검증 완료 |
-| ML15 | 신경망 학습 곡선 | `nn-training` | MLP SGD+모멘텀, 학습률 스케줄, 검증 20% | 구현 및 검증 완료 |
-| ML16 | Loss Landscape | `loss-landscape` | filter-normalised 두 방향 격자 손실, 등고선 | 구현 및 검증 완료 (2D 등고선만, 3D 표면 미구현) |
-| ML17 | Attention Map | `attention-map` | 멀티헤드 스케일드 닷프로덕트, 인과·패딩 마스크 | 구현 및 검증 완료 (학습되지 않은 무작위 가중치임을 화면에 명시) |
-| ML18 | 활성화 분포·신호 흐름 | `activation-flow` | 실제 MLP 학습 전후 층별 분포, 죽은 뉴런 | 구현 및 검증 완료 |
+(PHY 16종은 요청서의 PHY01–PHY16 전부에 대응합니다.)
 
-## 나머지 후보 (아직 시작하지 않음)
+계산 검증(단위 테스트 142개): ML(`v6ml` 24), 시계열·베이지안(`v6tsa` 22), 프랙탈(`v6fractal` 11), 물리(`v6physics` 15), 3D·화학(`v6field3d` 12) 외 기존 430개. 주요 검증: SHAP 합산 불변량, UMAP a·b = umap-learn(1.577, 0.895), t-SNE 퍼플렉서티·KL, 실루엣 손계산, ACF 손계산·AR(2)의 PACF 절단, STL 재구성 항등식, Aalen–Johansen 항등식, GEV L-적률 복원, 로렌츠 리아푸노프 ≈ 0.9, fcc 배위수 12·NaCl 밀도 2.164, 마칭 사면체 구의 넓이와 닫힌 메시, Newton 근 회전 대칭 등.
 
-- 통계·시계열(ST01–ST15), 지리공간(GEO01–GEO10), 물리·화학·수학(PHY01–PHY16), 생물정보(BIO01–BIO10), 금융(FIN01–FIN10), 네트워크(NET01–NET10), 언어·텍스트(TXT01–TXT10), 소프트웨어(SW01–SW08), 산업·신뢰성(IND01–IND08): 모두 **후보**. 구현하면 이 문서에서 해당 행을 위 표 형식으로 옮겨 적습니다.
-- 추가 발굴 후보(목록 외)는 구현 시 같은 표에 추가합니다.
+## 남은 후보 (아직 시작하지 않음 = 후보)
+
+- 지리공간(GEO01–GEO10), 생물정보(BIO01–BIO10), 금융(FIN01–FIN10), 네트워크(NET01–NET10), 언어·텍스트(TXT01–TXT10), 소프트웨어(SW01–SW08), 산업·신뢰성(IND01–IND08).
+- 구현하면 위 표의 해당 분야 행으로 옮겨 적습니다.
 
 ## 중복 판단 기록
 
-- Parallel Sets(A03): 올루비얼(시간 축 순서)·평행좌표(수치 축)와 다른 입력(범주 다차원)이지만 계산은 올루비얼과 비슷하여 구현 시 “차원 축 재배열 + 범주 필터” 상호작용으로 차별화합니다. 불충분하면 “기존 기법에 통합”으로 바꿉니다.
-- ML 중 PDP는 기존 `partial-dependence`가 있어 ICE·ALE만 새로 추가했습니다(ICE 화면에 PDP 평균을 함께 표시).
+- ML09 ICE: 기존 `partial-dependence`가 있어 PDP는 새로 만들지 않고 ICE 화면에 PDP 평균을 겹쳐 표시.
+- ST05 계절 부분계열·ST06 시차 도표: 기존 캘린더·선 그래프와 다른 질문(계절별 추세, 자기상관 구조)에 답해 독립 기법으로 인정.
+- PHY02 Julia는 Mandelbrot의 매개변수 평면과 연동되는 별개의 반복 집합이라 독립.
+- PHY15 띠 구조와 PHY16 상태 밀도는 같은 모형(강한 결합)에서 나오지만, 위·아래 패널의 질문이 달라(분산 관계 vs 에너지 분포) 독립 항목으로 두었습니다.
