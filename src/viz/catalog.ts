@@ -35,8 +35,9 @@ export const subcategories: Partial<Record<CategoryId, SubcategoryDef[]>> = {
     { id: 'analysis', name: '공간 분석' }, { id: 'stats', name: '공간 통계' }, { id: 'spacetime', name: '시공간' }, { id: 'map3d', name: '3D 지도' },
   ],
   uncertainty: [
-    { id: 'regression', name: '회귀 진단' }, { id: 'survival', name: '생존 분석' }, { id: 'process', name: '공정 관리' }, { id: 'model', name: '모델 평가' }, { id: 'inference', name: '추정·표본' },
+    { id: 'regression', name: '회귀 진단' }, { id: 'survival', name: '생존 분석' }, { id: 'process', name: '공정 관리' }, { id: 'model', name: '모델 평가' }, { id: 'inference', name: '추정·표본' }, { id: 'bayes', name: '베이지안' }, { id: 'extreme', name: '극단값' },
   ],
+  timeseries: [{ id: 'serial', name: '자기상관·분해' }],
   science: [
     { id: 'surface3d', name: '3차원' }, { id: 'dynamics', name: '동역학' }, { id: 'signal', name: '신호·주파수' }, { id: 'polar', name: '극좌표·삼각' }, { id: 'mesh', name: '기하' },
   ],

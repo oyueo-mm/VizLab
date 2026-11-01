@@ -3,6 +3,7 @@ import { useMemo, useRef, type ReactNode } from 'react'
 import { AxisBottom, AxisLeft, Legend, Readout, Tooltip, localPoint, margins, useTooltip } from '../../components/chart/primitives'
 import { fmt } from '../../lib/format'
 import { colorAt } from '../../lib/colors'
+import { formatTime } from '../../stats/datetime'
 
 /** Building blocks shared by the v0.6 charts: an SVG stage with tooltip and readout, a layered XY plot and a labelled heat grid. */
 
@@ -15,7 +16,7 @@ export function useStage() {
 export type StageApi = ReturnType<typeof useStage>
 
 /** Notes sit at the bottom right so they never cover the centred x-axis title. */
-const NOTE_STYLE = { left: 'auto', right: 8, bottom: 6, maxWidth: '40%', textAlign: 'right' } as const
+const NOTE_STYLE = { left: 'auto', right: 8, bottom: 2, maxWidth: '58%', textAlign: 'right' } as const
 
 export function Stage({ stage, width, height, label, readout, note, compact, children, overlay }: {
   stage: StageApi; width: number; height: number; label: string; readout?: { label: string; value: ReactNode }[]; note?: ReactNode; compact?: boolean; children: ReactNode; overlay?: ReactNode
@@ -71,6 +72,10 @@ export interface XYProps {
   extra?: (api: { x: (v: number) => number; y: (v: number) => number; iw: number; ih: number }) => ReactNode
   /** Domain padding fraction. */
   pad?: number
+  /** Approximate number of x ticks. */
+  xTicks?: number
+  /** The x values are epoch milliseconds. */
+  xDate?: boolean
   legend?: boolean
 }
 
@@ -80,6 +85,7 @@ export function XYPlot(p: XYProps) {
   const { layers, width, height, compact } = p
   const stage = useStage()
   const m = margins(compact, { ...(p.margin ?? {}) })
+  if (p.note && !compact) m.bottom += 18
   let iw = Math.max(10, width - m.left - m.right), ih = Math.max(10, height - m.top - m.bottom)
   if (p.square) { const side = Math.min(iw, ih); m.left += (iw - side) / 2; iw = ih = side }
   const dom = useMemo(() => {
@@ -126,7 +132,7 @@ export function XYPlot(p: XYProps) {
     const yf = p.yFormat ?? fmt
     stage.at(e, (
       <>
-        <b>{(p.xFormat ?? fmt)(best)}</b>
+        <b>{(p.xFormat ?? (p.xDate ? formatTime : fmt))(best)}</b>
         {hoverLayers.map((ly, i) => { const k = ly.x.findIndex((v) => v === best); return k < 0 || !finite(ly.y[k]) ? null : <div key={i}>{ly.label ?? `계열 ${i + 1}`}: {yf(ly.y[k])}</div> })}
       </>
     ))
@@ -139,7 +145,7 @@ export function XYPlot(p: XYProps) {
         onClick={p.onPick ? (e) => { const l = localPoint(stage.svgRef.current!, e); const x = l.x - m.left, y = l.y - m.top; if (x >= 0 && x <= iw && y >= 0 && y <= ih) p.onPick!(sx.invert(x), sy.invert(y)) } : undefined}>
         <defs><clipPath id={clipId}><rect x={-2} y={-2} width={iw + 4} height={ih + 4} /></clipPath></defs>
         <g transform={`translate(${m.left},${m.top})`}>
-          <AxisBottom scale={sx} y={ih} grid={!compact && p.grid !== false ? ih : 0} label={p.xLabel} compact={compact} format={p.xFormat} />
+          <AxisBottom scale={sx} y={ih} grid={!compact && p.grid !== false ? ih : 0} label={p.xLabel} compact={compact} format={p.xFormat} ticks={p.xTicks} date={p.xDate} />
           <AxisLeft scale={sy} x={0} grid={!compact && p.grid !== false ? iw : 0} label={p.yLabel} compact={compact} format={p.yFormat} />
           <rect x={0} y={0} width={iw} height={ih} fill="none" stroke="#e5e7eb" />
           <g clipPath={`url(#${clipId})`}>
@@ -275,3 +281,18 @@ export function HeatGrid(p: HeatProps) {
 export const linspace = (a: number, b: number, n: number) => Array.from({ length: n }, (_, i) => (n === 1 ? a : a + ((b - a) * i) / (n - 1)))
 
 export const nums = (v: readonly (number | null)[]) => v.filter((x): x is number => x != null && Number.isFinite(x))
+
+/** Vertically stacked panels that share one chart area; each child gets its pixel height. */
+export function Panels({ width, height, parts, children }: { width: number; height: number; parts: number[]; children: ((h: number) => ReactNode)[] }) {
+  const total = parts.reduce((a, b) => a + b, 0)
+  let used = 0
+  return (
+    <div style={{ width, height }} data-testid="panels">
+      {children.map((render, i) => {
+        const h = i === children.length - 1 ? height - used : Math.floor((height * parts[i]) / total)
+        used += h
+        return <div key={i} style={{ height: h, position: 'relative' }}>{render(h)}</div>
+      })}
+    </div>
+  )
+}
