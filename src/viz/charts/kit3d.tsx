@@ -23,7 +23,8 @@ export interface Scene3DProps {
   readout?: { label: string; value: ReactNode }[]
   note?: ReactNode
   fit?: number
-  onClick?: () => void
+  /** Draw the cube frame (default true). */
+  frame?: boolean
 }
 
 export function Scene3D(p: Scene3DProps) {
@@ -46,7 +47,7 @@ export function Scene3D(p: Scene3DProps) {
       <div ref={boxRef} className="orbit-box" tabIndex={compact ? -1 : 0} style={{ width, height }} aria-label={`${p.label}: 끌어서 회전, 휠로 확대`}>
         <canvas ref={cvRef} className="canvas3d" data-testid="canvas3d" style={{ width, height }} aria-hidden="true" />
         <svg ref={stage.svgRef} width={width} height={height} className="chart-svg" role="img" data-testid="chart-svg" aria-label={p.label} style={{ position: 'absolute', inset: 0, overflow: 'hidden' }} onPointerLeave={stage.hide}>
-          <Frame3D proj={proj} box={box} labels={compact ? [] : p.labels} />
+          {p.frame !== false && <Frame3D proj={proj} box={box} labels={compact ? [] : p.labels} />}
           {p.overlay?.(proj, stage)}
         </svg>
       </div>

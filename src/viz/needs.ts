@@ -216,4 +216,10 @@ export const needs: Record<string, Slot[]> = {
   'band-structure': [['category'], ['number']],
   'density-of-states': [['category'], ['number']],
   'phase-diagram': [['category'], ['number'], ['number']],
+  'isosurface': [['number'], ['number'], ['number'], ['number']],
+  'volume-rendering': [['number'], ['number'], ['number'], ['number']],
+  'vector-field-3d': [['number'], ['number'], ['number'], ['number'], ['number'], ['number']],
+  'tensor-glyph': [['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number']],
+  'molecule-viewer': [['category'], ['number'], ['number'], ['number']],
+  'crystal-lattice': [['category'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number']],
 }

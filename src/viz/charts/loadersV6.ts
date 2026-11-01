@@ -50,4 +50,10 @@ export const loadersV6: Record<string, Loader> = {
   'band-structure': () => import('./condensedCharts').then((m) => m.bandModule),
   'density-of-states': () => import('./condensedCharts').then((m) => m.dosModule),
   'phase-diagram': () => import('./condensedCharts').then((m) => m.phaseModule),
+  isosurface: () => import('./field3dCharts').then((m) => m.isoModule),
+  'volume-rendering': () => import('./field3dCharts').then((m) => m.volumeModule),
+  'vector-field-3d': () => import('./field3dCharts').then((m) => m.vector3dModule),
+  'tensor-glyph': () => import('./field3dCharts').then((m) => m.tensorModule),
+  'molecule-viewer': () => import('./chemCharts').then((m) => m.moleculeModule),
+  'crystal-lattice': () => import('./chemCharts').then((m) => m.crystalModule),
 }
