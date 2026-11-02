@@ -10,6 +10,10 @@ export const loadersV8: Record<string, Loader> = {
   'kelp-diagram': () => import('./setCharts8').then((m) => m.kelpModule),
   'rainbow-boxes': () => import('./setCharts8').then((m) => m.rainbowBoxesModule),
   'radial-sets': () => import('./setCharts8').then((m) => m.radialSetsModule),
+  // three-dimensional
+  'cone-tree': () => import('./coneTree8').then((m) => m.coneTreeModule),
+  'stream-surface': () => import('./fieldCharts8').then((m) => m.streamSurfaceModule),
+  streamtube: () => import('./fieldCharts8').then((m) => m.streamtubeModule),
   // networks
   nodetrix: () => import('./graphCharts8').then((m) => m.nodeTrixModule),
   'power-graph': () => import('./graphCharts8').then((m) => m.powerGraphModule),

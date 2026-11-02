@@ -295,4 +295,7 @@ export const needs: Record<string, Slot[]> = {
   'nodetrix': [['category'], ['category']],
   'power-graph': [['category'], ['category']],
   'confluent-drawing': [['category'], ['category']],
+  'cone-tree': [['category']],
+  'stream-surface': [['number'], ['number'], ['number'], ['number'], ['number'], ['number']],
+  'streamtube': [['number'], ['number'], ['number'], ['number'], ['number'], ['number']],
 }

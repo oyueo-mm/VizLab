@@ -36,6 +36,19 @@ export const datasetsV8: DatasetDef[] = [
     },
   },
   {
+    id: 'vector-vortex', name: '소용돌이 흐름 (3차원 벡터장, 수식)', description: '중심축 둘레를 도는 소용돌이에 안쪽으로 빨려 드는 성분과 위로 솟는 성분을 더한 합성 흐름입니다: (−1.5·y·g − 0.35·x, 1.5·x·g − 0.35·y, 0.2 + 0.7·g)이며 g = exp(−(x²+y²)/2)입니다. 유선이 축 둘레를 나선으로 감으며 올라가 곡면·튜브 표현에 알맞습니다. 한 행이 격자점의 벡터 하나입니다.',
+    size: { min: 5, max: 13, default: 9, step: 1, label: '축당 격자점 수' },
+    generate: (_seed, n) => {
+      const rows: Cell[][] = []
+      for (let k = 0; k < n; k++) for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+        const x = -2 + (4 * i) / (n - 1), y = -2 + (4 * j) / (n - 1), z = -2 + (4 * k) / (n - 1)
+        const g = Math.exp(-(x * x + y * y) / 2)
+        rows.push([round(x, 4), round(y, 4), round(z, 4), round(-1.5 * y * g - 0.35 * x, 5), round(1.5 * x * g - 0.35 * y, 5), round(0.2 + 0.7 * g, 5)])
+      }
+      return table([num('x'), num('y'), num('z'), num('u'), num('v'), num('w')], rows)
+    },
+  },
+  {
     id: 'dense-modules', name: '조밀한 의존 관계망 (이분 완전연결 + 완전그래프, 합성)', description: '앱 6개가 공용 서비스 5개를 모두 호출하는 완전 이분 구조, 팀원 6명이 서로 모두 연결된 완전그래프, 같은 모양의 작은 이분 구조와 몇 개의 잡음 연결로 이루어진 합성 네트워크입니다. 간선은 많지만 중복되는 연결 구조가 뚜렷해 Power Graph와 Confluent Drawing으로 크게 압축됩니다. 실제 서비스의 관계가 아닙니다.',
     size: { min: 0, max: 12, default: 4, step: 1, label: '잡음 연결 수' },
     generate: (seed, n) => {

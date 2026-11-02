@@ -55,7 +55,7 @@ process-map fault-tree word-tree lifelines`,
   focus: `table-lens hyperbolic-tree`,
   temporal: `hops particle-flow nn-training queue-simulation`,
   texture: `line-integral-convolution`,
-  spatial3d: `terrain-3d prism-map space-time-cube space-time-kde surface-3d scatter-3d strange-attractor isosurface volume-rendering vector-field-3d molecule-viewer crystal-lattice iv-surface yield-surface loss-landscape`,
+  spatial3d: `cone-tree stream-surface streamtube terrain-3d prism-map space-time-cube space-time-kde surface-3d scatter-3d strange-attractor isosurface volume-rendering vector-field-3d molecule-viewer crystal-lattice iv-surface yield-surface loss-landscape`,
   composite: `raincloud joint-distribution shap-summary`,
 }
 

@@ -11,6 +11,7 @@ import { catalogV6 } from './catalogV6'
 import { catalogV7 } from './catalogV7'
 import { catalogV8 } from './catalogV8'
 import { catalogV8Net } from './catalogV8Net'
+import { catalogV8Sci } from './catalogV8Sci'
 import { catalog, categories, categoryById, dataKinds, inCategory, searchCatalog, vizById } from './catalog'
 import { hasModule, loadAllModules, moduleIds } from './charts'
 import { autoMapping, incompatibility, mappingErrors } from './mapping'
@@ -23,7 +24,7 @@ const V4 = ['choropleth', 'symbol-map', 'dot-density', 'geo-hexbin', 'flow-map',
 const V5 = catalogV5.map((c) => c.id)
 const V6 = catalogV6.map((c) => c.id)
 const V7 = catalogV7.map((c) => c.id)
-const V8 = [...catalogV8, ...catalogV8Net].map((c) => c.id)
+const V8 = [...catalogV8, ...catalogV8Net, ...catalogV8Sci].map((c) => c.id)
 const ALL = [...V1, ...V2, ...V3, ...V4, ...V5, ...V6, ...V7, ...V8]
 
 let modules: Record<string, VizModule>

@@ -20,12 +20,12 @@ const scalarRoles: RoleSpec[] = [
   { key: 'z', label: 'z', type: 'number', required: true, prefer: '^z|z$' },
   { key: 'value', label: '스칼라 값', type: 'number', required: true, prefer: '값|value|밀도' },
 ]
-const vectorRoles: RoleSpec[] = [
+export const vectorRoles: RoleSpec[] = [
   { key: 'x', label: 'x', type: 'number', required: true, prefer: '^x' }, { key: 'y', label: 'y', type: 'number', required: true, prefer: '^y' }, { key: 'z', label: 'z', type: 'number', required: true, prefer: '^z' },
   { key: 'u', label: '벡터 u (x 성분)', type: 'number', required: true, prefer: '^u' }, { key: 'v', label: '벡터 v (y 성분)', type: 'number', required: true, prefer: '^v' }, { key: 'w', label: '벡터 w (z 성분)', type: 'number', required: true, prefer: '^w' },
 ]
 
-function columns(table: DataTable, mapping: Mapping, keys: string[]) {
+export function columns(table: DataTable, mapping: Mapping, keys: string[]) {
   const idx = keys.map((k) => columnIndex(table, roleColumn(mapping, k)))
   if (idx.some((i) => i < 0)) return null
   const rows: number[][] = []
@@ -39,7 +39,7 @@ function useScalarGrid(table: DataTable, mapping: Mapping): Grid3 | null {
 const needGrid = <ChartMessage>x, y, z 좌표와 값 열을 고르세요. 규칙적인 3차원 격자(축마다 2점 이상, 8행 이상)여야 합니다.</ChartMessage>
 
 /** Maps world positions of a grid into the unit cube used by the scene (uniform scale, centred). */
-function cubeMap(g: Grid3) {
+export function cubeMap(g: Grid3) {
   const ext = [(g.nx - 1) * g.dx, (g.ny - 1) * g.dy, (g.nz - 1) * g.dz], c = [g.x0 + ext[0] / 2, g.y0 + ext[1] / 2, g.z0 + ext[2] / 2], s = 2 / Math.max(...ext)
   return { s, norm: (p: V3): V3 => [(p[0] - c[0]) * s, (p[1] - c[1]) * s, (p[2] - c[2]) * s], box: { x: [-(ext[0] * s) / 2, (ext[0] * s) / 2] as [number, number], y: [-(ext[1] * s) / 2, (ext[1] * s) / 2] as [number, number], z: [-(ext[2] * s) / 2, (ext[2] * s) / 2] as [number, number] } }
 }
