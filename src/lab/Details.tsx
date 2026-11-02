@@ -38,6 +38,8 @@ export default function Details({ id, open, onToggle }: { id: string; open: bool
           <article>
             <h3>정의</h3>
             <p>{c.definition}</p>
+            {c.note && <p className="details-note" data-testid="details-note">{c.note}</p>}
+            {c.encoding && <><h3>시각적 매핑</h3><List items={c.encoding} /></>}
             <h3>어떤 데이터에 적합한가</h3>
             <List items={c.suitable} />
             <h3>작동 원리</h3>
@@ -54,8 +56,10 @@ export default function Details({ id, open, onToggle }: { id: string; open: bool
             </div>
             <h3>주의사항</h3>
             <List items={c.cautions} />
+            {c.differs && <><h3>다른 기법과의 차이</h3><List items={c.differs} /></>}
             <h3>비슷한 시각화</h3>
             <Related id={id} />
+            {c.references && <><h3>참고자료</h3><List items={c.references} /></>}
           </article>
         </div>
       )}

@@ -52,3 +52,4 @@
 .dot-canvas, .flow-canvas { z-index: 2; }
 .tip-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 2px; }
 .matrix-canvas { position: absolute; image-rendering: pixelated; pointer-events: none; }
+.details-note { margin: 10px 0; padding: 8px 12px; border-left: 3px solid var(--accent); background: #f7f8fa; color: var(--muted); font-size: 13px; line-height: 1.6; }

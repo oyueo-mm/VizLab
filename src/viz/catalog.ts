@@ -1,5 +1,7 @@
 import { catalogV5 } from './catalogV5'
 import { catalogV6 } from './catalogV6'
+import { catalogV7 } from './catalogV7'
+import { hasKind, techniqueResultLinks, type VizKind } from './kinds'
 import { purposeTerms } from './purposes'
 import type { CategoryId, DataKind, VizMeta } from './types'
 
@@ -33,6 +35,7 @@ export interface SubcategoryDef { id: string; name: string }
 
 /** Second-level groups inside a category, shown as a filter row in the catalog. */
 export const subcategories: Partial<Record<CategoryId, SubcategoryDef[]>> = {
+  multivariate: [{ id: 'highdim', name: '고차원 투영' }, { id: 'pixel', name: '픽셀·표 기반' }, { id: 'glyph', name: '글리프·단면' }],
   geo: [
     { id: 'point', name: '위치·밀도' }, { id: 'surface', name: '지형·연속 표면' }, { id: 'thematic', name: '주제도' }, { id: 'distort', name: '지도 변형' },
     { id: 'analysis', name: '공간 분석' }, { id: 'stats', name: '공간 통계' }, { id: 'spacetime', name: '시공간' }, { id: 'map3d', name: '3D 지도' },
@@ -173,7 +176,19 @@ const catalogV14: VizMeta[] = [
   { id: 'hive', name: '하이브 플롯', nameEn: 'Hive Plot', category: 'network', dataKinds: ['network'], keywords: ['축 배치', '결정적 레이아웃', '노드 속성', 'hive plot', 'hive', 'rule-based layout'], summary: '노드의 속성으로 어느 축에, 축의 어디에 놓일지 규칙으로 정하고 연결을 곡선으로 이어, 같은 데이터가 늘 같은 모양이 되는 네트워크 그림입니다.', related: ['network', 'arc', 'adjacency'] },
 ]
 
-export const catalog: VizMeta[] = [...catalogV14, ...catalogV5, ...catalogV6]
+export const catalog: VizMeta[] = [...catalogV14, ...catalogV5, ...catalogV6, ...catalogV7]
+
+// Technique ↔ result links (v0.7): both sides list each other under "related" without touching the original catalog entries' ids.
+for (const [technique, results] of techniqueResultLinks) {
+  const t = catalog.find((v) => v.id === technique)
+  for (const r of results) {
+    const m = catalog.find((v) => v.id === r)
+    if (t && m) {
+      if (!t.related.includes(r)) t.related = [...t.related, r]
+      if (!m.related.includes(technique)) m.related = [...m.related, technique]
+    }
+  }
+}
 
 export const vizById = new Map(catalog.map((v) => [v.id, v]))
 
@@ -186,11 +201,12 @@ const normalize = (s: string) => s.toLowerCase().replace(/[\s·/()-]/g, '')
  * The category and the data kinds are independent filters: a chart must be in the category
  * and support at least one of the selected data kinds.
  */
-export function searchCatalog(query: string, category: CategoryId | 'all' = 'all', list: readonly VizMeta[] = catalog, kinds: readonly DataKind[] = [], sub?: string) {
+export function searchCatalog(query: string, category: CategoryId | 'all' = 'all', list: readonly VizMeta[] = catalog, kinds: readonly DataKind[] = [], sub?: string, kind?: VizKind | '') {
   const terms = query.split(/\s+/).map(normalize).filter(Boolean)
   return list.filter((meta) => {
     if (category !== 'all' && !inCategory(meta, category)) return false
     if (sub && meta.sub !== sub) return false
+    if (kind && !hasKind(meta, kind)) return false
     if (kinds.length && !kinds.some((k) => meta.dataKinds.includes(k))) return false
     if (!terms.length) return true
     return terms.every((t) => haystack(meta).includes(t))

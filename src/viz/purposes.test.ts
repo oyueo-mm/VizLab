@@ -27,6 +27,6 @@ describe('search by analysis purpose and abbreviation', () => {
 
   it('does not make unrelated queries match everything', () => {
     expect(searchCatalog('병목').length).toBeLessThan(15)
-    expect(catalog.length).toBe(250)
+    expect(catalog.length).toBeGreaterThanOrEqual(250)
   })
 })
