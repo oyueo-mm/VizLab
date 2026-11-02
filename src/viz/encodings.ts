@@ -39,13 +39,13 @@ event-raster barcode-plot lexis bifurcation radial-distribution band-structure d
 volcano ma-plot manhattan gsea-running-sum ramachandran learning-curve validation-curve ice-plot ale-plot weibull-plot lexical-dispersion zipf-plot rich-club marey-chart`,
   length: `diverging-stacked-bar stem-and-leaf hanging-rootogram tornado-chart persistence-diagram lineup pit-histogram histogram bar grouped-bar stacked-bar lollipop waterfall pyramid pareto bullet stacked-bar-100 upset linear-set-diagram spike-map gantt radial-bar volume-profile risk-contribution
 silhouette-plot shap-waterfall permutation-importance tolerance-stackup`,
-  area: `bagplot functional-boxplot splatterplot parallel-tag-clouds fan bubble violin ridgeline pie waffle area stacked-area streamgraph punchcard symbol-map dorling vba-map buffer-map funnel nightingale-rose cumulative-flow wind-rose equivolume drawdown order-book coverage
+  area: `contour-boxplot bagplot functional-boxplot splatterplot parallel-tag-clouds fan bubble violin ridgeline pie waffle area stacked-area streamgraph punchcard symbol-map dorling vba-map buffer-map funnel nightingale-rose cumulative-flow wind-rose equivolume drawdown order-book coverage
 venn bubble-sets kelp-diagram rainbow-boxes radial-sets word-cloud`,
   color: `probabilistic-isocontour zame od-maps tilebars kde2d heatmap calendar horizon kde-map hillshade slope-aspect bivariate chorochromatic choropleth hotspot lisa raster-map dasymetric kriging-map density-ratio-map
 spectrogram scalogram recurrence-plot polar-heatmap mandelbrot-set julia-set newton-fractal domain-coloring order-flow-footprint order-book-heatmap clustered-heatmap contact-map confusion-matrix decision-boundary
 hyperparam-landscape attention-map community-blockmodel collocation-matrix gradient-plot`,
   glyph: `sunflower-plot vector-field-topology box letter-value candlestick chernoff-faces vector-field glyph-map pictogram tensor-glyph renko heikin-ashi point-figure line-break sequence-logo msa-logo`,
-  connection: `contour-tree setnet maptrix paohvis infocrystal metrosets phrase-net nodetrix power-graph confluent-drawing chord dendrogram network arc tanglegram od-matrix-map adjacency edge-bundling bipartite hive hypergraph biofabric radial-tree dag-layout force-directed-edge-bundling linesets phylogenetic-tree decision-tree
+  connection: `spacetree contour-tree setnet maptrix paohvis infocrystal metrosets phrase-net nodetrix power-graph confluent-drawing chord dendrogram network arc tanglegram od-matrix-map adjacency edge-bundling bipartite hive hypergraph biofabric radial-tree dag-layout force-directed-edge-bundling linesets phylogenetic-tree decision-tree
 process-map fault-tree word-tree lifelines`,
   flow: `sequence-braiding set-streams lifeflow sankey alluvial parallel-sets flow-map streamline max-flow phase-portrait activation-flow storyline-chart`,
   partition: `wordstream gosper-map mosaicsets semantic-substrates hexbin treemap mosaic sunburst pack icicle voronoi-treemap geo-hexbin tile-grid square-grid cluster-map gridded-cartogram voronoi-map marimekko flame delaunay phase-diagram dimensional-stacking`,
@@ -61,7 +61,7 @@ process-map fault-tree word-tree lifelines`,
 
 /** Secondary principles; entries that are drawn with a second encoding that is part of the technique. */
 const SECOND_LIST: Record<string, string> = {
-  position: 'diverging-stacked-bar bagplot probabilistic-isocontour persistence-diagram contour-tree splatterplot lineup excentric-labeling metrosets semantic-substrates bubble heatmap parallel hive biofabric linesets bubble-sets tsne umap pca-biplot hops gradient-plot dorling streamline',
+  position: 'spacetree contour-boxplot diverging-stacked-bar bagplot probabilistic-isocontour persistence-diagram contour-tree splatterplot lineup excentric-labeling metrosets semantic-substrates bubble heatmap parallel hive biofabric linesets bubble-sets tsne umap pca-biplot hops gradient-plot dorling streamline',
   color: 'maptrix hexbin tile-grid recursive-pattern circle-segments space-filling-curve pixel-bar-chart dimensional-stacking hyperslice terrain-3d voronoi-map isosurface',
   multivariate: 'pairplot parallel-sets radviz star-coordinates dimensional-stacking chernoff-faces pca-biplot',
   temporal: 'functional-boxplot perspective-wall wordstream sequence-braiding set-streams paohvis lifeflow connected-scatter streamgraph stacked-area line area candlestick calendar horizon storyline-chart lifelines marey-chart time-curves lexis event-raster gantt grand-tour space-time-cube',

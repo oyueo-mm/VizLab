@@ -277,3 +277,41 @@ describe('bagplot / diverging bars / decision curve', () => {
     expect(q.model).toBeCloseTo(0.5)
   })
 })
+
+import { contourBandDepth, contourBoxplot, spaceTree } from './stat10c'
+
+describe('contour boxplot / SpaceTree', () => {
+  const mk = (cells: number[]) => Uint8Array.from(cells)
+  it('contour band depth: nested sets make the middle one deepest', () => {
+    const a = mk([1, 0, 0, 0]), b = mk([1, 1, 0, 0]), c = mk([1, 1, 1, 0])
+    const d = contourBandDepth([a, b, c])
+    expect(d[1]).toBe(1)
+    expect(d[0]).toBeCloseTo(5 / 6)
+    expect(d[2]).toBeCloseTo(5 / 6)
+  })
+  it('contour boxplot: the central box is the union minus the intersection of the deepest half', () => {
+    const ms = [mk([1, 0, 0, 0, 0]), mk([1, 1, 0, 0, 0]), mk([1, 1, 1, 0, 0]), mk([1, 1, 1, 1, 0]), mk([1, 1, 1, 1, 1])]
+    const cb = contourBoxplot(ms)
+    expect(cb.median).toBe(2)
+    expect(cb.central.length).toBe(3)
+    expect([...cb.union]).toEqual([1, 1, 1, 1, 0])
+    expect([...cb.intersection]).toEqual([1, 1, 0, 0, 0])
+  })
+  const tree = { name: 'R', children: [{ name: 'A', children: [{ name: 'a1' }, { name: 'a2' }, { name: 'a3' }] }, { name: 'B', children: [{ name: 'b1' }, { name: 'b2' }] }, { name: 'C' }] }
+  it('SpaceTree: only the selected path and its children are open; no overlaps; inside the frame', () => {
+    expect(spaceTree(tree, [], 300).map((n) => n.name)).toEqual(['R', 'A', 'B', 'C'])
+    const ns = spaceTree(tree, ['A'], 300)
+    expect(ns.map((n) => n.name)).toEqual(['R', 'A', 'a1', 'a2', 'a3', 'B', 'C'])
+    for (let d = 0; d < 3; d++) {
+      const col = ns.filter((n) => n.depth === d).sort((p, q) => p.y - q.y)
+      for (let i = 1; i < col.length; i++) expect(col[i].y - col[i - 1].y).toBeGreaterThanOrEqual(col[i].h)
+      for (const n of col) { expect(n.y - n.h / 2).toBeGreaterThanOrEqual(0); expect(n.y + n.h / 2).toBeLessThanOrEqual(300) }
+    }
+  })
+  it('SpaceTree: node height shrinks when a column is crowded', () => {
+    const big = { name: 'R', children: Array.from({ length: 60 }, (_, i) => ({ name: `n${i}` })) }
+    const h = spaceTree(big, [], 300)[1].h
+    expect(h).toBeLessThan(24)
+    expect(spaceTree(tree, [], 300)[1].h).toBe(24)
+  })
+})

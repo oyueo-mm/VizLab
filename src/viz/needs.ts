@@ -344,4 +344,6 @@ export const needs: Record<string, Slot[]> = {
   'bagplot': [['number'], ['number']],
   'diverging-stacked-bar': [['category'], ['number'], ['number']],
   'decision-curve': [['number'], ['number']],
+  'contour-boxplot': [['category'], ['number'], ['number'], ['number']],
+  'spacetree': [['category']],
 }

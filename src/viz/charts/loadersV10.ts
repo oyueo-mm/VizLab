@@ -22,4 +22,6 @@ export const loadersV10: Record<string, Loader> = {
   bagplot: () => import('./statCharts10b').then((m) => m.bagModule),
   'diverging-stacked-bar': () => import('./statCharts10b').then((m) => m.divModule),
   'decision-curve': () => import('./statCharts10b').then((m) => m.dcaModule),
+  'contour-boxplot': () => import('./treeCharts10').then((m) => m.cbModule),
+  spacetree: () => import('./treeCharts10').then((m) => m.spaceTreeModule),
 }

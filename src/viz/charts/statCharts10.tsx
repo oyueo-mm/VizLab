@@ -77,12 +77,12 @@ export const fbModule: VizModule<FbParams> = {
 
 export interface StemParams { unit: number; split: boolean }
 
-const niceUnit = (range: number) => { for (const u of [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000]) if (range / (u * 10) <= 16) return u; return 1000 }
 
 function StemChart({ table, mapping, params, width, height, compact }: ChartProps<StemParams>) {
   const vals = useMemo(() => { const vi = columnIndex(table, roleColumn(mapping, 'value')); return vi < 0 ? null : table.rows.map((r) => toNumber(r[vi])).filter((v): v is number => v != null) }, [table, mapping])
   if (!vals || vals.length < 3) return <ChartMessage>값(숫자) 열을 고르세요.</ChartMessage>
-  const unit = params.unit > 0 ? params.unit : niceUnit(Math.max(...vals) - Math.min(...vals))
+  const range = Math.max(...vals) - Math.min(...vals)
+  const unit = params.unit > 0 ? params.unit : range > 0 ? 10 ** Math.floor(Math.log10(range / 50)) : 1 // a power of ten, so a stem is a decade of the leaf unit
   const { rows } = stemLeaf(vals, unit, params.split)
   const rowH = Math.max(7, Math.min(22, (height - 70) / rows.length)), fs = Math.min(15, rowH * 0.85)
   const cw = fs * 0.62
@@ -90,13 +90,15 @@ function StemChart({ table, mapping, params, width, height, compact }: ChartProp
   const stemW = String(Math.max(...rows.map((r) => Math.abs(r.stem)))).length + 2
   const ox = Math.max(12, (width - (stemW + Math.max(...rows.map((r) => r.leaves.length)) + 2) * cw) / 2)
   const fmtStem = (s: number) => String(Math.round(s * 10 * unit * 1e6) / 1e6)
+  // a split stem is shown twice: the second row starts at the middle of the stem (leaves 5–9)
+  const fmtRow = (i: number) => (params.split && i > 0 && rows[i - 1].stem === rows[i].stem ? String(Math.round((rows[i].stem * 10 + 5) * unit * 1e6) / 1e6) : fmtStem(rows[i].stem))
   return (
     <div className="chart-root">
       <svg width={width} height={height} className="chart-svg" role="img" data-testid="chart-svg" aria-label={`줄기-잎 그림: 값 ${vals.length}개, 줄기 ${rows.length}줄`}>
         {!compact && <text x={ox} y={18} fontSize={12} fill="#6b7280" data-testid="stem-key">잎 한 칸 = {fmt(unit, 3)} · 예) {fmtStem(rows[Math.floor(rows.length / 2)].stem)}│{rows[Math.floor(rows.length / 2)].leaves[0] ?? 0} = {fmt((rows[Math.floor(rows.length / 2)].stem * 10 + (rows[Math.floor(rows.length / 2)].leaves[0] ?? 0)) * unit, 6)}</text>}
         {rows.map((r, i) => (
           <g key={i} data-testid="stem-row" data-count={r.leaves.length}>
-            <text x={ox + stemW * cw} y={top + i * rowH + rowH * 0.8} fontSize={fs} fontFamily="monospace" textAnchor="end" fill="#374151">{fmtStem(r.stem)}</text>
+            <text x={ox + stemW * cw} y={top + i * rowH + rowH * 0.8} fontSize={fs} fontFamily="monospace" textAnchor="end" fill="#374151">{fmtRow(i)}</text>
             <line x1={ox + (stemW + 0.5) * cw} x2={ox + (stemW + 0.5) * cw} y1={top + i * rowH} y2={top + (i + 1) * rowH} stroke="#9aa6a6" />
             <text x={ox + (stemW + 1.5) * cw} y={top + i * rowH + rowH * 0.8} fontSize={fs} fontFamily="monospace" fill="#2a8c82" letterSpacing={cw * 0.4} data-testid="stem-leaves">{[...r.leaves].sort((a, b) => a - b).join('')}</text>
           </g>

@@ -203,4 +203,23 @@ export const datasetsV10: DatasetDef[] = [
       return table([cat('환자'), num('결과'), num('모형 A 위험'), num('모형 B 위험')], rows)
     },
   },
+  {
+    id: 'contour-ensemble', name: '시뮬레이션 앙상블 (격자 스칼라장 여러 개, 합성)', description: '28×28 격자 위의 스칼라장 여러 개(멤버)입니다. 장마다 두 개의 봉우리 위치와 크기가 조금씩 흔들리고, 한 멤버는 봉우리가 크게 옮겨져 있습니다. 같은 값 이상인 영역(등치선 안쪽)을 멤버별 윤곽으로 보고 그 묶음을 상자그림처럼 요약하는 윤곽 상자그림에 알맞습니다.',
+    size: { min: 8, max: 40, default: 20, step: 2, label: '멤버 수' },
+    generate: (seed, n) => {
+      const r = createRng(seed)
+      const G = 28
+      const rows: Cell[][] = []
+      for (let m = 0; m < n; m++) {
+        const odd = m === n - 1
+        const cx1 = 9 + r.normal(0, 1.2) + (odd ? 7 : 0), cy1 = 10 + r.normal(0, 1.2) + (odd ? 5 : 0), s1 = 4.2 + r.normal(0, 0.4)
+        const cx2 = 19 + r.normal(0, 1.2), cy2 = 18 + r.normal(0, 1.2), s2 = 3.6 + r.normal(0, 0.4)
+        for (let y = 0; y < G; y++) for (let x = 0; x < G; x++) {
+          const v = Math.exp(-((x - cx1) ** 2 + (y - cy1) ** 2) / (2 * s1 * s1)) + 0.8 * Math.exp(-((x - cx2) ** 2 + (y - cy2) ** 2) / (2 * s2 * s2))
+          rows.push([`멤버 ${String(m + 1).padStart(2, '0')}`, x, y, round(v, 3)])
+        }
+      }
+      return table([cat('멤버'), num('x'), num('y'), num('값')], rows)
+    },
+  },
 ]
