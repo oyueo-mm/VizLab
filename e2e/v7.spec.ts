@@ -16,7 +16,7 @@ test.describe('v0.7: classification and catalog', () => {
   test('lists every entry once and offers the four kinds as a filter independent of the category', async ({ page }) => {
     expect(V7.length).toBe(31)
     await page.goto('./#/catalog')
-    await expect(cards(page)).toHaveCount(281)
+    await expect(cards(page)).toHaveCount(301)
     await expect(page.getByTestId('kind-filters')).toBeVisible()
     for (const k of ['technique', 'specialized', 'analysis', 'application']) await expect(page.getByTestId(`nature-${k}`)).toBeVisible()
     await page.getByTestId('nature-analysis').click()

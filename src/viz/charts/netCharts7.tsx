@@ -12,6 +12,7 @@ import { roleColumn, roleColumns } from '../mapping'
 import type { ChartProps, ControlsProps, VizModule } from '../types'
 
 const ACCENT = '#2a8c82'
+type Pt = [number, number]
 
 // ───────────────────────────── Hyperbolic Tree ─────────────────────────────
 
@@ -177,13 +178,46 @@ export const linearModule: VizModule<LinearParams> = {
 
 // ───────────────────────────── Force-directed edge bundling ─────────────────────────────
 
+/**
+ * Bundled polylines of the edges. The computation runs in a Web Worker so the page stays responsive while it works; a newer request
+ * terminates the older one (cancel). Where workers are unavailable (server render, tests) it runs synchronously. The previous result stays
+ * on screen while a new one is computed.
+ */
+function useBundled(edges: Edge2[] | null, opts: { cycles: number; iterations: number; stiffness: number; threshold: number }, enabled: boolean) {
+  const canWorker = typeof Worker !== 'undefined'
+  const sync = useMemo(() => {
+    if (!enabled || !edges || canWorker) return null
+    const t0 = performance.now()
+    const lines = bundleEdges(edges, opts)
+    return { lines, ms: performance.now() - t0 }
+  }, [enabled, edges, canWorker, opts.cycles, opts.iterations, opts.stiffness, opts.threshold]) // eslint-disable-line react-hooks/exhaustive-deps
+  const [res, setRes] = useState<{ lines: Pt[][]; ms: number; edges: Edge2[] } | null>(null)
+  const [busy, setBusy] = useState(false)
+  useEffect(() => {
+    if (!enabled || !edges || !canWorker) return
+    let live = true
+    setBusy(true)
+    const t0 = performance.now()
+    let w: Worker | null = null
+    const done = (lines: Pt[][]) => { if (live) { setRes({ lines, ms: performance.now() - t0, edges }); setBusy(false) } }
+    try {
+      w = new Worker(new URL('../../stats/fdeb.worker.ts', import.meta.url), { type: 'module' })
+      w.onmessage = (e: MessageEvent<Pt[][]>) => { done(e.data); w?.terminate() }
+      w.onerror = () => { w?.terminate(); done(bundleEdges(edges, opts)) }
+      w.postMessage({ edges, opts })
+    } catch { done(bundleEdges(edges, opts)) }
+    return () => { live = false; w?.terminate() }
+  }, [enabled, edges, canWorker, opts.cycles, opts.iterations, opts.stiffness, opts.threshold]) // eslint-disable-line react-hooks/exhaustive-deps
+  const cur = canWorker ? res : sync
+  return { lines: cur?.lines ?? null, ms: cur?.ms ?? 0, busy }
+}
+
 export interface FdebParams { strength: number; cycles: number; threshold: number; mode: 'bundled' | 'straight' | 'both'; opacity: number; weighted: boolean }
 const MAX_EDGES = 300
 
 function FdebChart({ table, mapping, params, width, height, compact }: ChartProps<FdebParams>) {
   const cols = ['sx', 'sy', 'tx', 'ty'].map((k) => columnIndex(table, roleColumn(mapping, k)))
   const gcol = columnIndex(table, roleColumn(mapping, 'group')), wcol = columnIndex(table, roleColumn(mapping, 'weight'))
-  const ms = useRef(0)
   const model = useMemo(() => {
     if (cols.some((c) => c < 0)) return null
     const raw = table.rows.map((r) => ({ v: cols.map((c) => toNumber(r[c])), g: gcol >= 0 ? toLabel(r[gcol]) : '', w: wcol >= 0 ? toNumber(r[wcol]) ?? 1 : 1 }))
@@ -196,13 +230,8 @@ function FdebChart({ table, mapping, params, width, height, compact }: ChartProp
     const edges: Edge2[] = used.map((e) => ({ x0: (e.v[0]! - x0) / sc, y0: (e.v[1]! - y0) / sc, x1: (e.v[2]! - x0) / sc, y1: (e.v[3]! - y0) / sc }))
     return { edges, used, extent: [(x1 - x0) / sc, (y1 - y0) / sc] as [number, number], dropped: raw.length - used.length }
   }, [table, cols.join(','), gcol, wcol]) // eslint-disable-line react-hooks/exhaustive-deps
-  const lines = useMemo(() => {
-    if (!model || params.mode === 'straight') return null
-    const t0 = performance.now()
-    const out = bundleEdges(model.edges, { cycles: compact ? 3 : params.cycles, iterations: compact ? 20 : 50, stiffness: params.strength, threshold: params.threshold })
-    ms.current = performance.now() - t0
-    return out
-  }, [model, params.mode, params.strength, params.cycles, params.threshold, compact])
+  const bundle = useBundled(model?.edges ?? null, { cycles: compact ? 3 : params.cycles, iterations: compact ? 20 : 50, stiffness: params.strength, threshold: params.threshold }, !!model && params.mode !== 'straight')
+  const lines = params.mode === 'straight' ? null : bundle.lines
   if (!model) return <ChartMessage>출발·도착의 x, y 열(숫자형 4개)을 선택하세요.</ChartMessage>
   const m = compact ? 6 : 30
   const sc = Math.min((width - 2 * m) / model.extent[0], (height - 2 * m) / model.extent[1])
@@ -218,7 +247,7 @@ function FdebChart({ table, mapping, params, width, height, compact }: ChartProp
         {(params.mode === 'straight' || params.mode === 'both') && model.edges.map((e, i) => <line key={`s${i}`} x1={px([e.x0, e.y0])[0]} y1={px([e.x0, e.y0])[1]} x2={px([e.x1, e.y1])[0]} y2={px([e.x1, e.y1])[1]} stroke={params.mode === 'both' ? '#cfd5da' : color(model.used[i].g)} strokeOpacity={params.mode === 'both' ? 0.5 : params.opacity} strokeWidth={0.7} data-testid="fdeb-straight" />)}
         {lines && (params.mode === 'bundled' || params.mode === 'both') && lines.map((l, i) => <path key={`b${i}`} d={curve(l) ?? ''} fill="none" stroke={color(model.used[i].g)} strokeOpacity={params.opacity} strokeWidth={params.weighted ? 0.6 + 2.4 * (model.used[i].w / wmax) : 1.1} data-testid="fdeb-path" />)}
         {model.edges.map((e, i) => <g key={`n${i}`}><circle cx={px([e.x0, e.y0])[0]} cy={px([e.x0, e.y0])[1]} r={compact ? 1 : 2} fill="#111" fillOpacity={0.5} /><circle cx={px([e.x1, e.y1])[0]} cy={px([e.x1, e.y1])[1]} r={compact ? 1 : 2} fill="#111" fillOpacity={0.5} /></g>)}
-        {!compact && lines && <text x={m} y={height - 8} className="radar-level" data-testid="fdeb-readout">간선 {model.edges.length}개{model.dropped ? `(${model.dropped}개는 표본에서 제외)` : ''} · 묶음 계산 {ms.current.toFixed(0)}ms</text>}
+        {!compact && lines && <text x={m} y={height - 8} className="radar-level" data-testid="fdeb-readout">간선 {model.edges.length}개{model.dropped ? `(${model.dropped}개는 표본에서 제외)` : ''} · 묶음 계산 {bundle.ms.toFixed(0)}ms{bundle.busy ? ' · 계산 중…' : ''}</text>}
       </svg>
       {!compact && <Legend items={groups.filter(Boolean).map((g) => ({ key: g, color: color(g) }))} />}
     </div>

@@ -59,6 +59,16 @@ export const presets: Preset[] = [
   { id: 'uncertainty-views', name: '신뢰구간 · HOPs · 그라디언트 플롯', note: '같은 그룹 평균의 불확실성을 구간, 가능한 결과의 움직임, 농도로', datasetId: 'groups', n: 160, charts: ['ci', 'hops', 'gradient-plot'] },
   { id: 'sets-linear', name: '벤·오일러 · UpSet · 선형 집합 도표', note: '같은 소속 데이터를 원의 겹침, 조합 막대, 너비가 원소 수인 열로', datasetId: 'set-members', charts: ['venn', 'upset', 'linear-set-diagram'] },
   { id: 'tree-layouts', name: '트리맵 · 보로노이 트리맵 · 쌍곡 트리', note: '같은 계층을 사각 분할, 보로노이 분할, 쌍곡 원판으로', datasetId: 'budget', charts: ['treemap', 'voronoi-treemap', 'hyperbolic-tree'] },
+  // v0.8
+  { id: 'set-regions', name: '버블 셋 · 라인셋 · 켈프', note: '같은 점·집합 소속을 면(에너지 등치선), 선(최단 경로), 뼈대 영역(신장 트리)으로 — 한 점을 가리키면 세 그림에서 모두 강조됩니다', datasetId: 'set-points', n: 30, charts: ['bubble-sets', 'linesets', 'kelp-diagram'] },
+  { id: 'set-overlap-radial', name: '벤·오일러 · UpSet · 래디얼 셋', note: '같은 동아리 소속을 영역, 교집합 막대, 원형 요약(차수별 원소)으로', datasetId: 'set-members', n: 120, charts: ['venn', 'upset', 'radial-sets'] },
+  { id: 'set-boxes', name: '선형 집합 · 레인보우 박스 · 래디얼 셋', note: '같은 소속 데이터를 조합 열 너비, 원소별 상자, 원형 부채꼴로 — 집계와 원소 단위 표현의 차이', datasetId: 'set-members', n: 80, charts: ['linear-set-diagram', 'rainbow-boxes', 'radial-sets'] },
+  { id: 'network-hybrid', name: '네트워크 · 노드트릭스 · 바이오패브릭', note: '같은 간선 목록을 노드-링크, 공동체 행렬 혼합, 간선을 세로 선분으로 편 표현으로', datasetId: 'net-communities', charts: ['network', 'nodetrix', 'biofabric'] },
+  { id: 'network-compress', name: '파워 그래프 · 합류 그래프 · 노드트릭스', note: '밀집한 같은 네트워크를 구조 압축(power 노드), 합류 줄기, 행렬 혼합으로', datasetId: 'dense-modules', charts: ['power-graph', 'confluent-drawing', 'nodetrix'] },
+  { id: 'network-attributes', name: '시맨틱 서브스트레이트 · 피벗 그래프 · 인접 행렬', note: '속성이 있는 같은 관계망을 속성 영역 배치, 속성 격자 집계, 행렬로', datasetId: 'people-network', charts: ['semantic-substrates', 'pivot-graph', 'adjacency'] },
+  { id: 'flow-3d', name: '3D 벡터장 · 스트림 서피스 · 스트림튜브', note: '같은 3차원 유동장을 화살표·유선, 시작선이 훑은 곡면, 속도를 반영한 튜브로', datasetId: 'vector-vortex', charts: ['vector-field-3d', 'stream-surface', 'streamtube'] },
+  { id: 'hierarchy-3d', name: '트리맵 · 쌍곡 트리 · 콘 트리', note: '같은 조직 계층을 면적 분할, 쌍곡 초점+맥락, 3차원 원뿔 배치로', datasetId: 'org-tree', charts: ['treemap', 'hyperbolic-tree', 'cone-tree'] },
+  { id: 'text-views', name: '워드 클라우드 · 패러럴 태그 클라우드 · 텍스트아크', note: '같은 문장 모음을 빈도 구름, 문서별 단어 열, 글 전체의 단어 분포로', datasetId: 'corpus-articles', charts: ['word-cloud', 'parallel-tag-clouds', 'textarc'] },
 ]
 
 export const presetById = new Map(presets.map((p) => [p.id, p]))

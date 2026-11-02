@@ -21,6 +21,7 @@ const shortest = (from: number, to: number) => { let d = (to - from) % (2 * Math
 function ConeChart({ table, mapping, params, setParams, width, height, compact }: ChartProps<ConeParams>) {
   const levels = roleColumns(mapping, 'levels')
   const reduced = useReducedMotion()
+  const tap = useRef({ key: '', t: 0 })
   const tree = useMemo(() => (levels.length ? buildTree(table, levels, null).tree : null), [table, levels.join('|')]) // eslint-disable-line react-hooks/exhaustive-deps
   const collapsed = useMemo(() => new Set(params.collapsed), [params.collapsed])
   // target phases come from the selection; the drawn phases follow them with a short animation
@@ -65,6 +66,13 @@ function ConeChart({ table, mapping, params, setParams, width, height, compact }
     if (hasKids) setParams({ collapsed: [...params.collapsed, n.key] })
     else if (collapsed.has(n.key)) setParams({ collapsed: params.collapsed.filter((k) => k !== n.key) })
   }
+  // The orbit box captures the pointer, so click / dblclick never reach a node: a press selects, a second press within 400 ms folds the subtree.
+  const press = (n: ConeNode) => {
+    const now = performance.now()
+    if (tap.current.key === n.key && now - tap.current.t < 400) { tap.current = { key: '', t: 0 }; toggle(n); return }
+    tap.current = { key: n.key, t: now }
+    select(n)
+  }
   const draw = (ctx: CanvasRenderingContext2D, proj: Projector) => {
     // translucent cone bases first, far to near
     const rings = nodes.filter((n) => n.children.length > 1).map((n) => ({ n, d: proj(P(n)).depth })).sort((a, b) => b.d - a.d)
@@ -103,7 +111,7 @@ function ConeChart({ table, mapping, params, setParams, width, height, compact }
             const r = (n.children.length ? 6 : 3.6) * (compact ? 0.6 : 1)
             return (
               <g key={n.key} data-testid="cone-node" style={{ cursor: compact ? undefined : 'pointer' }}
-                onClick={compact ? undefined : () => select(n)} onDoubleClick={compact ? undefined : () => toggle(n)}>
+                onPointerDown={compact ? undefined : () => press(n)}>
                 <circle cx={p.x} cy={p.y} r={r + 4} fill="transparent" />
                 <circle cx={p.x} cy={p.y} r={r} fill={n.key === params.selected ? '#111' : hot ? '#2a8c82' : colors(String(n.depth % 8))} stroke="#fff" strokeWidth={1} opacity={0.95} />
                 {!compact && shownLabels(n) && <text x={p.x} y={p.y - r - 3} textAnchor="middle" fontSize={10} fill="#333" style={{ paintOrder: 'stroke', stroke: '#fff', strokeWidth: 3, pointerEvents: 'none' }}>{n.name}</text>}

@@ -151,7 +151,7 @@ function CloudControls({ params, setParams }: ControlsProps<CloudParams>) {
 }
 
 export const cloudModule: VizModule<CloudParams> = {
-  roles: [{ key: 'text', label: '문장 (텍스트 열)', type: 'category', required: true }],
+  roles: [{ key: 'text', label: '문장 (텍스트 열)', type: 'category', required: true, prefer: '문장|text' }],
   datasets: ['text-corpus'],
   defaultParams: { minSize: 13, maxSize: 54, maxWords: 70, minCount: 1, rotate: false, stop: '', scheme: 'viridis', seed: 3 },
   Chart: CloudChart,

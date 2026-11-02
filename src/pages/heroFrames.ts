@@ -20,10 +20,12 @@ import type { HeroV7Key } from './heroFramesV7'
 import { v5Frame } from './heroFramesV5Lazy'
 import { v6Frame } from './heroFramesV6Lazy'
 import { v7Frame } from './heroFramesV7Lazy'
+import { v8Frame } from './heroFramesV8Lazy'
+import type { HeroV8Key } from './heroFramesV8'
 
 // ─── stages ──────────────────────────────────────────────────────────────────
 
-export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network' | 'geo' | 'meta' | 'flame' | 'bundle' | 'v5' | 'v6' | 'v7'
+export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network' | 'geo' | 'meta' | 'flame' | 'bundle' | 'v5' | 'v6' | 'v7' | 'v8'
 
 export const heroStages = [
   { key: 'scatter', label: '산점도', viz: 'scatter', group: 'dist' },
@@ -90,6 +92,14 @@ export const heroStages = [
   { key: 'fdeb', label: '힘 기반 간선 묶음', viz: 'force-directed-edge-bundling', group: 'v7' },
   { key: 'story', label: '스토리라인 차트', viz: 'storyline-chart', group: 'v7' },
   { key: 'lens', label: '테이블 렌즈', viz: 'table-lens', group: 'v7' },
+  { key: 'bubble', label: '버블 셋', viz: 'bubble-sets', group: 'v8' },
+  { key: 'nodetrix', label: '노드트릭스', viz: 'nodetrix', group: 'v8' },
+  { key: 'cone', label: '콘 트리', viz: 'cone-tree', group: 'v8' },
+  { key: 'ssurface', label: '스트림 서피스', viz: 'stream-surface', group: 'v8' },
+  { key: 'radial', label: '래디얼 셋', viz: 'radial-sets', group: 'v8' },
+  { key: 'confluent', label: '합류 그래프', viz: 'confluent-drawing', group: 'v8' },
+  { key: 'tarcs', label: '타임아크', viz: 'timearcs', group: 'v8' },
+  { key: 'lflow', label: '라이프플로', viz: 'lifeflow', group: 'v8' },
 ] as const
 export type HeroStage = (typeof heroStages)[number]['key']
 
@@ -584,6 +594,7 @@ export function buildFrame(stage: HeroStage, data: HeroData, w: number, h: numbe
     case 'v5': return v5Frame(stage as HeroV5Key, data.cycle, w, h)
     case 'v6': return v6Frame(stage as HeroV6Key, data.cycle, w, h)
     case 'v7': return v7Frame(stage as HeroV7Key, data.cycle, w, h)
+    case 'v8': return v8Frame(stage as HeroV8Key, data.cycle, w, h)
     case 'compare': return compareFrame(stage, data.compare, w, h)
     case 'time': return timeFrame(stage, data.time, w, h)
     case 'hierarchy': return hierarchyFrame(stage, data.tree, w, h)

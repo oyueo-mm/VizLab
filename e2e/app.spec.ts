@@ -8,7 +8,7 @@ test.describe('home', () => {
     const demo = page.getByTestId('hero-demo')
     await expect(demo.getByTestId('hero-marks').locator('circle')).toHaveCount(140)
     await expect(demo).toHaveAttribute('data-stage', 'scatter')
-    await expect(demo.getByTestId('hero-count')).toHaveText('1 / 64')
+    await expect(demo.getByTestId('hero-count')).toHaveText('1 / 72')
     // auto-advances to the next representation of the same data after ~1.8 s
     await expect(demo).toHaveAttribute('data-stage', 'histogram', { timeout: 4000 })
     await expect(page.getByTestId('featured-scatter')).toBeVisible()
@@ -44,7 +44,7 @@ test.describe('home', () => {
     await page.goto('./')
     await page.getByTestId('hero-cta').click()
     await expect(page).toHaveURL(/#\/catalog$/)
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(281)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(301)
   })
 })
 
@@ -69,17 +69,17 @@ test.describe('sidebar', () => {
     await page.goto('./')
     await page.getByTestId('nav-cat-timeseries').click()
     await expect(page).toHaveURL(/#\/catalog\/timeseries$/)
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(51)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(55)
     await expect(page.getByTestId('sidebar').getByText('준비 중')).toHaveCount(0)
     await page.getByTestId('nav-cat-hierarchy').click()
     await expect(page).toHaveURL(/#\/catalog\/hierarchy$/)
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(21)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(22)
     await page.getByTestId('nav-cat-uncertainty').click()
     await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(47)
     for (const c of ['geo', 'network', 'special', 'science', 'bio', 'finance']) {
       await page.getByTestId(`nav-cat-${c}`).click()
       await expect(page).toHaveURL(new RegExp(`#/catalog/${c}$`))
-      await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount({ geo: 50, network: 30, special: 17, science: 37, bio: 13, finance: 20 }[c]!)
+      await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount({ geo: 53, network: 45, special: 18, science: 39, bio: 13, finance: 20 }[c]!)
     }
   })
 })
@@ -93,7 +93,7 @@ test.describe('catalog', () => {
 
   test('shows real chart previews for every card', async ({ page }) => {
     const cards = page.getByTestId('catalog-grid').locator('.viz-card')
-    await expect(cards).toHaveCount(281)
+    await expect(cards).toHaveCount(301)
     await cards.last().scrollIntoViewIfNeeded()
     for (const id of ['scatter', 'heatmap', 'radar', 'ridgeline', 'sankey', 'ci']) {
       await page.getByTestId(`card-${id}`).scrollIntoViewIfNeeded()

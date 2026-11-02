@@ -5,15 +5,15 @@ import { expect, readout, setRange, test } from './fixtures'
 const V6 = readdirSync('src/viz').filter((f) => /^catalogV6.+\.ts$/.test(f)).flatMap((f) => [...readFileSync(`src/viz/${f}`, 'utf8').matchAll(/\{ id: '([a-z0-9-]+)', name:/g)].map((m) => m[1]))
 
 test.describe('v0.6: catalog and categories', () => {
-  test('lists 281 charts in 17 categories, including the new industry, text and ML categories', async ({ page }) => {
+  test('lists 301 charts in 17 categories, including the new industry, text and ML categories', async ({ page }) => {
     expect(V6.length).toBe(83)
     await page.goto('./#/catalog')
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(281)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(301)
     for (const c of ['ml', 'industry', 'text']) await expect(page.getByTestId(`chip-${c}`)).toBeVisible()
     await page.getByTestId('chip-industry').click()
     await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(5)
     await page.getByTestId('chip-text').click()
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(5)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(8)
     await page.getByTestId('chip-ml').click()
     await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(20)
   })
@@ -113,7 +113,7 @@ test.describe('v0.6: network, industry, bio and text labs', () => {
   test('the home animation reaches the v0.6 stages', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('./')
-    await expect(page.getByTestId('hero-count')).toHaveText('1 / 64')
+    await expect(page.getByTestId('hero-count')).toHaveText('1 / 72')
     for (let i = 0; i < 36; i++) await page.getByTestId('hero-next').click()
     await expect(page.getByTestId('hero-demo')).toHaveAttribute('data-stage', 'mandelbrot')
     await expect(page.getByTestId('hero-link')).toHaveAttribute('href', '#/viz/mandelbrot-set')

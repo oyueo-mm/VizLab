@@ -247,6 +247,7 @@ function NodeTrixChart({ table, mapping, params, setParams, width, height, compa
   const cell = compact ? 6 : Math.max(4, Math.min(params.cell, Math.floor(Math.sqrt((0.3 * width * height) / Math.max(1, sumSq)))))
   const [moved, setMoved] = useState<Record<string, Pt>>({})
   const drag = useRef<{ g: number; dx: number; dy: number } | null>(null)
+  const tap = useRef({ g: -1, t: 0 })
   const layout = useMemo(() => {
     if (!model) return null
     const asNode = (gi: number) => params.collapsed.includes(gi) || model.groups[gi].members.length < params.minSize
@@ -273,6 +274,10 @@ function NodeTrixChart({ table, mapping, params, setParams, width, height, compa
   const inter = g.edges.filter(([a, b]) => model.of[a] !== model.of[b])
   const onDown = (gi: number, e: PointerEvent<SVGGElement>) => {
     if (compact) return
+    // a second press on the same block within 400 ms folds / unfolds it (pointer capture keeps a dblclick event from arriving)
+    const now = performance.now()
+    if (tap.current.g === gi && now - tap.current.t < 400) { tap.current = { g: -1, t: 0 }; toggleCollapse(gi); return }
+    tap.current = { g: gi, t: now }
     const p = localPoint(svgRef.current!, e)
     svgRef.current!.setPointerCapture(e.pointerId)
     drag.current = { g: gi, dx: blocks[gi].x - p.x, dy: blocks[gi].y - p.y }
@@ -302,7 +307,7 @@ function NodeTrixChart({ table, mapping, params, setParams, width, height, compa
           const x0 = bl.x - bl.size / 2, y0 = bl.y - bl.size / 2
           if (layout.asNode(gi)) {
             return (
-              <g key={gi} data-testid="nodetrix-node" style={{ cursor: compact ? undefined : 'grab' }} onPointerDown={(e) => onDown(gi, e)} onDoubleClick={compact ? undefined : () => { if (members.length >= params.minSize) toggleCollapse(gi) }}
+              <g key={gi} data-testid="nodetrix-node" style={{ cursor: compact ? undefined : 'grab' }} onPointerDown={(e) => onDown(gi, e)}
                 onPointerEnter={compact ? undefined : (e) => { const lp = localPoint(svgRef.current!, e); show(lp.x, lp.y, <><b>공동체 {gi + 1}</b><br />노드 {members.length}개: {members.slice(0, 6).map((m) => g.net.nodes[m].id).join(', ')}{members.length > 6 ? ' …' : ''}<br />{members.length >= params.minSize ? '두 번 눌러 행렬로 펼치기' : ''}</>) }} onPointerLeave={hide}>
                 <circle cx={bl.x} cy={bl.y} r={bl.size / 2} fill={color(String(gi))} fillOpacity={0.28} stroke={color(String(gi))} strokeWidth={1.6} />
                 {!compact && <text x={bl.x} y={bl.y} textAnchor="middle" dy="0.34em" className="radar-axis-label" style={{ pointerEvents: 'none' }}>{members.length === 1 ? g.net.nodes[members[0]].id : members.length}</text>}
@@ -328,7 +333,7 @@ function NodeTrixChart({ table, mapping, params, setParams, width, height, compa
               }))}
               {!compact && cell >= 9 && members.map((m, k) => <text key={m} x={x0 - 3} y={y0 + (k + 0.5) * cell} dy="0.34em" textAnchor="end" fontSize={Math.min(10, cell - 1)} fill="#5f6b76" style={{ pointerEvents: 'none' }}>{g.net.nodes[m].id}</text>)}
               {/* header bar: grab to move, double-click to collapse */}
-              <g style={{ cursor: compact ? undefined : 'grab' }} onPointerDown={(e) => onDown(gi, e)} onDoubleClick={compact ? undefined : () => toggleCollapse(gi)}
+              <g style={{ cursor: compact ? undefined : 'grab' }} onPointerDown={(e) => onDown(gi, e)}
                 onPointerEnter={compact ? undefined : (e) => { const lp = localPoint(svgRef.current!, e); show(lp.x, lp.y, <><b>공동체 {gi + 1}</b> (노드 {members.length}개)<br />끌어서 이동 · 두 번 눌러 접기</>) }} onPointerLeave={hide}>
                 <rect x={x0} y={y0 - 9} width={bl.size} height={9} fill={color(String(gi))} fillOpacity={0.8} data-testid="nodetrix-header" />
               </g>

@@ -1,8 +1,9 @@
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 import { ChevronDown } from 'lucide-react'
-import { useMemo } from 'react'
-import { content, type Formula } from '../content'
+import { useEffect, useMemo, useState } from 'react'
+import { loadContent } from '../content/loader'
+import type { Formula, VizContent } from '../content/types'
 import { Related } from './Related'
 
 function FormulaView({ f }: { f: Formula }) {
@@ -23,9 +24,20 @@ function FormulaView({ f }: { f: Formula }) {
 
 const List = ({ items }: { items: string[] }) => <ul>{items.map((t) => <li key={t}>{t}</li>)}</ul>
 
+type Loaded = { id: string; content: VizContent | undefined } | { id: string; error: true }
+
 export default function Details({ id, open, onToggle }: { id: string; open: boolean; onToggle: () => void }) {
-  const c = content[id]
-  if (!c) return null
+  // The explanation text is loaded when the lab shows it (one version group at a time), not with the page.
+  const [state, setState] = useState<Loaded | null>(null)
+  const [attempt, setAttempt] = useState(0)
+  useEffect(() => {
+    let live = true
+    loadContent(id).then((c) => { if (live) setState({ id, content: c }) }).catch(() => { if (live) setState({ id, error: true }) })
+    return () => { live = false }
+  }, [id, attempt])
+  const current = state && state.id === id ? state : null
+  if (current && 'content' in current && !current.content) return null
+  const c = current && 'content' in current ? current.content : undefined
   return (
     <section className={`lab-details ${open ? 'is-open' : ''}`} aria-label="상세 설명">
       <button type="button" className="details-toggle" aria-expanded={open} aria-controls="details-body" onClick={onToggle} data-testid="details-toggle">
@@ -33,7 +45,14 @@ export default function Details({ id, open, onToggle }: { id: string; open: bool
         <span className="details-sub">정의 · 적합한 데이터 · 작동 원리 · 수식 · 장단점 · 주의사항 · 비슷한 시각화</span>
         <ChevronDown size={18} className={open ? 'rot-180' : ''} aria-hidden="true" />
       </button>
-      {open && (
+      {open && !c && (
+        <div id="details-body" className="details-body" data-testid="details-body" role="status">
+          {current && 'error' in current ? (
+            <p>설명을 불러오지 못했습니다. <button type="button" className="link-btn" onClick={() => { setState(null); setAttempt((a) => a + 1) }} data-testid="details-retry">다시 시도</button></p>
+          ) : <p>설명을 불러오는 중…</p>}
+        </div>
+      )}
+      {open && c && (
         <div id="details-body" className="details-body" data-testid="details-body">
           <article>
             <h3>정의</h3>
