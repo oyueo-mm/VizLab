@@ -11,7 +11,7 @@ test.describe('v0.5: catalog', () => {
     await page.getByTestId('chip-geo').click()
     await expect(page.getByTestId('sub-filters')).toBeVisible()
     const all = await page.getByTestId('catalog-grid').locator('.viz-card').count()
-    expect(all).toBe(46)
+    expect(all).toBe(50)
     for (const s of ['sub-point', 'sub-surface', 'sub-thematic', 'sub-distort', 'sub-analysis', 'sub-stats', 'sub-spacetime', 'sub-map3d']) await expect(page.getByTestId(s), s).toBeVisible()
     await page.getByTestId('sub-surface').click()
     await expect(page).toHaveURL(/\?s=surface/)

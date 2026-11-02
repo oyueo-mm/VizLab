@@ -37,7 +37,7 @@ test.describe('v0.4: catalog', () => {
     await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(281)
     for (const c of ['geo', 'network', 'special']) await expect(page.getByTestId(`chip-${c}`)).toBeVisible()
     await page.getByTestId('chip-geo').click()
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(46)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(50)
     await page.getByTestId('chip-all').click()
     if (await page.getByTestId('filter-toggle').isVisible()) await page.getByTestId('filter-toggle').click()
     await page.getByTestId('kind-geospatial').click()
