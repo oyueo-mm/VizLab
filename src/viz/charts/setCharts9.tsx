@@ -212,7 +212,7 @@ function MosaicChart({ table, mapping, params, setParams, width, height, compact
     }
     return out
   }
-  const bounds = useMemo(() => m.cols.map((_, s) => boundary(s)), [layout, m, params.grid, width, height]) // eslint-disable-line react-hooks/exhaustive-deps
+  const bounds = m.cols.map((_, s) => boundary(s))
   const contiguous = layout.components.filter((c) => c === 1).length
   return (
     <div className="chart-root">

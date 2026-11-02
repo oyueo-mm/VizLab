@@ -310,4 +310,9 @@ export const needs: Record<string, Slot[]> = {
   'metrosets': [['number'], ['number']],
   'mosaicsets': [['number'], ['number']],
   'infocrystal': [['number'], ['number']],
+  'paohvis': [['number'], ['category'], ['category']],
+  'set-streams': [['category'], ['number'], ['category']],
+  'sequence-braiding': [['category'], ['number'], ['category']],
+  'dust-magnet': [['number'], ['number']],
+  'gosper-map': [['category'], ['number']],
 }

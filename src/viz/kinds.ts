@@ -72,6 +72,7 @@ lifelines line-integral-convolution globe-3d multi-planar-reconstruction hyperbo
 bubble-sets linesets kelp-diagram rainbow-boxes radial-sets nodetrix power-graph confluent-drawing cone-tree stream-surface streamtube semantic-substrates pivot-graph timearcs lifeflow timesets flowstrates textarc parallel-tag-clouds phrase-net
 metrosets mosaicsets infocrystal
 metrosets mosaicsets infocrystal
+paohvis set-streams sequence-braiding dust-magnet gosper-map
 `).map((id) => [id, 'technique' as VizKind])),
   // forms with their own field conventions: specialized charts that are also independent techniques (see kindAlso)
   'marey-chart': 'specialized', tanglegram: 'specialized',
