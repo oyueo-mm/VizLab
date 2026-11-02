@@ -4,6 +4,7 @@ import { loadersV6 } from './loadersV6'
 import { loadersV7 } from './loadersV7'
 import { loadersV8 } from './loadersV8'
 import { loadersV9 } from './loadersV9'
+import { loadersV10 } from './loadersV10'
 
 type Loader = () => Promise<VizModule>
 
@@ -187,6 +188,7 @@ const loaders: Record<string, Loader> = {
   ...loadersV7,
   ...loadersV8,
   ...loadersV9,
+  ...loadersV10,
 }
 
 export const hasModule = (id: string) => Object.prototype.hasOwnProperty.call(loaders, id)

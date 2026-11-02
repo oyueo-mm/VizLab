@@ -13,7 +13,8 @@ describe('lazy explanation loading', () => {
     expect(contentGroupOf('bubble-sets')).toBe('v8')
     expect(contentGroupOf('lifeflow')).toBe('v8')
     expect(contentGroupOf('metrosets')).toBe('v9')
-    expect(new Set(catalog.map((m) => contentGroupOf(m.id)))).toEqual(new Set(['legacy', 'v5', 'v6', 'v7', 'v8', 'v9']))
+    expect(contentGroupOf('zame')).toBe('v10')
+    expect(new Set(catalog.map((m) => contentGroupOf(m.id)))).toEqual(new Set(['legacy', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10']))
   })
   it('keeps the concept notes of computed results', async () => {
     expect((await loadContent('mandelbrot-set'))?.note).toContain('분석·계산 결과')

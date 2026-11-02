@@ -7,11 +7,13 @@ import type { DatasetIdV6 } from './datasetIdsV6'
 import type { DatasetIdV7 } from './datasetIdsV7'
 import type { DatasetIdV8 } from './datasetIdsV8'
 import type { DatasetIdV9 } from './datasetIdsV9'
+import type { DatasetIdV10 } from './datasetIdsV10'
 import { datasetsV7 } from './datasetsV7'
 import { datasetsV7b } from './datasetsV7b'
 import { datasetsV8 } from './datasetsV8'
 import { datasetsV8b } from './datasetsV8b'
 import { datasetsV9 } from './datasetsV9'
+import { datasetsV10 } from './datasetsV10'
 import type { DataTable } from './table'
 
 export type DatasetId =
@@ -31,6 +33,7 @@ export type DatasetId =
   | DatasetIdV7
   | DatasetIdV8
   | DatasetIdV9
+  | DatasetIdV10
 
 export interface DatasetSize { min: number; max: number; default: number; step: number; label: string }
 
@@ -54,6 +57,7 @@ export const datasets: DatasetDef[] = [
   ...datasetsV8,
   ...datasetsV8b,
   ...datasetsV9,
+  ...datasetsV10,
 ]
 
 export const datasetById = new Map(datasets.map((d) => [d.id, d]))

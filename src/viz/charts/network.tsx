@@ -7,6 +7,7 @@ import { useReducedMotion } from '../../hooks/motion'
 import { categoryColor, colorAt } from '../../lib/colors'
 import { fmt } from '../../lib/format'
 import { buildNetwork, createSimulation, layoutNetwork, type ForceOptions, type SimNode } from '../../stats/network'
+import type { SimIn, SimOut } from '../../stats/netsim.worker'
 import type { ChartProps, ControlsProps, VizModule } from '../types'
 import { edgeRoles, edgeRows, NetworkEditor, networkKey } from './networkShared'
 
@@ -31,6 +32,10 @@ export interface NetworkParams {
 
 /** Graph size (nodes + links) above which 'auto' switches from SVG to canvas. Chosen from the measurements in the v0.4 notes. */
 export const AUTO_CANVAS = 1500
+/** Canvas graphs with more nodes than this run their force simulation in a Web Worker (the page then only paints). */
+export const WORKER_MIN_NODES = 400
+/** While a graph with more links than this is still moving, only a third of its links are painted. */
+export const LOD_LINKS = 4000
 
 
 type Pos = Map<string, { x: number; y: number }>
@@ -49,11 +54,14 @@ function NetworkChart({ table, mapping, params, setParams, width, height, compac
     [iw, ih, params.linkDistance, params.linkStrength, params.charge, params.gravity, params.size, compact])
   // Synchronous layout: used for thumbnails, tests and as the starting point of the live simulation. A large graph only gets a rough first
   // layout (each tick costs time proportional to the graph), because the live simulation keeps improving it without blocking the page.
-  const settled = useMemo(() => layoutNetwork(net, opts, compact ? 220 : net.nodes.length > 400 ? 40 : 300), [key, opts]) // eslint-disable-line react-hooks/exhaustive-deps
+  const wantCanvas = !compact && (params.renderer === 'canvas' || (params.renderer === 'auto' && net.nodes.length + net.links.length > AUTO_CANVAS))
+  const workerSim = wantCanvas && !reduced && typeof Worker !== 'undefined' && net.nodes.length > WORKER_MIN_NODES
+  // With the worker the page does not lay the graph out at all: the first positions are the deterministic start spiral and the worker refines them.
+  const settled = useMemo(() => layoutNetwork(net, opts, workerSim ? 0 : compact ? 220 : net.nodes.length > 400 ? 40 : 300), [key, opts, workerSim]) // eslint-disable-line react-hooks/exhaustive-deps
   const [live, setLive] = useState<Pos | null>(null)
   const positions = (!compact && live) || settled
   const posRef = useRef<Pos>(settled)
-  const useCanvas = !compact && (params.renderer === 'canvas' || (params.renderer === 'auto' && net.nodes.length + net.links.length > AUTO_CANVAS))
+  const useCanvas = wantCanvas
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const drawRef = useRef<(() => void) | null>(null)
   const canvasModeRef = useRef(useCanvas)
@@ -62,6 +70,7 @@ function NetworkChart({ table, mapping, params, setParams, width, height, compac
   // While the simulation runs on a canvas the live positions only exist in the ref; at rest (or in SVG mode) they are the rendered state.
   if (!(useCanvas && running)) posRef.current = positions
   const simRef = useRef<{ sim: ReturnType<typeof createSimulation>['sim']; nodes: SimNode[] } | null>(null)
+  const workerRef = useRef<Worker | null>(null)
   const [paused, setPaused] = useState(false)
   const pausedRef = useRef(false)
   pausedRef.current = paused
@@ -79,6 +88,32 @@ function NetworkChart({ table, mapping, params, setParams, width, height, compac
   // and stops itself when the system has cooled (alpha < alphaMin) — nothing runs while the graph is at rest.
   useEffect(() => {
     if (compact || reduced || !net.nodes.length) { setLive(null); setRunning(false); return }
+    if (workerSim) {
+      const order = net.nodes.map((n) => n.id)
+      const cur = new Map<string, { x: number; y: number }>(order.map((id) => [id, { x: posRef.current.get(id)?.x ?? 0, y: posRef.current.get(id)?.y ?? 0 }]))
+      let w: Worker | null = null
+      let raf = 0
+      let latest: Float32Array | null = null
+      let finished = false
+      const apply = () => {
+        raf = 0
+        if (!latest) return
+        const xy = latest
+        latest = null
+        order.forEach((id, i) => { const p = cur.get(id)!; p.x = xy[2 * i]; p.y = xy[2 * i + 1] })
+        posRef.current = cur
+        if (finished) { setLive(new Map(order.map((id) => [id, { ...cur.get(id)! }])) as Pos); setRunning(false) } else { drawRef.current?.(); setRunning(true) }
+      }
+      try {
+        w = new Worker(new URL('../../stats/netsim.worker.ts', import.meta.url), { type: 'module' })
+        workerRef.current = w
+        w.onmessage = (e: MessageEvent<SimOut>) => { latest = e.data.xy; finished = e.data.t === 'done'; if (!raf) raf = requestAnimationFrame(apply) }
+        const init: SimIn = { t: 'init', nodes: net.nodes.map((n) => ({ id: n.id })), links: net.links.map((l) => ({ source: l.source, target: l.target, weight: l.weight })), opts, previous: posRef.current.size ? [...posRef.current].map(([id, p]) => [id, p.x, p.y] as [string, number, number]) : [], pinned: pinnedRef.current as Record<string, [number, number]>, alpha: posRef.current.size ? 0.6 : 1 }
+        w.postMessage(init)
+        setRunning(true)
+      } catch { /* no worker: the page falls back to the synchronous layout it already has */ setRunning(false) }
+      return () => { cancelAnimationFrame(raf); w?.terminate(); workerRef.current = null }
+    }
     const { sim, nodes } = createSimulation(net, opts, posRef.current.size ? posRef.current : undefined)
     for (const n of nodes) { const p = pinnedRef.current[n.id]; if (p) { n.fx = p[0]; n.fy = p[1] } }
     simRef.current = { sim, nodes }
@@ -98,7 +133,9 @@ function NetworkChart({ table, mapping, params, setParams, width, height, compac
     const wake = () => { if (!raf) raf = requestAnimationFrame(loop) }
     ;(sim as unknown as { wake: () => void }).wake = wake
     return () => { cancelAnimationFrame(raf); sim.stop(); simRef.current = null }
-  }, [key, opts, params.restart, compact, reduced]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [key, opts, params.restart, compact, reduced, workerSim]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { workerRef.current?.postMessage({ t: 'pause', on: paused } satisfies SimIn) }, [paused])
 
   // Wheel zoom (needs a non-passive listener to stop the page from scrolling).
   useEffect(() => {
@@ -132,6 +169,11 @@ function NetworkChart({ table, mapping, params, setParams, width, height, compac
     return map
   }, [net])
 
+  // Per-link drawing data that does not change while the layout moves: node indexes and the line-width class (the canvas path touches every link on every frame).
+  const linkMeta = useMemo(() => {
+    const idx = new Map(net.nodes.map((n, i) => [n.id, i]))
+    return net.links.map((l) => ({ a: idx.get(l.source) ?? -1, b: idx.get(l.target) ?? -1, wk: (Math.round((0.8 + 3.2 * Math.sqrt(l.weight / wmax)) * 2) / 2).toFixed(1) }))
+  }, [net, wmax])
   if (!edgeRoles.every((r) => !r.required || mappingHas(mapping, r.key))) return <ChartMessage>출발 노드와 도착 노드(범주형) 열을 선택하세요.</ChartMessage>
   if (!net.nodes.length) return <ChartMessage>노드가 없습니다. 출발 노드 열에 이름을 입력하세요.</ChartMessage>
 
@@ -164,6 +206,7 @@ function NetworkChart({ table, mapping, params, setParams, width, height, compac
     const id = hitNode(e)
     if (id) {
       dragNode.current = id
+      if (workerRef.current) { const g = toGraph(e); workerRef.current.postMessage({ t: 'drag', id, x: g.x, y: g.y } satisfies SimIn) }
       const sim = simRef.current
       const node = sim?.nodes.find((n) => n.id === id)
       if (sim && node) { const g = toGraph(e); node.fx = g.x; node.fy = g.y; sim.sim.alphaTarget(0.3); (sim.sim as unknown as { wake?: () => void }).wake?.() }
@@ -185,6 +228,7 @@ function NetworkChart({ table, mapping, params, setParams, width, height, compac
       }
     }
     if (dragNode.current) {
+      if (workerRef.current) { const g = toGraph(e); workerRef.current.postMessage({ t: 'drag', id: dragNode.current, x: g.x, y: g.y } satisfies SimIn); return }
       const sim = simRef.current
       const node = sim?.nodes.find((n) => n.id === dragNode.current)
       if (node) { const g = toGraph(e); node.fx = g.x; node.fy = g.y }
@@ -196,6 +240,12 @@ function NetworkChart({ table, mapping, params, setParams, width, height, compac
     const id = dragNode.current
     dragNode.current = null
     panning.current = null
+    if (id && workerRef.current) {
+      const p = posRef.current.get(id)
+      workerRef.current.postMessage({ t: 'release', id, keep: params.pinDrag } satisfies SimIn)
+      if (params.pinDrag && p) setParams({ pinned: { ...params.pinned, [id]: [p.x, p.y] } })
+      return
+    }
     const sim = simRef.current
     if (id && sim) {
       const node = sim.nodes.find((n) => n.id === id)
@@ -225,15 +275,17 @@ function NetworkChart({ table, mapping, params, setParams, width, height, compac
     const batches = new Map<string, Path2D>()
     const hot = new Path2D()
     let hasHot = false
-    for (const l of net.links) {
-      const a = pos.get(l.source)
-      const b = pos.get(l.target)
+    const P = net.nodes.map((n) => pos.get(n.id))
+    const anyMarked = marked.size > 0
+    // Level of detail while a large layout is moving: every third link (the full set is drawn again once it has settled), so the painting keeps up with the worker.
+    const stride = running && !dragNode.current && net.links.length > LOD_LINKS ? 3 : 1
+    for (let i = 0; i < net.links.length; i += stride) {
+      const l = net.links[i], m = linkMeta[i]
+      const a = P[m.a], b = P[m.b]
       if (!a || !b) continue
       const isNear = near ? near.has(l.source) && near.has(l.target) && (l.source === focus || l.target === focus) : true
-      const isMarked = l.rows.some((r) => marked.has(r))
-      const w = 0.8 + 3.2 * Math.sqrt(l.weight / wmax)
-      if (isMarked) { hot.moveTo(a.x, a.y); hot.lineTo(b.x, b.y); hasHot = true; continue }
-      const key = `${isNear ? 1 : 0}|${(Math.round(w * 2) / 2).toFixed(1)}`
+      if (anyMarked && l.rows.some((r) => marked.has(r))) { hot.moveTo(a.x, a.y); hot.lineTo(b.x, b.y); hasHot = true; continue }
+      const key = `${isNear ? 1 : 0}|${m.wk}`
       let path = batches.get(key)
       if (!path) { path = new Path2D(); batches.set(key, path) }
       path.moveTo(a.x, a.y)
@@ -256,7 +308,7 @@ function NetworkChart({ table, mapping, params, setParams, width, height, compac
       if (!p) continue
       const r = Math.min(maxR, radius(n))
       const dim = !!near && !near.has(n.id)
-      const isMarked = n.rows.some((q) => marked.has(q))
+      const isMarked = anyMarked && n.rows.some((q) => marked.has(q))
       if (selected === n.id || isMarked || params.pinned[n.id]) { special.push({ n, x: p.x, y: p.y, r, dim, marked: isMarked }); continue }
       const key = `${colorOf(n)}|${dim ? 1 : 0}`
       let path = fills.get(key)
