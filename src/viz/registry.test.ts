@@ -50,7 +50,7 @@ describe('visualization registry', () => {
 
   it('has no empty category and every new chart is reachable from a category', () => {
     for (const c of categories) expect(catalog.filter((v) => inCategory(v, c.id)).length, c.id).toBeGreaterThan(0)
-    expect(categories.map((c) => c.id)).toEqual(['distribution', 'relationship', 'comparison', 'timeseries', 'composition', 'multivariate', 'hierarchy', 'uncertainty', 'geo', 'network', 'special', 'science', 'bio', 'finance', 'ml'])
+    expect(categories.map((c) => c.id)).toEqual(['distribution', 'relationship', 'comparison', 'timeseries', 'composition', 'multivariate', 'hierarchy', 'uncertainty', 'geo', 'network', 'special', 'science', 'bio', 'finance', 'industry', 'text', 'ml'])
   })
 
   it('uses datasets that exist and fit every chart by default', () => {

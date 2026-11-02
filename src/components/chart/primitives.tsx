@@ -29,7 +29,7 @@ export function AxisBottom({ scale, grid = 0, ticks = 6, label, format: customFo
   const [r0, r1] = scale.range()
   const [d0, d1] = scale.domain()
   const count = compact ? 3 : ticks
-  const values = date ? dateTicks(d0, d1, count) : scale.ticks(count)
+  const values = date ? dateTicks(d0, d1, count) : thinLog(scale, scale.ticks(count))
   const format = customFormat ?? (date ? dateTickFormat(d0, d1, count) : tickFormat)
   return (
     <g transform={`translate(0,${y})`} className="axis" aria-hidden="true">
@@ -46,9 +46,18 @@ export function AxisBottom({ scale, grid = 0, ticks = 6, label, format: customFo
   )
 }
 
+/** Log scales return every integer multiple of a power of ten; keep 1 and 5 (and 2) × 10^k so the labels do not collide. */
+function thinLog<S extends { domain(): number[] }>(scale: S, values: number[]): number[] {
+  if (!('base' in scale) || values.length <= 8) return values
+  const [a, b] = scale.domain(), decades = Math.abs(Math.log10(Math.max(a, b) / Math.min(a, b)))
+  const keep = decades > 3 ? [1] : decades > 1.5 ? [1, 2, 5] : [1, 2, 3, 5]
+  const out = values.filter((v) => keep.includes(Math.round(v / 10 ** Math.floor(Math.log10(v) + 1e-9))))
+  return out.length >= 2 ? out : values
+}
+
 export function AxisLeft({ scale, grid = 0, ticks = 6, label, format = tickFormat, compact, x }: AxisProps & { x: number }) {
   const [r0, r1] = scale.range()
-  const values = scale.ticks(compact ? 3 : ticks)
+  const values = thinLog(scale, scale.ticks(compact ? 3 : ticks))
   return (
     <g transform={`translate(${x},0)`} className="axis" aria-hidden="true">
       {grid > 0 && values.map((v) => <line key={`g${v}`} className="grid" x1={0} x2={grid} y1={scale(v)} y2={scale(v)} />)}

@@ -10,3 +10,4 @@ export type DatasetIdV6 =
   | 'geo-field-iso' | 'geo-field-aniso' | 'events-spacetime' | 'case-control'
   | 'asset-returns' | 'option-chain' | 'trade-footprint' | 'book-snapshots' | 'event-returns' | 'pnl-fat' | 'yield-history'
   | 'dag-release' | 'flow-supply' | 'flow-grid' | 'net-hubs' | 'net-communities'
+  | 'life-wearout' | 'life-early' | 'stack-gearbox' | 'queue-orders' | 'log-orders' | 'tree-pump' | 'gsea-expr' | 'msa-kinase' | 'backbone-bundle' | 'corpus-topics' | 'corpus-zipf'

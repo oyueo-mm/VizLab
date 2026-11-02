@@ -81,4 +81,19 @@ export const loadersV6: Record<string, Loader> = {
   'max-flow': () => import('./graphCharts2').then((m) => m.flowModule),
   'rich-club': () => import('./graphCharts2').then((m) => m.richClubModule),
   'community-blockmodel': () => import('./graphCharts2').then((m) => m.blockModule),
+  // industry
+  'weibull-plot': () => import('./industryCharts').then((m) => m.weibullModule),
+  'tolerance-stackup': () => import('./industryCharts').then((m) => m.stackModule),
+  'queue-simulation': () => import('./industryCharts').then((m) => m.queueModule),
+  'process-map': () => import('./industryCharts').then((m) => m.processModule),
+  'fault-tree': () => import('./industryCharts').then((m) => m.treeModule),
+  // bioinformatics
+  'gsea-running-sum': () => import('./bio2Charts').then((m) => m.gseaModule),
+  'msa-logo': () => import('./bio2Charts').then((m) => m.msaModule),
+  'contact-map': () => import('./bio2Charts').then((m) => m.contactModule),
+  'ramachandran': () => import('./bio2Charts').then((m) => m.ramaModule),
+  // language and text
+  'collocation-matrix': () => import('./textCharts').then((m) => m.collModule),
+  'lexical-dispersion': () => import('./textCharts').then((m) => m.dispModule),
+  'zipf-plot': () => import('./textCharts').then((m) => m.zipfModule),
 }

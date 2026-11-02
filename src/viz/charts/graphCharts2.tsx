@@ -119,9 +119,9 @@ export const spectralModule: VizModule<SpectralParams> = {
 
 // ─── layered graph drawing (shared by the DAG and flow charts) ──────────────────────
 
-interface LEdge { a: number; b: number; color: string; width: number; dash?: string; label?: string; halo?: string; tip?: ReactNode }
+export interface LEdge { a: number; b: number; color: string; width: number; dash?: string; label?: string; halo?: string; tip?: ReactNode }
 
-function LayeredGraph({ width, height, compact, names, layout, orient, edges, fill, stroke, strokeW, nodeTip, label, readout, note }: {
+export function LayeredGraph({ width, height, compact, names, layout, orient, edges, fill, stroke, strokeW, nodeTip, label, readout, note }: {
   width: number; height: number; compact?: boolean; names: string[]; layout: DagLayout; orient: 'LR' | 'TB'; edges: LEdge[]
   fill: (i: number) => string; stroke: (i: number) => string; strokeW: (i: number) => number; nodeTip: (i: number) => ReactNode; label: string
   readout?: { label: string; value: ReactNode }[]; note?: ReactNode
@@ -129,7 +129,7 @@ function LayeredGraph({ width, height, compact, names, layout, orient, edges, fi
   const stage = useStage()
   const font = compact ? 7 : 11.5, bh = compact ? 8 : 24, M = compact ? 6 : 20
   const depth = layout.layers.length, maxSize = Math.max(1, ...layout.layers.map((l) => l.length))
-  let bw = compact ? 14 : Math.max(34, Math.min(118, Math.max(...names.map((s) => textWidth(s, font))) + 14))
+  let bw = compact ? 14 : Math.max(34, Math.min(orient === 'TB' ? 168 : 118, Math.max(...names.map((s) => textWidth(s, font))) + 14))
   bw = orient === 'LR' ? Math.min(bw, Math.max(30, (width - 2 * M) / depth - (compact ? 4 : 24))) : Math.min(bw, Math.max(30, (width - 2 * M) / maxSize - 8))
   const P = names.map((_, v) => {
     const l = layout.layer[v], c = layout.x[v]
