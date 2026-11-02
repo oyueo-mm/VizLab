@@ -111,11 +111,9 @@ export function classicalMDS(D: readonly (readonly number[])[]): [number, number
   const eig = (M: number[][], seed: number): { vec: number[]; val: number } => {
     const rng = createRng(seed)
     let v = Array.from({ length: n }, () => rng() - 0.5)
-    let val = 0
     for (let it = 0; it < 300; it++) {
       const w = M.map((row) => row.reduce((a, b, k) => a + b * v[k], 0))
       const norm = Math.hypot(...w) || 1
-      val = norm
       const next = w.map((x) => x / norm)
       const diff = Math.hypot(...next.map((x, k) => x - v[k]))
       v = next
@@ -123,7 +121,7 @@ export function classicalMDS(D: readonly (readonly number[])[]): [number, number
     }
     // Rayleigh quotient gives the signed eigenvalue
     const Mv = M.map((row) => row.reduce((a, b, k) => a + b * v[k], 0))
-    val = v.reduce((a, b, k) => a + b * Mv[k], 0)
+    const val = v.reduce((a, b, k) => a + b * Mv[k], 0)
     return { vec: v, val }
   }
   const e1 = eig(B, 11)

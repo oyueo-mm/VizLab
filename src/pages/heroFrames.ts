@@ -16,12 +16,14 @@ import { stackRows } from '../stats/stack'
 import { bundlingFrame, choroplethFrame, flameFrame, forestFrame } from './heroFramesV4'
 import type { HeroV5Key } from './heroFramesV5'
 import type { HeroV6Key } from './heroFramesV6'
+import type { HeroV7Key } from './heroFramesV7'
 import { v5Frame } from './heroFramesV5Lazy'
 import { v6Frame } from './heroFramesV6Lazy'
+import { v7Frame } from './heroFramesV7Lazy'
 
 // ─── stages ──────────────────────────────────────────────────────────────────
 
-export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network' | 'geo' | 'meta' | 'flame' | 'bundle' | 'v5' | 'v6'
+export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network' | 'geo' | 'meta' | 'flame' | 'bundle' | 'v5' | 'v6' | 'v7'
 
 export const heroStages = [
   { key: 'scatter', label: '산점도', viz: 'scatter', group: 'dist' },
@@ -74,6 +76,20 @@ export const heroStages = [
   { key: 'tolerance', label: '공차 누적 해석', viz: 'tolerance-stackup', group: 'v6' },
   { key: 'queue', label: '대기행렬 시뮬레이션', viz: 'queue-simulation', group: 'v6' },
   { key: 'rama', label: '라마찬드란 도표', viz: 'ramachandran', group: 'v6' },
+  { key: 'radviz', label: 'RadViz', viz: 'radviz', group: 'v7' },
+  { key: 'chernoff', label: '체르노프 얼굴', viz: 'chernoff-faces', group: 'v7' },
+  { key: 'star', label: 'Star Coordinates', viz: 'star-coordinates', group: 'v7' },
+  { key: 'tour', label: '그랜드 투어', viz: 'grand-tour', group: 'v7' },
+  { key: 'stacking', label: '차원 쌓기', viz: 'dimensional-stacking', group: 'v7' },
+  { key: 'psets', label: '패럴렐 셋', viz: 'parallel-sets', group: 'v7' },
+  { key: 'vtreemap', label: '보로노이 트리맵', viz: 'voronoi-treemap', group: 'v7' },
+  { key: 'qdot', label: '분위수 점도표', viz: 'quantile-dotplot', group: 'v7' },
+  { key: 'hops', label: '가상 결과 플롯 (HOPs)', viz: 'hops', group: 'v7' },
+  { key: 'tcurve', label: '타임 커브', viz: 'time-curves', group: 'v7' },
+  { key: 'lic', label: '선적분 합성곱 (LIC)', viz: 'line-integral-convolution', group: 'v7' },
+  { key: 'fdeb', label: '힘 기반 간선 묶음', viz: 'force-directed-edge-bundling', group: 'v7' },
+  { key: 'story', label: '스토리라인 차트', viz: 'storyline-chart', group: 'v7' },
+  { key: 'lens', label: '테이블 렌즈', viz: 'table-lens', group: 'v7' },
 ] as const
 export type HeroStage = (typeof heroStages)[number]['key']
 
@@ -567,6 +583,7 @@ export function buildFrame(stage: HeroStage, data: HeroData, w: number, h: numbe
     case 'bundle': return bundlingFrame(data.cycle, w, h)
     case 'v5': return v5Frame(stage as HeroV5Key, data.cycle, w, h)
     case 'v6': return v6Frame(stage as HeroV6Key, data.cycle, w, h)
+    case 'v7': return v7Frame(stage as HeroV7Key, data.cycle, w, h)
     case 'compare': return compareFrame(stage, data.compare, w, h)
     case 'time': return timeFrame(stage, data.time, w, h)
     case 'hierarchy': return hierarchyFrame(stage, data.tree, w, h)

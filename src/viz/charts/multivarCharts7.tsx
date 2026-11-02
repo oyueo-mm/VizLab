@@ -124,8 +124,9 @@ export const radvizModule: VizModule<RadvizParams> = {
 
 export interface StarParams { norm: 'minmax' | 'zscore'; off: string[]; axes: Record<string, [number, number]>; weights: Record<string, number>; highlight: string; spin: boolean; size: number }
 
-function StarChart({ table, mapping, params, setParams, width, height, compact }: ChartProps<StarParams>) {
+function StarChart({ table, mapping, params, setParams, width, height, compact, linked }: ChartProps<StarParams>) {
   const obs = useObs(table, mapping, params.norm)
+  const marked = new Set(linked?.rows ?? [])
   const { tip, show, hide } = useTooltip()
   const svgRef = useRef<SVGSVGElement>(null)
   const dragging = useRef<string | null>(null)
@@ -173,9 +174,9 @@ function StarChart({ table, mapping, params, setParams, width, height, compact }
         ))}
         {obs.rows.map((row, i) => {
           const g = obs.groups[i]
-          const dim = params.highlight && g !== params.highlight
-          return <circle key={row} cx={cx + pts[i][0] * R} cy={cy + pts[i][1] * R} r={params.size} fill={obs.color(g)} fillOpacity={dim ? 0.08 : 0.75} data-testid="star-point"
-            onPointerEnter={compact ? undefined : (e) => { const lp = localPoint(svgRef.current!, e); show(lp.x, lp.y, <><b>{g || `행 ${row + 1}`}</b>{idx.map((j) => <div key={j}>{obs.vars[j]}: {fmt(obs.raw[i][j])}</div>)}</>) }} onPointerLeave={hide} />
+          const dim = (params.highlight && g !== params.highlight) || (marked.size > 0 && !marked.has(row))
+          return <circle key={row} cx={cx + pts[i][0] * R} cy={cy + pts[i][1] * R} r={marked.has(row) ? params.size + 2 : params.size} fill={obs.color(g)} fillOpacity={dim ? 0.08 : 0.75} stroke={marked.has(row) ? '#111' : 'none'} data-testid="star-point"
+            onPointerEnter={compact ? undefined : (e) => { linked?.set([row]); const lp = localPoint(svgRef.current!, e); show(lp.x, lp.y, <><b>{g || `행 ${row + 1}`}</b>{idx.map((j) => <div key={j}>{obs.vars[j]}: {fmt(obs.raw[i][j])}</div>)}</>) }} onPointerLeave={() => { hide(); linked?.set(null) }} />
         })}
       </svg>
       {!compact && <><Legend7 obs={obs} highlight={params.highlight} onPick={(highlight) => setParams({ highlight })} /><Tooltip tip={tip} width={width} /></>}
@@ -215,8 +216,9 @@ export const starModule: VizModule<StarParams> = {
 
 export interface TourParams { norm: 'minmax' | 'zscore'; off: string[]; speed: number; seed: number; playing: boolean; t: number; highlight: string; trail: boolean; selected: number }
 
-function TourChart({ table, mapping, params, setParams, width, height, compact }: ChartProps<TourParams>) {
+function TourChart({ table, mapping, params, setParams, width, height, compact, linked }: ChartProps<TourParams>) {
   const obs = useObs(table, mapping, params.norm)
+  const marked = new Set(linked?.rows ?? [])
   const reduced = useReducedMotion()
   const { tip, show, hide } = useTooltip()
   const svgRef = useRef<SVGSVGElement>(null)
@@ -257,9 +259,9 @@ function TourChart({ table, mapping, params, setParams, width, height, compact }
         ))}
         {obs.rows.map((row, i) => {
           const g = obs.groups[i]
-          const dim = (params.highlight && g !== params.highlight) || (sel >= 0 && sel !== row)
-          return <circle key={row} cx={cx + pts[i][0] * sc} cy={cy + pts[i][1] * sc} r={sel === row ? 6 : 3.4} fill={obs.color(g)} fillOpacity={dim ? 0.1 : 0.78} stroke={sel === row ? '#111' : 'none'} data-testid="tour-point"
-            onPointerEnter={compact ? undefined : (e) => { const lp = localPoint(svgRef.current!, e); show(lp.x, lp.y, <><b>{g || `행 ${row + 1}`}</b><br />클릭해 이 관측값을 따라가기</>) }} onPointerLeave={hide}
+          const dim = (params.highlight && g !== params.highlight) || (sel >= 0 && sel !== row) || (marked.size > 0 && !marked.has(row))
+          return <circle key={row} cx={cx + pts[i][0] * sc} cy={cy + pts[i][1] * sc} r={sel === row || marked.has(row) ? 6 : 3.4} fill={obs.color(g)} fillOpacity={dim ? 0.1 : 0.78} stroke={sel === row ? '#111' : 'none'} data-testid="tour-point"
+            onPointerEnter={compact ? undefined : (e) => { linked?.set([row]); const lp = localPoint(svgRef.current!, e); show(lp.x, lp.y, <><b>{g || `행 ${row + 1}`}</b><br />클릭해 이 관측값을 따라가기</>) }} onPointerLeave={() => { hide(); linked?.set(null) }}
             onClick={compact ? undefined : () => setParams({ selected: sel === row ? -1 : row })} />
         })}
       </svg>

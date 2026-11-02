@@ -8,6 +8,7 @@ import { buildFrame, heroData, heroStages } from './heroFrames'
 import { heroGeoReady, loadHeroGeo } from './heroFramesV4'
 import { heroV5Ready, loadHeroV5 } from './heroFramesV5Lazy'
 import { heroV6Ready, loadHeroV6 } from './heroFramesV6Lazy'
+import { heroV7Ready, loadHeroV7 } from './heroFramesV7Lazy'
 
 export { heroStages } from './heroFrames'
 export type { HeroStage } from './heroFrames'
@@ -31,6 +32,7 @@ export function HeroDemo() {
   const [geoReady, setGeoReady] = useState(heroGeoReady())
   const [v5Ready, setV5Ready] = useState(heroV5Ready())
   const [v6Ready, setV6Ready] = useState(heroV6Ready())
+  const [v7Ready, setV7Ready] = useState(heroV7Ready())
   const width = size.width || 560
   const height = Math.max(260, Math.min(420, width * 0.68))
   const data = useMemo(() => heroData(cycle), [cycle])
@@ -59,6 +61,14 @@ export function HeroDemo() {
     void loadHeroV6().then(() => { if (live) setV6Ready(true) }).catch(() => {})
     return () => { live = false }
   }, [index, v6Ready, stage.group])
+
+  // The v0.7 stages' engines are the last chunk, fetched the same way.
+  useEffect(() => {
+    if (v7Ready || (index < heroStages.findIndex((s) => s.group === 'v7') - 5 && stage.group !== 'v7')) return
+    let live = true
+    void loadHeroV7().then(() => { if (live) setV7Ready(true) }).catch(() => {})
+    return () => { live = false }
+  }, [index, v7Ready, stage.group])
 
   // Pause when the chart is off-screen or the tab is hidden.
   useEffect(() => {
@@ -90,7 +100,7 @@ export function HeroDemo() {
     const resized = !last.current || last.current.w !== width || last.current.h !== height
     last.current = { w: width, h: height }
     engine.current.setFrame(buildFrame(stage.key, data, width, height), resized || reduced || !running ? 0 : MOVE_MS, width)
-  }, [stage.key, data, width, height, reduced, running, geoReady, v5Ready, v6Ready])
+  }, [stage.key, data, width, height, reduced, running, geoReady, v5Ready, v6Ready, v7Ready])
 
   useEffect(() => () => { engine.current?.destroy(); engine.current = null }, [])
 

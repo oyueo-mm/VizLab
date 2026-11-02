@@ -53,6 +53,7 @@ export const kindAlso: Record<string, VizKind[]> = {
   ternary: ['specialized'], 'wind-rose': ['technique'], 'gantt': ['technique'], 'flame': ['technique'], roc: ['technique'], 'sequence-logo': ['technique'],
   'phylogenetic-tree': ['technique'], 'manhattan': ['technique'], 'kaplan-meier': ['technique'], 'spiral-plot': ['specialized'], 'volume-rendering': ['analysis'],
   'qq': ['technique'], 'hive': ['specialized'], 'lexis': ['specialized'], 'streamline': ['analysis'], 'vector-field': ['analysis'],
+  'marey-chart': ['technique'], tanglegram: ['technique'], 'multi-planar-reconstruction': ['specialized'], lifelines: ['specialized'], punchcard: ['specialized'],
 }
 
 export function kindOf(id: string): VizKind {
@@ -63,7 +64,15 @@ export function kindOf(id: string): VizKind {
 }
 
 /** Main kind of entries added after v0.6 (registered next to their catalog files). */
-export const extraKinds: Record<string, VizKind> = {}
+export const extraKinds: Record<string, VizKind> = {
+  ...Object.fromEntries(ids(`
+radviz star-coordinates grand-tour dimensional-stacking table-lens recursive-pattern circle-segments hyperslice pixel-bar-chart chernoff-faces
+quantile-dotplot hops gradient-plot wilkinson-dotplot punchcard parallel-sets word-cloud word-tree space-filling-curve voronoi-treemap time-curves
+lifelines line-integral-convolution globe-3d multi-planar-reconstruction hyperbolic-tree linear-set-diagram force-directed-edge-bundling storyline-chart
+`).map((id) => [id, 'technique' as VizKind])),
+  // forms with their own field conventions: specialized charts that are also independent techniques (see kindAlso)
+  'marey-chart': 'specialized', tanglegram: 'specialized',
+}
 
 export const kindsAlsoOf = (id: string): VizKind[] => kindAlso[id] ?? []
 
@@ -88,4 +97,14 @@ export const techniqueResultLinks: [string, string[]][] = [
   ['domain-coloring', ['mandelbrot-set', 'julia-set', 'newton-fractal']],
   ['choropleth', ['hotspot', 'lisa']],
   ['isoline', ['kriging-map']],
+  ['radviz', ['tsne', 'umap']],
+  ['grand-tour', ['pca-biplot', 'umap']],
+  ['hops', ['bootstrap', 'mcmc-trace']],
+  ['quantile-dotplot', ['prior-posterior', 'return-level']],
+  ['line-integral-convolution', ['vector-field', 'streamline', 'particle-flow']],
+  ['globe-3d', ['tissot', 'choropleth']],
+  ['multi-planar-reconstruction', ['isosurface', 'volume-rendering']],
+  ['force-directed-edge-bundling', ['od-matrix-map', 'flow-map']],
+  ['time-curves', ['strange-attractor', 'recurrence-plot']],
+  ['space-filling-curve', ['calendar']],
 ]

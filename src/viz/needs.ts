@@ -283,4 +283,8 @@ export const needs: Record<string, Slot[]> = {
   'line-integral-convolution': [['category'], ['number'], ['number'], ['number'], ['number']],
   'globe-3d': [['category'], ['number']],
   'multi-planar-reconstruction': [['number'], ['number'], ['number'], ['number']],
+  'hyperbolic-tree': [['category']],
+  'linear-set-diagram': [['number'], ['number']],
+  'force-directed-edge-bundling': [['number'], ['number'], ['number'], ['number']],
+  'storyline-chart': [['category'], ['number'], ['category']],
 }

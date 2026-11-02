@@ -8,7 +8,7 @@ test.describe('home', () => {
     const demo = page.getByTestId('hero-demo')
     await expect(demo.getByTestId('hero-marks').locator('circle')).toHaveCount(140)
     await expect(demo).toHaveAttribute('data-stage', 'scatter')
-    await expect(demo.getByTestId('hero-count')).toHaveText('1 / 50')
+    await expect(demo.getByTestId('hero-count')).toHaveText('1 / 64')
     // auto-advances to the next representation of the same data after ~1.8 s
     await expect(demo).toHaveAttribute('data-stage', 'histogram', { timeout: 4000 })
     await expect(page.getByTestId('featured-scatter')).toBeVisible()
@@ -44,7 +44,7 @@ test.describe('home', () => {
     await page.goto('./')
     await page.getByTestId('hero-cta').click()
     await expect(page).toHaveURL(/#\/catalog$/)
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(250)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(281)
   })
 })
 
@@ -93,7 +93,7 @@ test.describe('catalog', () => {
 
   test('shows real chart previews for every card', async ({ page }) => {
     const cards = page.getByTestId('catalog-grid').locator('.viz-card')
-    await expect(cards).toHaveCount(250)
+    await expect(cards).toHaveCount(281)
     await cards.last().scrollIntoViewIfNeeded()
     for (const id of ['scatter', 'heatmap', 'radar', 'ridgeline', 'sankey', 'ci']) {
       await page.getByTestId(`card-${id}`).scrollIntoViewIfNeeded()

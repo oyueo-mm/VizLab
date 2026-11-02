@@ -51,6 +51,14 @@ export const presets: Preset[] = [
   { id: 'corpus', name: '공기어 · 어휘 분산 · 지프 도표', note: '같은 말뭉치를 단어 연관, 위치별 분포, 순위–빈도로', datasetId: 'corpus-topics', charts: ['collocation-matrix', 'lexical-dispersion', 'zipf-plot'] },
   { id: 'protein-geometry', name: '접촉 지도 · 라마찬드란 도표', note: '같은 골격 좌표를 거리 기반 접촉과 각도 기반 이면각으로', datasetId: 'backbone-bundle', charts: ['contact-map', 'ramachandran'] },
   { id: 'model-explain', name: '순열 중요도 · ICE · ALE', note: '같은 표 형식 자료에서 변수 영향을 세 가지 설명 기법으로', datasetId: 'ml-tabular', charts: ['permutation-importance', 'ice-plot', 'ale-plot'] },
+  // v0.7
+  { id: 'multivariate-projections', name: '산점도 · RadViz · Star Coordinates', note: '같은 다변량 자료를 두 변수 축, 변수 앵커의 가중 평균, 축 벡터의 합으로 — 한 관측값을 가리키면 다른 투영에서도 강조됩니다', datasetId: 'flowers', n: 90, charts: ['scatter', 'radviz', 'star-coordinates'] },
+  { id: 'projection-tour', name: 'PCA 바이플롯 · Grand Tour', note: '같은 자료를 최적의 한 평면과 연속으로 변하는 모든 평면으로', datasetId: 'flowers', n: 90, charts: ['pca-biplot', 'grand-tour'] },
+  { id: 'many-variables', name: '평행좌표 · 차원 쌓기 · 테이블 렌즈', note: '같은 다변량 표를 선, 중첩 격자, 압축한 표로', datasetId: 'cars', n: 90, charts: ['parallel', 'dimensional-stacking', 'table-lens'] },
+  { id: 'distribution-dots', name: '히스토그램 · 분위수 점도표 · 윌킨슨 점도표', note: '같은 표본을 막대, 모형 분위수의 점, 관측값의 쌓은 점으로', datasetId: 'normal', n: 200, charts: ['histogram', 'quantile-dotplot', 'wilkinson-dotplot'] },
+  { id: 'uncertainty-views', name: '신뢰구간 · HOPs · 그라디언트 플롯', note: '같은 그룹 평균의 불확실성을 구간, 가능한 결과의 움직임, 농도로', datasetId: 'groups', n: 160, charts: ['ci', 'hops', 'gradient-plot'] },
+  { id: 'sets-linear', name: '벤·오일러 · UpSet · 선형 집합 도표', note: '같은 소속 데이터를 원의 겹침, 조합 막대, 너비가 원소 수인 열로', datasetId: 'set-members', charts: ['venn', 'upset', 'linear-set-diagram'] },
+  { id: 'tree-layouts', name: '트리맵 · 보로노이 트리맵 · 쌍곡 트리', note: '같은 계층을 사각 분할, 보로노이 분할, 쌍곡 원판으로', datasetId: 'budget', charts: ['treemap', 'voronoi-treemap', 'hyperbolic-tree'] },
 ]
 
 export const presetById = new Map(presets.map((p) => [p.id, p]))

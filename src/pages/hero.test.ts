@@ -4,12 +4,13 @@ import { MOVE_MS, STAGE_MS } from './HeroDemo'
 import { bundleCurve, heroGeoValue, loadHeroGeo, resample } from './heroFramesV4'
 import { loadHeroV5 } from './heroFramesV5Lazy'
 import { loadHeroV6 } from './heroFramesV6Lazy'
+import { loadHeroV7 } from './heroFramesV7Lazy'
 import { buildFrame, heroData, heroFlows, heroSample, heroStages, heroTree, HERO_N, type HeroStage, type Mark } from './heroFrames'
 
 const W = 560
 const H = 380
 
-beforeAll(async () => { await loadHeroGeo(); await loadHeroV5(); await loadHeroV6() })
+beforeAll(async () => { await loadHeroGeo(); await loadHeroV5(); await loadHeroV6(); await loadHeroV7() })
 
 describe('home animation timing', () => {
   it('shows each chart for about 1.8 s with a 0.5–0.65 s morph', () => {
@@ -25,13 +26,14 @@ describe('home animation frames', () => {
   const frame = (s: HeroStage, d = data) => buildFrame(s, d, W, H)
   const numbers = (m: Mark): number[] => Object.values(m).flatMap((v) => (typeof v === 'number' ? [v] : Array.isArray(v) && typeof v[0] !== 'string' ? (v as any[]).flat().filter((x) => typeof x === 'number') : []))
 
-  it('has 50 distinct stages, each drawn from real engines', () => {
-    expect(heroStages.length).toBe(50)
-    expect(new Set(heroStages.map((s) => s.key)).size).toBe(50)
-    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(50)
+  it('has 64 distinct stages, each drawn from real engines', () => {
+    expect(heroStages.length).toBe(64)
+    expect(new Set(heroStages.map((s) => s.key)).size).toBe(64)
+    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(64)
     expect(heroStages.slice(0, 24).map((s) => s.group)).toEqual([...Array(6).fill('dist'), 'path', ...Array(4).fill('compare'), 'pyramid', ...Array(4).fill('time'), ...Array(2).fill('hierarchy'), 'flame', 'flow', 'network', 'bundle', 'geo', 'meta'])
     expect(heroStages.slice(24, 36).every((s) => s.group === 'v5')).toBe(true)
-    expect(heroStages.slice(36).every((s) => s.group === 'v6')).toBe(true)
+    expect(heroStages.slice(36, 50).every((s) => s.group === 'v6')).toBe(true)
+    expect(heroStages.slice(50).every((s) => s.group === 'v7')).toBe(true)
     expect(heroStages.map((s) => s.viz)).toEqual(expect.arrayContaining(['connected-scatter', 'pyramid', 'network', 'horizon', 'choropleth', 'forest', 'flame', 'edge-bundling', 'isoline', 'kaplan-meier', 'manhattan', 'upset']))
   })
 
@@ -384,5 +386,34 @@ describe('v0.5 stages', () => {
       expect(JSON.stringify(f(k, 1)), k).toBe(JSON.stringify(f(k, 1)))
       expect(JSON.stringify(f(k, 1)), k).not.toBe(JSON.stringify(f(k, 2)))
     }
+  })
+})
+
+describe('v0.7 home stages use the technique engines', () => {
+  const frame = (s: HeroStage, cycle = 0) => buildFrame(s, heroData(cycle), W, H)
+  const circles = (s: HeroStage, prefix: string, cycle = 0) => frame(s, cycle).filter((m) => m.t === 'circle' && m.k.startsWith(prefix)) as Extract<Mark, { t: 'circle' }>[]
+
+  it('RadViz and Grand Tour points stay inside the unit disc of the stage', () => {
+    for (const [s, prefix] of [['radviz', 'rv:p'], ['tour', 'gt:p']] as const) {
+      const pts = circles(s, prefix)
+      expect(pts.length, s).toBe(66)
+      const cx = d3.mean(pts, (p) => p.x)!, cy = d3.mean(pts, (p) => p.y)!
+      const R = Math.min(W - 2 * 22, H - 18 - 4 - 34 - 2) / 2
+      for (const p of pts) expect(Math.hypot(p.x - cx, p.y - cy)).toBeLessThanOrEqual(R * 1.2)
+    }
+  })
+
+  it('the quantile dotplot has 40 dots (each carries 2.5 % probability) and the HOP bars change between frames of the same data', () => {
+    expect(circles('qdot', 'qd:d').length).toBe(40)
+    const bars = (c: number) => (frame('hops', c).filter((m) => m.k.startsWith('hp:b')) as Extract<Mark, { t: 'rect' }>[]).map((r) => r.h)
+    expect(bars(0)).not.toEqual(bars(1))
+    expect(bars(2)).toEqual(bars(2))
+  })
+
+  it('edge bundling morphs between straight and bundled polylines with the same point count', () => {
+    const lines = (c: number) => frame('fdeb', c).filter((m) => m.t === 'poly') as Extract<Mark, { t: 'poly' }>[]
+    expect(lines(0).length).toBe(lines(1).length)
+    expect(lines(0)[0].pts.length).toBe(lines(1)[0].pts.length)
+    expect(lines(0)[0].pts).not.toEqual(lines(1)[0].pts)
   })
 })

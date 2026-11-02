@@ -247,19 +247,18 @@ export function voronoiPartition(values: readonly number[], polygon: readonly P2
   while (sites.length < n) { const p: P2 = [x0 + rng() * (x1 - x0), y0 + rng() * (y1 - y0)]; if (inside(p)) sites.push(p) }
   const w = new Array<number>(n).fill(0)
   const R2 = total / n
-  let cells: P2[][] = []
-  let error = Infinity
+  let error: number
   for (let it = 0; it < iters; it++) {
-    cells = sites.map((_, i) => powerCell(i, sites, w, polygon))
-    const areas = cells.map(polyArea)
+    const iterCells = sites.map((_, i) => powerCell(i, sites, w, polygon))
+    const areas = iterCells.map(polyArea)
     error = Math.max(...areas.map((a, i) => Math.abs(a - target[i]) / Math.max(target[i], 1e-12)))
     if (error < tol) break
-    cells.forEach((c, i) => {
+    iterCells.forEach((c, i) => {
       if (c.length >= 3) { const g = polyCentroid(c); sites[i] = [sites[i][0] + 0.35 * (g[0] - sites[i][0]), sites[i][1] + 0.35 * (g[1] - sites[i][1])] }
       w[i] += 0.5 * R2 * ((target[i] - areas[i]) / Math.max(R2, 1e-12)) * 0.6
     })
   }
-  cells = sites.map((_, i) => powerCell(i, sites, w, polygon))
+  const cells = sites.map((_, i) => powerCell(i, sites, w, polygon))
   const areas = cells.map(polyArea)
   error = Math.max(...areas.map((a, i) => Math.abs(a - target[i]) / Math.max(target[i], 1e-12)))
   return { cells, error }

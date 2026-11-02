@@ -128,7 +128,7 @@ function MareyChart({ table, mapping, params, setParams, width, height, compact 
     return lines.length ? { lines, stations, cross: polylineCrossings(lines) } : null
   }, [table, tcol, pcol, mcol, scol])
   if (!model) return <ChartMessage>열차, 위치, 시각 열을 선택하세요(열차마다 2개 이상의 지점).</ChartMessage>
-  const m = compact ? { l: 8, r: 8, t: 8, b: 14 } : { l: 70, r: 24, t: 36, b: 52 }
+  const m = compact ? { l: 8, r: 8, t: 8, b: 14 } : { l: 70, r: 24, t: 72, b: 52 }
   const w = width - m.l - m.r, h = height - m.t - m.b
   const allT = model.lines.flatMap((l) => l.pts.map((p) => p[0])), allP = model.lines.flatMap((l) => l.pts.map((p) => p[1]))
   const x = d3.scaleLinear().domain([Math.min(...allT), Math.max(...allT)]).range([0, w])

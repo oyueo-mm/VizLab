@@ -15,7 +15,7 @@ beforeAll(async () => { modules = await loadAllModules() })
 const issueFor = (viz: string, table = generateDataset('normal'), remembered = {}) => compareIssue(modules[viz], table, paneMapping(modules[viz], table, remembered))
 
 describe('recommended comparison presets', () => {
-  it('has the v0.3 combinations the v0.4 geo, agreement, calibration, network and mosaic ones, and ten v0.5 ones', () => {
+  it('has the v0.3 combinations the v0.4 geo, agreement, calibration, network and mosaic ones, ten v0.5 ones, nine v0.6 ones and seven v0.7 ones', () => {
     expect(presets.map((p) => p.charts)).toEqual([
       ['histogram', 'kde', 'ecdf'], ['box', 'violin', 'raincloud'], ['scatter', 'hexbin', 'kde2d'], ['bar', 'lollipop', 'bullet'],
       ['line', 'area', 'step'], ['treemap', 'sunburst', 'icicle'], ['roc', 'pr'],
@@ -29,6 +29,9 @@ describe('recommended comparison presets', () => {
       ['tsne', 'umap'], ['acf-plot', 'pacf-plot', 'lag-plot'], ['stl', 'seasonal-subseries'], ['efficient-frontier', 'risk-return-scatter', 'risk-contribution'],
       ['community-blockmodel', 'spectral-embedding', 'adjacency'], ['dag-layout', 'max-flow'], ['collocation-matrix', 'lexical-dispersion', 'zipf-plot'], ['contact-map', 'ramachandran'],
       ['permutation-importance', 'ice-plot', 'ale-plot'],
+      // v0.7
+      ['scatter', 'radviz', 'star-coordinates'], ['pca-biplot', 'grand-tour'], ['parallel', 'dimensional-stacking', 'table-lens'], ['histogram', 'quantile-dotplot', 'wilkinson-dotplot'],
+      ['ci', 'hops', 'gradient-plot'], ['venn', 'upset', 'linear-set-diagram'], ['treemap', 'voronoi-treemap', 'hyperbolic-tree'],
     ])
     for (const p of presets) { expect(p.charts.length).toBeLessThanOrEqual(MAX_PANES); expect(p.charts.length).toBeGreaterThanOrEqual(2) }
   })

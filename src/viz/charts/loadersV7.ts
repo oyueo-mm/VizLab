@@ -36,4 +36,9 @@ export const loadersV7: Record<string, Loader> = {
   'line-integral-convolution': () => import('./sciCharts7').then((m) => m.licModule),
   'globe-3d': () => import('./sciCharts7').then((m) => m.globeModule),
   'multi-planar-reconstruction': () => import('./sciCharts7').then((m) => m.mprModule),
+  // relations
+  'hyperbolic-tree': () => import('./netCharts7').then((m) => m.hypModule),
+  'linear-set-diagram': () => import('./netCharts7').then((m) => m.linearModule),
+  'force-directed-edge-bundling': () => import('./netCharts7').then((m) => m.fdebModule),
+  'storyline-chart': () => import('./netCharts7').then((m) => m.storyModule),
 }
