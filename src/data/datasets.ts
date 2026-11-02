@@ -4,6 +4,8 @@ import { datasetsV4 } from './datasetsV4'
 import { datasetsV5 } from './datasetsV5'
 import { datasetsV6 } from './datasetsV6'
 import type { DatasetIdV6 } from './datasetIdsV6'
+import type { DatasetIdV7 } from './datasetIdsV7'
+import { datasetsV7 } from './datasetsV7'
 import type { Cell, Column, DataTable } from './table'
 
 export type DatasetId =
@@ -20,6 +22,7 @@ export type DatasetId =
   | 'surface-grid' | 'signal-chirp' | 'rp-series' | 'phase-seeds' | 'bifurcation-marks' | 'wind-obs' | 'soil-texture' | 'polar-curves' | 'points-2d' | 'hourly-visits' | 'yield-curves' | 'order-book' | 'spike-trials' | 'event-log' | 'lifelines' | 'kanban'
   | 'de-genes' | 'gwas-synth' | 'binding-sites' | 'coverage-synth' | 'microbiome-dist' | 'expression-matrix' | 'species-dist' | 'set-members'
   | DatasetIdV6
+  | DatasetIdV7
 
 export interface DatasetSize { min: number; max: number; default: number; step: number; label: string }
 
@@ -387,6 +390,7 @@ export const datasets: DatasetDef[] = [
   ...datasetsV4,
   ...datasetsV5,
   ...datasetsV6,
+  ...datasetsV7,
 ]
 
 export const datasetById = new Map(datasets.map((d) => [d.id, d]))

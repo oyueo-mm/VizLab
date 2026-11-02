@@ -1,0 +1,8 @@
+import type { VizMeta } from './types'
+
+/** v0.7 scientific and geospatial visualization techniques. */
+export const catalogV7Sci: VizMeta[] = [
+  { id: 'line-integral-convolution', name: '선적분 합성곱 (LIC)', nameEn: 'Line Integral Convolution', category: 'science', alsoIn: ['geo'], dataKinds: ['numeric', 'geospatial'], keywords: ['벡터장 텍스처', '유동 시각화', '흐름 방향 결', '노이즈 적분', '유선 텍스처', 'lic', 'line integral convolution', 'vector field texture', 'flow visualization', 'streamline texture'], summary: '모든 픽셀에서 벡터장을 따라 앞뒤로 백색 노이즈를 평균해, 흐름 방향으로 매끄럽고 수직으로 변하는 결로 벡터장의 방향 구조를 조밀하게 보여줍니다.', related: ['vector-field', 'streamline', 'particle-flow'] },
+  { id: 'globe-3d', name: '3D 지구본', nameEn: '3D Globe', category: 'geo', sub: 'map3d', alsoIn: ['science'], dataKinds: ['geospatial', 'numeric'], keywords: ['구면 지도', '직교투영', '지구본 회전', '구면 좌표', '3차원 지구', '3d globe', 'orthographic projection', 'spherical map', 'rotating globe', 'virtual globe'], summary: '세계 국가 통계를 평면 지도가 아닌 구면 위에 올려 직교투영으로 보여주며, 끌어서 돌리면 중심에서는 정확하고 가장자리에서는 찌그러지는 구면의 왜곡을 직접 확인합니다.', related: ['choropleth', 'tissot', 'dorling'] },
+  { id: 'multi-planar-reconstruction', name: '다평면 재구성 (MPR)', nameEn: 'Multi-Planar Reconstruction', category: 'science', alsoIn: ['geo'], dataKinds: ['numeric', 'multivariate'], keywords: ['직교 단면', '볼륨 단면', '축면 관상면 시상면', '의료 영상', '동기화 단면', 'mpr', 'multi-planar reconstruction', 'orthogonal slices', 'axial coronal sagittal', 'volume slicing', 'ortho view'], summary: '3차원 볼륨을 같은 교차점을 지나는 세 직교 평면(축면·관상면·시상면)으로 잘라 나란히 보이고, 한 단면에서 교차점을 옮기면 나머지가 함께 바뀝니다.', related: ['isosurface', 'volume-rendering', 'terrain-profile'] },
+]

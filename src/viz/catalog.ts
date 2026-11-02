@@ -36,6 +36,7 @@ export interface SubcategoryDef { id: string; name: string }
 /** Second-level groups inside a category, shown as a filter row in the catalog. */
 export const subcategories: Partial<Record<CategoryId, SubcategoryDef[]>> = {
   multivariate: [{ id: 'highdim', name: '고차원 투영' }, { id: 'pixel', name: '픽셀·표 기반' }, { id: 'glyph', name: '글리프·단면' }],
+  distribution: [{ id: 'dots', name: '점 기반 분포' }],
   geo: [
     { id: 'point', name: '위치·밀도' }, { id: 'surface', name: '지형·연속 표면' }, { id: 'thematic', name: '주제도' }, { id: 'distort', name: '지도 변형' },
     { id: 'analysis', name: '공간 분석' }, { id: 'stats', name: '공간 통계' }, { id: 'spacetime', name: '시공간' }, { id: 'map3d', name: '3D 지도' },
