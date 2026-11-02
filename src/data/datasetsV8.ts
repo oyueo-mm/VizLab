@@ -35,4 +35,26 @@ export const datasetsV8: DatasetDef[] = [
       return table([cat('이름'), num('x'), num('y'), ...SET_POINT_SETS.map(num)], rows)
     },
   },
+  {
+    id: 'dense-modules', name: '조밀한 의존 관계망 (이분 완전연결 + 완전그래프, 합성)', description: '앱 6개가 공용 서비스 5개를 모두 호출하는 완전 이분 구조, 팀원 6명이 서로 모두 연결된 완전그래프, 같은 모양의 작은 이분 구조와 몇 개의 잡음 연결로 이루어진 합성 네트워크입니다. 간선은 많지만 중복되는 연결 구조가 뚜렷해 Power Graph와 Confluent Drawing으로 크게 압축됩니다. 실제 서비스의 관계가 아닙니다.',
+    size: { min: 0, max: 12, default: 4, step: 1, label: '잡음 연결 수' },
+    generate: (seed, n) => {
+      const r = createRng(seed)
+      const E: [string, string][] = []
+      const apps = ['앱1', '앱2', '앱3', '앱4', '앱5', '앱6'], svc = ['인증', '결제', '알림', '검색', '로그']
+      for (const a of apps) for (const b of svc) E.push([a, b])
+      const team = ['가', '나', '다', '라', '마', '바']
+      for (let i = 0; i < team.length; i++) for (let j = i + 1; j < team.length; j++) E.push([`팀${team[i]}`, `팀${team[j]}`])
+      const xs = ['배치1', '배치2', '배치3'], ys = ['큐', '저장소', '캐시', '모니터']
+      for (const a of xs) for (const b of ys) E.push([a, b])
+      const all = [...apps, ...svc, ...team.map((t) => `팀${t}`), ...xs, ...ys]
+      const have = new Set(E.map(([a, b]) => `${a}|${b}`))
+      for (let k = 0; k < n; k++) {
+        const a = all[r.int(0, all.length - 1)], b = all[r.int(0, all.length - 1)]
+        if (a !== b && !have.has(`${a}|${b}`) && !have.has(`${b}|${a}`)) { have.add(`${a}|${b}`); E.push([a, b]) }
+      }
+      const kind = (id: string) => (apps.includes(id) || xs.includes(id) ? '호출 측' : svc.includes(id) || ys.includes(id) ? '제공 측' : '팀')
+      return table([cat('노드 A'), cat('노드 B'), num('가중치'), cat('그룹')], E.map(([a, b]) => [a, b, 1, kind(a)]))
+    },
+  },
 ]

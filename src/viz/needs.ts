@@ -292,4 +292,7 @@ export const needs: Record<string, Slot[]> = {
   'kelp-diagram': [['number'], ['number'], ['number'], ['number']],
   'rainbow-boxes': [['number'], ['number']],
   'radial-sets': [['number'], ['number']],
+  'nodetrix': [['category'], ['category']],
+  'power-graph': [['category'], ['category']],
+  'confluent-drawing': [['category'], ['category']],
 }

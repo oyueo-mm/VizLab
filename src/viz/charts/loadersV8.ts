@@ -10,4 +10,8 @@ export const loadersV8: Record<string, Loader> = {
   'kelp-diagram': () => import('./setCharts8').then((m) => m.kelpModule),
   'rainbow-boxes': () => import('./setCharts8').then((m) => m.rainbowBoxesModule),
   'radial-sets': () => import('./setCharts8').then((m) => m.radialSetsModule),
+  // networks
+  nodetrix: () => import('./graphCharts8').then((m) => m.nodeTrixModule),
+  'power-graph': () => import('./graphCharts8').then((m) => m.powerGraphModule),
+  'confluent-drawing': () => import('./graphCharts8').then((m) => m.confluentModule),
 }

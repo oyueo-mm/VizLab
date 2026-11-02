@@ -45,7 +45,7 @@ venn bubble-sets kelp-diagram rainbow-boxes radial-sets word-cloud`,
 spectrogram scalogram recurrence-plot polar-heatmap mandelbrot-set julia-set newton-fractal domain-coloring order-flow-footprint order-book-heatmap clustered-heatmap contact-map confusion-matrix decision-boundary
 hyperparam-landscape attention-map community-blockmodel collocation-matrix gradient-plot`,
   glyph: `box letter-value candlestick chernoff-faces vector-field glyph-map pictogram tensor-glyph renko heikin-ashi point-figure line-break sequence-logo msa-logo`,
-  connection: `chord dendrogram network arc tanglegram od-matrix-map adjacency edge-bundling bipartite hive hypergraph biofabric radial-tree dag-layout force-directed-edge-bundling linesets phylogenetic-tree decision-tree
+  connection: `nodetrix power-graph confluent-drawing chord dendrogram network arc tanglegram od-matrix-map adjacency edge-bundling bipartite hive hypergraph biofabric radial-tree dag-layout force-directed-edge-bundling linesets phylogenetic-tree decision-tree
 process-map fault-tree word-tree lifelines`,
   flow: `sankey alluvial parallel-sets flow-map streamline max-flow phase-portrait activation-flow storyline-chart`,
   partition: `hexbin treemap mosaic sunburst pack icicle voronoi-treemap geo-hexbin tile-grid square-grid cluster-map gridded-cartogram voronoi-map marimekko flame delaunay phase-diagram dimensional-stacking`,
