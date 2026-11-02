@@ -1,6 +1,7 @@
 import { catalogV5 } from './catalogV5'
 import { catalogV6 } from './catalogV6'
 import { catalogV7 } from './catalogV7'
+import { catalogV8 } from './catalogV8'
 import { hasKind, techniqueResultLinks, type VizKind } from './kinds'
 import { purposeTerms } from './purposes'
 import type { CategoryId, DataKind, VizMeta } from './types'
@@ -177,7 +178,7 @@ const catalogV14: VizMeta[] = [
   { id: 'hive', name: '하이브 플롯', nameEn: 'Hive Plot', category: 'network', dataKinds: ['network'], keywords: ['축 배치', '결정적 레이아웃', '노드 속성', 'hive plot', 'hive', 'rule-based layout'], summary: '노드의 속성으로 어느 축에, 축의 어디에 놓일지 규칙으로 정하고 연결을 곡선으로 이어, 같은 데이터가 늘 같은 모양이 되는 네트워크 그림입니다.', related: ['network', 'arc', 'adjacency'] },
 ]
 
-export const catalog: VizMeta[] = [...catalogV14, ...catalogV5, ...catalogV6, ...catalogV7]
+export const catalog: VizMeta[] = [...catalogV14, ...catalogV5, ...catalogV6, ...catalogV7, ...catalogV8]
 
 // Technique ↔ result links (v0.7): both sides list each other under "related" without touching the original catalog entries' ids.
 for (const [technique, results] of techniqueResultLinks) {

@@ -5,8 +5,10 @@ import { datasetsV5 } from './datasetsV5'
 import { datasetsV6 } from './datasetsV6'
 import type { DatasetIdV6 } from './datasetIdsV6'
 import type { DatasetIdV7 } from './datasetIdsV7'
+import type { DatasetIdV8 } from './datasetIdsV8'
 import { datasetsV7 } from './datasetsV7'
 import { datasetsV7b } from './datasetsV7b'
+import { datasetsV8 } from './datasetsV8'
 import type { Cell, Column, DataTable } from './table'
 
 export type DatasetId =
@@ -24,6 +26,7 @@ export type DatasetId =
   | 'de-genes' | 'gwas-synth' | 'binding-sites' | 'coverage-synth' | 'microbiome-dist' | 'expression-matrix' | 'species-dist' | 'set-members'
   | DatasetIdV6
   | DatasetIdV7
+  | DatasetIdV8
 
 export interface DatasetSize { min: number; max: number; default: number; step: number; label: string }
 
@@ -393,6 +396,7 @@ export const datasets: DatasetDef[] = [
   ...datasetsV6,
   ...datasetsV7,
   ...datasetsV7b,
+  ...datasetsV8,
 ]
 
 export const datasetById = new Map(datasets.map((d) => [d.id, d]))

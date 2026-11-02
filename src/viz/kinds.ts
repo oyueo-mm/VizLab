@@ -69,6 +69,7 @@ export const extraKinds: Record<string, VizKind> = {
 radviz star-coordinates grand-tour dimensional-stacking table-lens recursive-pattern circle-segments hyperslice pixel-bar-chart chernoff-faces
 quantile-dotplot hops gradient-plot wilkinson-dotplot punchcard parallel-sets word-cloud word-tree space-filling-curve voronoi-treemap time-curves
 lifelines line-integral-convolution globe-3d multi-planar-reconstruction hyperbolic-tree linear-set-diagram force-directed-edge-bundling storyline-chart
+bubble-sets linesets kelp-diagram rainbow-boxes radial-sets
 `).map((id) => [id, 'technique' as VizKind])),
   // forms with their own field conventions: specialized charts that are also independent techniques (see kindAlso)
   'marey-chart': 'specialized', tanglegram: 'specialized',

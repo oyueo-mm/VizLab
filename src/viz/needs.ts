@@ -287,4 +287,9 @@ export const needs: Record<string, Slot[]> = {
   'linear-set-diagram': [['number'], ['number']],
   'force-directed-edge-bundling': [['number'], ['number'], ['number'], ['number']],
   'storyline-chart': [['category'], ['number'], ['category']],
+  'bubble-sets': [['number'], ['number'], ['number'], ['number']],
+  'linesets': [['number'], ['number'], ['number'], ['number']],
+  'kelp-diagram': [['number'], ['number'], ['number'], ['number']],
+  'rainbow-boxes': [['number'], ['number']],
+  'radial-sets': [['number'], ['number']],
 }
