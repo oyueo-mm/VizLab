@@ -1,4 +1,5 @@
 import * as d3 from 'd3'
+import { percentileRanker, vsupBins, vsupCell, vsupColor } from '../../stats/vsup'
 import { useMemo } from 'react'
 import { ChartMessage, Legend, Readout, Tooltip, localPoint, useSvgId } from '../../components/chart/primitives'
 import { ControlGroup, Hint, Segmented, Select, Slider, Toggle } from '../../components/controls'
@@ -16,7 +17,7 @@ const regionRole = { key: 'region', label: '지역 ID (예: KOR, KR-11)', type: 
 
 // ─── bivariate choropleth ───────────────────────────────────────────────────────────
 
-export interface BivariateParams extends GeoParams { classes: 2 | 3 | 4; method: ClassMethod; palette: 'stevens' | 'warm' | 'green'; borders: boolean; cell: string; selected: string }
+export interface BivariateParams extends GeoParams { classes: 2 | 3 | 4; method: ClassMethod; palette: 'stevens' | 'warm' | 'green'; borders: boolean; cell: string; selected: string; /** v0.9: 'vsup' reads Y as uncertainty and merges the value colours as it rises */ scheme?: 'grid' | 'vsup' }
 
 const PALETTES: Record<BivariateParams['palette'], { name: string; c00: string; c10: string; c01: string; c11: string }> = {
   stevens: { name: '청록 × 보라', c00: '#e8e8e8', c10: '#5ac8c8', c01: '#be64ac', c11: '#3b4994' },
@@ -33,6 +34,9 @@ export function bivariateColor(pal: BivariateParams['palette'], n: number, i: nu
   return d3.interpolateLab(bottom, top)(ty)
 }
 
+/** Colour ramp of the value axis used by the VSUP scheme: the palette's own corner colours, light to dark. */
+const vsupRamp = (pal: BivariateParams['palette']) => { const p = PALETTES[pal]; const a = d3.interpolateLab(p.c00, p.c10), b = d3.interpolateLab(p.c10, p.c11); return (t: number) => (t < 0.5 ? a(2 * t) : b(2 * t - 1)) }
+
 function BivariateChart({ table, mapping, params, setParams, width, height, compact, linked }: ChartProps<BivariateParams>) {
   const st = useRegionStage(table, mapping, params, width, height, compact, KEYS_XY)
   const { data, map, paths, svgRef, zoom, tip, show, hide } = st
@@ -42,7 +46,16 @@ function BivariateChart({ table, mapping, params, setParams, width, height, comp
   const ex = useMemo(() => classBreaks(xs, params.method, n), [xs.join(','), params.method, n]) // eslint-disable-line react-hooks/exhaustive-deps
   const ey = useMemo(() => classBreaks(ys, params.method, n), [ys.join(','), params.method, n]) // eslint-disable-line react-hooks/exhaustive-deps
   const cx = Math.max(1, ex.length - 1), cy = Math.max(1, ey.length - 1)
-  const cls = rows.map((q) => (q.x != null && q.y != null ? { i: Math.min(cx - 1, classIndex(q.x, ex)), j: Math.min(cy - 1, classIndex(q.y, ey)) } : null))
+  const vsup = params.scheme === 'vsup'
+  const rankX = useMemo(() => percentileRanker(xs), [xs.join(',')]) // eslint-disable-line react-hooks/exhaustive-deps
+  const rankY = useMemo(() => percentileRanker(ys), [ys.join(',')]) // eslint-disable-line react-hooks/exhaustive-deps
+  const cls = rows.map((q) => {
+    if (q.x == null || q.y == null) return null
+    if (vsup) { const v = vsupCell(rankX(q.x), rankY(q.y), n); return { i: v.bin, j: v.level } }
+    return { i: Math.min(cx - 1, classIndex(q.x, ex)), j: Math.min(cy - 1, classIndex(q.y, ey)) }
+  })
+  const ramp = vsupRamp(params.palette)
+  const colorOf = (c: { i: number; j: number }) => (vsup ? vsupColor(ramp, { level: c.j, bin: c.i, bins: vsupBins(n, c.j) }, n) : bivariateColor(params.palette, Math.max(cx, cy), c.i, c.j))
   const marked = new Set(linked?.rows ?? [])
   const hatch = useSvgId('biv-hatch')
   const r = useMemo(() => correlation(rows.filter((q) => q.x != null && q.y != null).map((q) => q.x!), rows.filter((q) => q.x != null && q.y != null).map((q) => q.y!)), [rows])
@@ -62,7 +75,7 @@ function BivariateChart({ table, mapping, params, setParams, width, height, comp
             const hi = params.cell === (c ? `${c.i},${c.j}` : '') || params.selected === reg.id || (row.d?.rows.some((q) => marked.has(q)) ?? false)
             const dim = params.cell !== '' && !hi
             return (
-              <path key={reg.id} className="map-region" data-testid="map-region" data-id={reg.id} data-cell={c ? `${c.i},${c.j}` : ''} d={d} fill={c ? bivariateColor(params.palette, Math.max(cx, cy), c.i, c.j) : `url(#${hatch})`} fillOpacity={dim ? 0.25 : 1}
+              <path key={reg.id} className="map-region" data-testid="map-region" data-id={reg.id} data-cell={c ? `${c.i},${c.j}` : ''} d={d} fill={c ? colorOf(c) : `url(#${hatch})`} fillOpacity={dim ? 0.25 : 1}
                 stroke={hi ? '#121816' : '#ffffff'} strokeWidth={hi ? 1.6 : params.borders ? 0.6 : 0} vectorEffect="non-scaling-stroke"
                 onPointerMove={compact ? undefined : (e) => { linked?.set(row.d?.rows ?? null); const p = localPoint(svgRef.current!, e); show(p.x, p.y, <><b>{reg.name}</b><br />{roleColumn(mapping, 'x')}: {fmt(row.x)}{c ? ` (구간 ${c.i + 1}/${cx})` : ''}<br />{roleColumn(mapping, 'y')}: {fmt(row.y)}{c ? ` (구간 ${c.j + 1}/${cy})` : ''}</>) }}
                 onPointerLeave={() => { hide(); linked?.set(null) }} onClick={compact ? undefined : () => setParams({ selected: params.selected === reg.id ? '' : reg.id })} />
@@ -73,14 +86,21 @@ function BivariateChart({ table, mapping, params, setParams, width, height, comp
       {!compact && (<>
         <svg className="bivariate-legend" width={G + 78} height={G + 40} style={{ position: 'absolute', left: 8, bottom: 8 }} role="group" aria-label="이변량 범례" data-testid="biv-legend">
           <g transform={`translate(22,${4})`}>
-            {Array.from({ length: cy }, (_, jj) => Array.from({ length: cx }, (_, ii) => {
+            {vsup
+              ? Array.from({ length: n }, (_, lv) => Array.from({ length: vsupBins(n, lv) }, (_, bi) => {
+                const bins = vsupBins(n, lv), cw = G / bins, ch = G / n
+                const key = `${bi},${lv}`
+                return <rect key={key} data-testid="biv-cell" data-count={counts.get(key) ?? 0} x={bi * cw} y={(n - 1 - lv) * ch} width={cw - 1} height={ch - 1} fill={vsupColor(ramp, { level: lv, bin: bi, bins }, n)} stroke={params.cell === key ? '#121816' : 'none'} strokeWidth={2} style={{ cursor: 'pointer' }}
+                  onClick={() => setParams({ cell: params.cell === key ? '' : key })}><title>{`불확실성 단계 ${lv + 1} · 값 구간 ${bi + 1}/${bins}: ${counts.get(key) ?? 0}개 지역`}</title></rect>
+              }))
+              : Array.from({ length: cy }, (_, jj) => Array.from({ length: cx }, (_, ii) => {
               const cw = G / Math.max(cx, cy)
               const key = `${ii},${jj}`
               return <rect key={key} data-testid="biv-cell" data-count={counts.get(key) ?? 0} x={ii * cw} y={(cy - 1 - jj) * cw} width={cw - 1} height={cw - 1} fill={bivariateColor(params.palette, Math.max(cx, cy), ii, jj)} stroke={params.cell === key ? '#121816' : 'none'} strokeWidth={2} style={{ cursor: 'pointer' }}
                 onClick={() => setParams({ cell: params.cell === key ? '' : key })}><title>{`${roleColumn(mapping, 'x')} 구간 ${ii + 1} · ${roleColumn(mapping, 'y')} 구간 ${jj + 1}: ${counts.get(key) ?? 0}개 지역`}</title></rect>
             }))}
             <text x={G / 2} y={G + 14} textAnchor="middle" className="bar-label">{roleColumn(mapping, 'x')} →</text>
-            <text transform={`translate(-8,${G / 2}) rotate(-90)`} textAnchor="middle" className="bar-label">{roleColumn(mapping, 'y')} →</text>
+            <text transform={`translate(-8,${G / 2}) rotate(-90)`} textAnchor="middle" className="bar-label">{roleColumn(mapping, 'y')}{vsup ? ' (불확실성) →' : ' →'}</text>
           </g>
         </svg>
         <Readout items={[{ label: '지역', value: cls.filter(Boolean).length }, { label: '상관 r', value: fmt(r, 2) }, ...(params.cell ? [{ label: '선택 칸', value: `${counts.get(params.cell) ?? 0}개 지역` }] : [])]} />
@@ -100,6 +120,8 @@ function BivariateControls({ params, setParams, table, mapping }: ControlsProps<
   return (
     <>
       <ControlGroup title="구간 나누기">
+        <Segmented label="팔레트 방식" value={params.scheme ?? 'grid'} onChange={(scheme) => setParams({ scheme })} testId="ctl-biv-scheme" options={[{ value: 'grid', label: '이변량 격자' }, { value: 'vsup', label: 'VSUP (불확실성 억제)' }]} />
+        {params.scheme === 'vsup' && <Hint>VSUP는 Y를 불확실성으로 읽습니다. 불확실성이 낮은 단계에서는 X의 값 구간을 잘게(2ⁿ⁻¹개) 나누고, 불확실성이 높아질수록 인접한 구간을 둘씩 합쳐 마지막 단계에서는 한 색이 되어, 불확실한 값끼리는 색으로 구별되지 않습니다. 구간은 분위 순위로 나눕니다. ‘격자 크기’는 불확실성 단계 수입니다. 원 논문의 트리 구성(색 평균·채도 억제 규칙)을 단순화해, 합친 구간의 가운데 값 색에 불확실성만큼 회색을 섞습니다.</Hint>}
         <Segmented label="격자 크기" value={String(params.classes)} onChange={(v) => setParams({ classes: Number(v) as 2 | 3 | 4 })} testId="ctl-biv-classes" options={[{ value: '2', label: '2×2' }, { value: '3', label: '3×3' }, { value: '4', label: '4×4' }]} />
         <Select label="분할 기준 (두 변수 각각)" value={params.method} onChange={(method) => setParams({ method })} testId="ctl-biv-method" options={classMethods.map((m) => ({ value: m.value, label: m.label }))} />
         {method && <Hint>{method.hint}</Hint>}

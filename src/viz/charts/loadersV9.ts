@@ -14,4 +14,12 @@ export const loadersV9: Record<string, Loader> = {
   'sequence-braiding': () => import('./tempoCharts9').then((m) => m.braidModule),
   'dust-magnet': () => import('./multiCharts9').then((m) => m.dustMagnetModule),
   'gosper-map': () => import('./multiCharts9').then((m) => m.gosperMapModule),
+  // text, geographic flow, focus+context, scientific visualization
+  wordstream: () => import('./textCharts9').then((m) => m.wordStreamModule),
+  tilebars: () => import('./textCharts9').then((m) => m.tileBarsModule),
+  'od-maps': () => import('./geoFocusCharts9').then((m) => m.odMapModule),
+  'perspective-wall': () => import('./geoFocusCharts9').then((m) => m.wallModule),
+  ibfv: () => import('./sciCharts9').then((m) => m.ibfvModule),
+  hyperstreamlines: () => import('./sciCharts9').then((m) => m.hyperModule),
+  'fiber-surfaces': () => import('./sciCharts9').then((m) => m.fiberModule),
 }

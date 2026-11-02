@@ -315,4 +315,11 @@ export const needs: Record<string, Slot[]> = {
   'sequence-braiding': [['category'], ['number'], ['category']],
   'dust-magnet': [['number'], ['number']],
   'gosper-map': [['category'], ['number']],
+  'wordstream': [['number'], ['category'], ['category'], ['number']],
+  'tilebars': [['category'], ['category']],
+  'od-maps': [['category'], ['category'], ['number'], ['number'], ['number'], ['number'], ['number']],
+  'perspective-wall': [['number'], ['category']],
+  'ibfv': [['number'], ['number'], ['number'], ['number']],
+  'hyperstreamlines': [['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number']],
+  'fiber-surfaces': [['number'], ['number'], ['number'], ['number'], ['number']],
 }
