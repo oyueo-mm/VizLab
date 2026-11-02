@@ -22,4 +22,9 @@ export const loadersV9: Record<string, Loader> = {
   ibfv: () => import('./sciCharts9').then((m) => m.ibfvModule),
   hyperstreamlines: () => import('./sciCharts9').then((m) => m.hyperModule),
   'fiber-surfaces': () => import('./sciCharts9').then((m) => m.fiberModule),
+  // flow topology, geographic matrix, code lines, set + network
+  'vector-field-topology': () => import('./moreCharts9').then((m) => m.topologyModule),
+  maptrix: () => import('./moreCharts9').then((m) => m.mapTrixModule),
+  seesoft: () => import('./moreCharts9').then((m) => m.seesoftModule),
+  setnet: () => import('./moreCharts9').then((m) => m.setNetModule),
 }

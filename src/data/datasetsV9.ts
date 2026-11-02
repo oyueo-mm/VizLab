@@ -290,5 +290,53 @@ export const datasetsV9: DatasetDef[] = [
       return table([num('x'), num('y'), num('z'), num('온도'), num('농도')], rows)
     },
   },
+  {
+    id: 'club-network', name: '동아리 소속이 있는 인맥 (세 동아리와 친구 관계, 합성)', description: '가상 학생이 세 동아리(음악·운동·코딩) 중 어디에 가입했는지(0/1)와 친구 이름 목록(세미콜론으로 구분)을 한 행에 적은 합성 자료입니다. 같은 동아리 안에서 친구가 되기 쉽고, 동아리 사이 연결도 일부 있습니다. 한 행이 한 사람(노드)이고 ‘친구’ 열이 간선입니다. 집합 영역과 네트워크를 함께 배치하는 SetNet의 입력으로 알맞습니다.',
+    size: { min: 12, max: 40, default: 22, step: 2, label: '학생 수' },
+    generate: (seed, n) => {
+      const r = createRng(seed)
+      const clubs = ['음악', '운동', '코딩']
+      const names = Array.from({ length: n }, (_, i) => `${SURNAMES[i % SURNAMES.length]}${GIVEN[(i * 5) % GIVEN.length]}${i >= GIVEN.length ? i : ''}`)
+      const member = names.map(() => {
+        const m = clubs.map(() => 0)
+        m[r.int(0, 2)] = 1
+        if (r() < 0.28) m[r.int(0, 2)] = 1
+        if (r() < 0.06) m.fill(0)
+        return m
+      })
+      const friends: Set<number>[] = names.map(() => new Set())
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+        const common = member[i].some((v, c) => v && member[j][c])
+        if (r() < (common ? 0.24 : 0.05)) { friends[i].add(j); friends[j].add(i) }
+      }
+      const rows: Cell[][] = names.map((nm, i) => [nm, ...member[i], [...friends[i]].map((j) => names[j]).join(';')])
+      return table([cat('이름'), ...clubs.map(num), cat('친구')], rows)
+    },
+  },
+  {
+    id: 'code-lines', name: '소스 파일 네 개의 줄별 속성 (작성자·수정 시점, 합성)', description: '네 개의 소스 파일(길이가 서로 다름)의 줄마다 줄 번호, 글자 수, 들여쓰기, 작성자, 마지막 수정 후 지난 일수, 종류(코드·주석·빈 줄)와 내용을 적은 합성 자료입니다. 파일마다 오래된 줄과 최근에 고친 줄, 작성자의 분포가 다르게 만들었습니다. 한 행이 한 줄입니다.',
+    size: { min: 40, max: 400, default: 160, step: 20, label: '가장 긴 파일의 줄 수' },
+    generate: (seed, n) => {
+      const r = createRng(seed)
+      const files = [['main.ts', 1], ['chart.ts', 0.8], ['utils.ts', 0.5], ['api.ts', 0.3]] as const
+      const authors = ['가영', '나리', '다솜', '라온']
+      const words = ['load', 'draw', 'scale', 'render', 'format', 'filter', 'merge', 'parse', 'update', 'select']
+      const rows: Cell[][] = []
+      files.forEach(([file, frac], fi) => {
+        const len = Math.max(12, Math.round(n * frac))
+        let author = r.int(0, 3), age = r.int(200, 900)
+        for (let ln = 1; ln <= len; ln++) {
+          // authorship and age change in runs, as they do in real files
+          if (r() < 0.06) { author = r.int(0, 3); age = Math.max(1, Math.round(age * (0.15 + r() * 0.8))) }
+          const kind = r() < 0.12 ? '빈 줄' : r() < 0.2 ? '주석' : '코드'
+          const indent = kind === '빈 줄' ? 0 : r.int(0, 3) * 2
+          const body = kind === '빈 줄' ? '' : kind === '주석' ? `// ${words[r.int(0, 9)]} ${words[r.int(0, 9)]}` : `${r() < 0.3 ? 'const ' : ''}${words[r.int(0, 9)]}(${words[r.int(0, 9)]}, ${r.int(0, 99)})`
+          const text = ' '.repeat(indent) + body
+          rows.push([file, ln, text.length, indent, authors[(author + fi) % 4], age, kind, text])
+        }
+      })
+      return table([cat('파일'), num('줄'), num('글자 수'), num('들여쓰기'), cat('작성자'), num('수정 후 일수'), cat('종류'), cat('내용')], rows)
+    },
+  },
 ]
 

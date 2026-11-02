@@ -252,3 +252,95 @@ export function distToPolygon(pt: Pt, polygon: readonly Pt[]): number {
   }
   return best
 }
+
+// ───────────────────────────── Vector field topology ─────────────────────────────
+
+export type CriticalKind = 'saddle' | 'source' | 'sink' | 'repelling-focus' | 'attracting-focus' | 'center'
+export interface CriticalPoint { x: number; y: number; kind: CriticalKind; /** Jacobian [[ux, uy], [vx, vy]] */ jac: [number, number, number, number]; trace: number; det: number }
+
+const bilin = (arr: Float32Array, nx: number, i: number, j: number, a: number, b: number) => arr[j * nx + i] * (1 - a) * (1 - b) + arr[j * nx + i + 1] * a * (1 - b) + arr[(j + 1) * nx + i] * (1 - a) * b + arr[(j + 1) * nx + i + 1] * a * b
+
+function classify(trace: number, det: number): CriticalKind {
+  if (det < 0) return 'saddle'
+  const disc = trace * trace - 4 * det
+  if (Math.abs(trace) < 1e-6 * (1 + Math.abs(det))) return 'center'
+  if (disc >= 0) return trace > 0 ? 'source' : 'sink'
+  return trace > 0 ? 'repelling-focus' : 'attracting-focus'
+}
+
+/**
+ * Critical points (zeros) of the piecewise-bilinear field: every grid cell whose corner values of u and of v both change sign is searched with
+ * Newton's method on the bilinear interpolant; the points are classified by the trace and determinant of the Jacobian there.
+ */
+export function criticalPoints(f: Field2): CriticalPoint[] {
+  const out: CriticalPoint[] = []
+  const dx = (f.x1 - f.x0) / (f.nx - 1), dy = (f.y1 - f.y0) / (f.ny - 1)
+  for (let j = 0; j < f.ny - 1; j++) for (let i = 0; i < f.nx - 1; i++) {
+    const cu = [f.u[j * f.nx + i], f.u[j * f.nx + i + 1], f.u[(j + 1) * f.nx + i], f.u[(j + 1) * f.nx + i + 1]]
+    const cv = [f.v[j * f.nx + i], f.v[j * f.nx + i + 1], f.v[(j + 1) * f.nx + i], f.v[(j + 1) * f.nx + i + 1]]
+    const sgn = (c: number[]) => c.some((x) => x > 0) && c.some((x) => x < 0) || c.some((x) => x === 0)
+    if (!sgn(cu) || !sgn(cv)) continue
+    let a = 0.5, b = 0.5, ok = false
+    for (let it = 0; it < 40; it++) {
+      const u = bilin(f.u, f.nx, i, j, a, b), v = bilin(f.v, f.nx, i, j, a, b)
+      const uA = (cu[1] - cu[0]) * (1 - b) + (cu[3] - cu[2]) * b, uB = (cu[2] - cu[0]) * (1 - a) + (cu[3] - cu[1]) * a
+      const vA = (cv[1] - cv[0]) * (1 - b) + (cv[3] - cv[2]) * b, vB = (cv[2] - cv[0]) * (1 - a) + (cv[3] - cv[1]) * a
+      const det = uA * vB - uB * vA
+      if (Math.abs(det) < 1e-14) break
+      const da = (u * vB - v * uB) / det, db = (v * uA - u * vA) / det
+      a -= da; b -= db
+      if (Math.abs(da) + Math.abs(db) < 1e-10) { ok = true; break }
+      if (a < -0.01 || a > 1.01 || b < -0.01 || b > 1.01) break
+    }
+    if (!ok || a < -1e-6 || a > 1 + 1e-6 || b < -1e-6 || b > 1 + 1e-6) continue
+    const x = f.x0 + (i + a) * dx, y = f.y0 + (j + b) * dy
+    if (out.some((p) => Math.hypot(p.x - x, p.y - y) < 0.4 * Math.min(dx, dy))) continue
+    const ux = ((cu[1] - cu[0]) * (1 - b) + (cu[3] - cu[2]) * b) / dx, uy = ((cu[2] - cu[0]) * (1 - a) + (cu[3] - cu[1]) * a) / dy
+    const vx = ((cv[1] - cv[0]) * (1 - b) + (cv[3] - cv[2]) * b) / dx, vy = ((cv[2] - cv[0]) * (1 - a) + (cv[3] - cv[1]) * a) / dy
+    const trace = ux + vy, det = ux * vy - uy * vx
+    out.push({ x, y, kind: classify(trace, det), jac: [ux, uy, vx, vy], trace, det })
+  }
+  return out
+}
+
+function rk4(f: Field2, p: Pt, h: number): Pt {
+  const k1 = sampleField2(f, p[0], p[1]), k2 = sampleField2(f, p[0] + (h / 2) * k1[0], p[1] + (h / 2) * k1[1]), k3 = sampleField2(f, p[0] + (h / 2) * k2[0], p[1] + (h / 2) * k2[1]), k4 = sampleField2(f, p[0] + h * k3[0], p[1] + h * k3[1])
+  return [p[0] + (h / 6) * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]), p[1] + (h / 6) * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1])]
+}
+
+/** Streamline of the (normalised) field from `p0`, forward or backward in time, until it leaves the box, stalls near a zero or reaches `max` steps. */
+export function tangentCurve(f: Field2, p0: Pt, dir: 1 | -1, step: number, max: number): Pt[] {
+  const pts: Pt[] = [p0]
+  let p = p0
+  for (let s = 0; s < max; s++) {
+    const [u, v] = sampleField2(f, p[0], p[1])
+    const sp = Math.hypot(u, v)
+    if (sp < 1e-12 || (s > 2 && sp < f.refSpeed * 0.01)) break
+    const h = (dir * step) / sp
+    const q = rk4(f, p, h)
+    if (q[0] < f.x0 || q[0] > f.x1 || q[1] < f.y0 || q[1] > f.y1) break
+    pts.push(q); p = q
+  }
+  return pts
+}
+
+/** Separatrices of a saddle: the four curves leaving it along the eigen-directions of the Jacobian (forward along the unstable one, backward along the stable one). */
+export function separatrices(f: Field2, s: CriticalPoint, step: number, max = 400): Pt[][] {
+  const [ux, uy, vx, vy] = s.jac
+  const tr = ux + vy, dt = ux * vy - uy * vx
+  const disc = Math.sqrt(Math.max(0, tr * tr / 4 - dt))
+  const eigs = [tr / 2 + disc, tr / 2 - disc]
+  const out: Pt[][] = []
+  for (const lam of eigs) {
+    // eigenvector of [[ux,uy],[vx,vy]] for lam
+    let e: Pt = Math.abs(uy) > 1e-12 ? [uy, lam - ux] : Math.abs(vx) > 1e-12 ? [lam - vy, vx] : lam === eigs[0] ? [1, 0] : [0, 1]
+    const l = Math.hypot(e[0], e[1]) || 1
+    e = [e[0] / l, e[1] / l]
+    const eps = step * 0.5
+    for (const sign of [1, -1] as const) {
+      const start: Pt = [s.x + sign * eps * e[0], s.y + sign * eps * e[1]]
+      out.push([[s.x, s.y], ...tangentCurve(f, start, lam > 0 ? 1 : -1, step, max)])
+    }
+  }
+  return out
+}

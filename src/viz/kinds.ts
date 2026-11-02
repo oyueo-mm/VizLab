@@ -74,6 +74,7 @@ metrosets mosaicsets infocrystal
 metrosets mosaicsets infocrystal
 paohvis set-streams sequence-braiding dust-magnet gosper-map
 wordstream tilebars od-maps perspective-wall ibfv hyperstreamlines fiber-surfaces
+vector-field-topology maptrix seesoft setnet
 `).map((id) => [id, 'technique' as VizKind])),
   // forms with their own field conventions: specialized charts that are also independent techniques (see kindAlso)
   'marey-chart': 'specialized', tanglegram: 'specialized',

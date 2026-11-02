@@ -322,4 +322,8 @@ export const needs: Record<string, Slot[]> = {
   'ibfv': [['number'], ['number'], ['number'], ['number']],
   'hyperstreamlines': [['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number']],
   'fiber-surfaces': [['number'], ['number'], ['number'], ['number'], ['number']],
+  'vector-field-topology': [['number'], ['number'], ['number'], ['number']],
+  'maptrix': [['category'], ['category'], ['number'], ['number'], ['number'], ['number'], ['number']],
+  'seesoft': [['category'], ['number']],
+  'setnet': [['category'], ['number'], ['number']],
 }

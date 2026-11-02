@@ -7,6 +7,8 @@ import { edgeAt, parseQuery, tileBars, wordStream, type WordRow } from '../../st
 import { roleColumn } from '../mapping'
 import type { ChartProps, ControlsProps, VizModule } from '../types'
 
+const TEXT_INPUT = { width: '100%', padding: '6px 8px', border: '1px solid #cfd6d6', borderRadius: 6, fontSize: 13, background: '#fff' } as const
+
 // ───────────────────────────── WordStream ─────────────────────────────
 
 export interface WordStreamParams { topWords: number; minSize: number; maxSize: number; from: number; to: number; selTopic: string; selWord: string; bands: boolean }
@@ -173,7 +175,7 @@ function TileBarsControls({ params, setParams }: ControlsProps<TileParams>) {
     <ControlGroup title="검색어와 조각">
       <div className="field">
         <label htmlFor={id}>검색어 (쉼표로 줄 나눔, | 로 대체어)</label>
-        <input id={id} type="text" value={draft} data-testid="tile-query" onChange={(e) => { setDraft(e.target.value); setParams({ query: e.target.value }) }} />
+        <input id={id} type="text" style={TEXT_INPUT} value={draft} data-testid="tile-query" onChange={(e) => { setDraft(e.target.value); setParams({ query: e.target.value }) }} />
       </div>
       <Segmented label="문서 나누기" value={params.mode} onChange={(mode) => setParams({ mode, selTile: -1 })} options={[{ value: 'fixed', label: '고정 길이' }, { value: 'topic', label: '화제 전환 기준' }]} testId="ctl-mode" />
       <Slider label={params.mode === 'fixed' ? '조각당 문장 수' : '비교 창 크기 (문장)'} value={params.size} min={2} max={8} onChange={(size) => setParams({ size, selTile: -1 })} testId="ctl-size" />

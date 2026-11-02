@@ -136,3 +136,26 @@ export function tileBars(docs: readonly { name: string; sentences: string[] }[],
     return { name: d.name, sentences: d.sentences, tiles, counts, hits, together }
   })
 }
+
+// ───────────────────────────── Seesoft ─────────────────────────────
+
+export interface CodeLine { file: string; line: number; length: number; indent: number; author: string; age: number; kind: string; text: string }
+export interface SeesoftBand { y: number; h: number; /** indexes into the column's lines */ from: number; to: number }
+export interface SeesoftColumn { file: string; lines: CodeLine[]; bands: SeesoftBand[] }
+
+/**
+ * Seesoft layout: every file is a column and every line of a file a thin row. When the file has more lines than pixels the lines are grouped
+ * into bands of equal size (a band shows the average of its lines), otherwise each line gets `height / maxLines` pixels.
+ */
+export function seesoft(lines: readonly CodeLine[], height: number, minBand = 1): SeesoftColumn[] {
+  const files = [...new Set(lines.map((l) => l.file))]
+  const cols = files.map((f) => ({ file: f, lines: lines.filter((l) => l.file === f).sort((a, b) => a.line - b.line) }))
+  const maxLines = Math.max(1, ...cols.map((c) => c.lines.length))
+  const group = Math.max(1, Math.ceil((maxLines * minBand) / Math.max(1, height)))
+  const unit = height / Math.ceil(maxLines / group)
+  return cols.map((c) => ({
+    ...c,
+    bands: Array.from({ length: Math.ceil(c.lines.length / group) }, (_, i) => ({ y: i * unit, h: unit, from: i * group, to: Math.min(c.lines.length, (i + 1) * group) })),
+  }))
+}
+

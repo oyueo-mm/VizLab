@@ -38,3 +38,15 @@ export const odCellPos = (m: OdModel, outer: number, inner: number): { x: number
   x: m.grid[outer][0] * m.cols + m.grid[inner][0],
   y: m.grid[outer][1] * m.rows + m.grid[inner][1],
 })
+
+// ───────────────────────────── MapTrix ─────────────────────────────
+
+/** Row and column order of the embedded matrix: rows follow the regions' vertical map position, columns their horizontal position, so the leader lines to the map do not cross. */
+export function mapTrixOrder(m: OdModel): { rows: number[]; cols: number[] } {
+  const idx = m.regions.map((_, i) => i)
+  return {
+    rows: [...idx].sort((a, b) => m.grid[a][1] - m.grid[b][1] || m.grid[a][0] - m.grid[b][0]),
+    cols: [...idx].sort((a, b) => m.grid[a][0] - m.grid[b][0] || m.grid[a][1] - m.grid[b][1]),
+  }
+}
+

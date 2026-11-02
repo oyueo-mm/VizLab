@@ -324,3 +324,89 @@ export function crystalPreset(k: number, kind: 'and' | 'or' | 'one' | 'multi'): 
   }
   return out
 }
+
+// ───────────────────────────── SetNet ─────────────────────────────
+
+export interface SetNetModel {
+  /** circle centre and radius of every set in the unit square */
+  centers: Pt[]
+  radii: number[]
+  /** node positions in the unit square */
+  pos: Pt[]
+  /** set bitmask of every node */
+  mask: number[]
+  /** nodes that could not be placed in the zone their sets ask for (the zone is empty) */
+  violations: number
+  edges: [number, number][]
+}
+
+const inCircle = (p: Pt, c: Pt, r: number) => Math.hypot(p[0] - c[0], p[1] - c[1]) <= r
+
+/**
+ * Combined set and network layout in the spirit of SetNet: the sets are laid out first as Euler-style circles (sets that share nodes or are
+ * joined by many edges are drawn overlapping), then every node is placed inside the zone of exactly its own sets while a force layout keeps
+ * the connected nodes close. Nodes are projected back into their zone after every step.
+ */
+export function setNet(member: boolean[][], nNodes: number, edges: readonly [number, number][], seed: number): SetNetModel {
+  const k = member.length
+  const r = createRng(seed)
+  const size = member.map((m) => m.filter(Boolean).length)
+  const maxSize = Math.max(1, ...size)
+  const radii = size.map((s) => (k >= 4 ? 0.23 : 0.28) * Math.sqrt(Math.max(1, s) / maxSize))
+  const shared = (a: number, b: number) => { let c = 0; for (let i = 0; i < nNodes; i++) if (member[a][i] && member[b][i]) c++; return c }
+  const between = (a: number, b: number) => edges.filter(([u, v]) => (member[a][u] && member[b][v]) || (member[a][v] && member[b][u])).length
+  const centers: Pt[] = member.map((_, i) => [0.5 + 0.18 * Math.cos((2 * Math.PI * i) / k) + (r() - 0.5) * 0.02, 0.5 + 0.18 * Math.sin((2 * Math.PI * i) / k) + (r() - 0.5) * 0.02])
+  for (let it = 0; it < 400; it++) for (let a = 0; a < k; a++) for (let b = a + 1; b < k; b++) {
+    const sh = shared(a, b)
+    const want = sh > 0
+      ? (radii[a] + radii[b]) * (0.9 - 0.35 * Math.min(1, sh / Math.max(1, Math.min(size[a], size[b])) + (0.15 * between(a, b)) / Math.max(1, edges.length)))
+      : (radii[a] + radii[b]) * 1.12
+    const dx = centers[b][0] - centers[a][0], dy = centers[b][1] - centers[a][1]
+    const d = Math.max(1e-6, Math.hypot(dx, dy))
+    const f = ((d - want) / d) * 0.08
+    centers[a][0] += dx * f; centers[a][1] += dy * f; centers[b][0] -= dx * f; centers[b][1] -= dy * f
+  }
+  // fit everything into the unit square with a margin
+  const lo: Pt = [Math.min(...centers.map((c, i) => c[0] - radii[i])), Math.min(...centers.map((c, i) => c[1] - radii[i]))]
+  const hi: Pt = [Math.max(...centers.map((c, i) => c[0] + radii[i])), Math.max(...centers.map((c, i) => c[1] + radii[i]))]
+  const sc = 0.92 / Math.max(hi[0] - lo[0], hi[1] - lo[1])
+  const mid: Pt = [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2]
+  const fc = centers.map((c) => [0.5 + (c[0] - mid[0]) * sc, 0.5 + (c[1] - mid[1]) * sc] as Pt)
+  const fr = radii.map((x) => x * sc)
+  const maskOf = (p: Pt) => fc.reduce((m, c, i) => m | (inCircle(p, c, fr[i]) ? 1 << i : 0), 0)
+  const mask = Array.from({ length: nNodes }, (_, i) => member.reduce((m, s, si) => m | (s[i] ? 1 << si : 0), 0))
+  // sample every zone on a grid
+  const G = 70
+  const zone = new Map<number, Pt[]>()
+  for (let gy = 0; gy < G; gy++) for (let gx = 0; gx < G; gx++) { const p: Pt = [(gx + 0.5) / G, (gy + 0.5) / G]; const m = maskOf(p); zone.set(m, [...(zone.get(m) ?? []), p]) }
+  const nearestIn = (p: Pt, pts: Pt[]) => { let best = pts[0], bd = Infinity; for (const q of pts) { const d = (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2; if (d < bd) { bd = d; best = q } } return best }
+  const feasible = (m: number) => (zone.get(m)?.length ?? 0) > 0
+  const popcount = (v: number) => v.toString(2).split('1').length - 1
+  // a node whose zone is empty goes to the sampled zone that disagrees with its sets in the fewest circles
+  const targetZone = (m: number) => { if (feasible(m)) return m; let best = -1, bd = Infinity; for (const z of zone.keys()) { const d = popcount(z ^ m); if (d < bd) { bd = d; best = z } } return best }
+  const want = mask.map(targetZone)
+  const pos: Pt[] = want.map((z) => { const pts = zone.get(z)!; return pts[Math.floor(r() * pts.length)] })
+  const violations = mask.filter((m) => !feasible(m)).length
+  for (let it = 0; it < 220; it++) {
+    const cool = 1 - it / 220
+    const force: Pt[] = pos.map(() => [0, 0])
+    for (let a = 0; a < nNodes; a++) for (let b = a + 1; b < nNodes; b++) {
+      const dx = pos[b][0] - pos[a][0], dy = pos[b][1] - pos[a][1], d = Math.max(1e-4, Math.hypot(dx, dy))
+      if (d < 0.085) { const f = (0.085 - d) * 0.6; force[a][0] -= (dx / d) * f; force[a][1] -= (dy / d) * f; force[b][0] += (dx / d) * f; force[b][1] += (dy / d) * f }
+    }
+    for (const [a, b] of edges) {
+      const dx = pos[b][0] - pos[a][0], dy = pos[b][1] - pos[a][1], d = Math.max(1e-4, Math.hypot(dx, dy))
+      const f = (d - 0.12) * 0.1
+      force[a][0] += (dx / d) * f; force[a][1] += (dy / d) * f; force[b][0] -= (dx / d) * f; force[b][1] -= (dy / d) * f
+    }
+    for (let i = 0; i < nNodes; i++) {
+      const q: Pt = [pos[i][0] + force[i][0] * cool, pos[i][1] + force[i][1] * cool]
+      pos[i] = maskOf(q) === want[i] ? q : nearestIn(q, zone.get(want[i])!)
+    }
+  }
+  return { centers: fc, radii: fr, pos, mask, violations, edges: edges.map(([a, b]) => [a, b] as [number, number]) }
+}
+
+/** The set bitmask a point lies in for a given layout. */
+export const setNetMaskAt = (m: Pick<SetNetModel, 'centers' | 'radii'>, p: Pt) => m.centers.reduce((acc, c, i) => acc | (inCircle(p, c, m.radii[i]) ? 1 << i : 0), 0)
+

@@ -44,12 +44,12 @@ venn bubble-sets kelp-diagram rainbow-boxes radial-sets word-cloud`,
   color: `od-maps tilebars kde2d heatmap calendar horizon kde-map hillshade slope-aspect bivariate chorochromatic choropleth hotspot lisa raster-map dasymetric kriging-map density-ratio-map
 spectrogram scalogram recurrence-plot polar-heatmap mandelbrot-set julia-set newton-fractal domain-coloring order-flow-footprint order-book-heatmap clustered-heatmap contact-map confusion-matrix decision-boundary
 hyperparam-landscape attention-map community-blockmodel collocation-matrix gradient-plot`,
-  glyph: `box letter-value candlestick chernoff-faces vector-field glyph-map pictogram tensor-glyph renko heikin-ashi point-figure line-break sequence-logo msa-logo`,
-  connection: `paohvis infocrystal metrosets phrase-net nodetrix power-graph confluent-drawing chord dendrogram network arc tanglegram od-matrix-map adjacency edge-bundling bipartite hive hypergraph biofabric radial-tree dag-layout force-directed-edge-bundling linesets phylogenetic-tree decision-tree
+  glyph: `vector-field-topology box letter-value candlestick chernoff-faces vector-field glyph-map pictogram tensor-glyph renko heikin-ashi point-figure line-break sequence-logo msa-logo`,
+  connection: `setnet maptrix paohvis infocrystal metrosets phrase-net nodetrix power-graph confluent-drawing chord dendrogram network arc tanglegram od-matrix-map adjacency edge-bundling bipartite hive hypergraph biofabric radial-tree dag-layout force-directed-edge-bundling linesets phylogenetic-tree decision-tree
 process-map fault-tree word-tree lifelines`,
   flow: `sequence-braiding set-streams lifeflow sankey alluvial parallel-sets flow-map streamline max-flow phase-portrait activation-flow storyline-chart`,
   partition: `wordstream gosper-map mosaicsets semantic-substrates hexbin treemap mosaic sunburst pack icicle voronoi-treemap geo-hexbin tile-grid square-grid cluster-map gridded-cartogram voronoi-map marimekko flame delaunay phase-diagram dimensional-stacking`,
-  pixel: `pixel-bar-chart recursive-pattern circle-segments space-filling-curve`,
+  pixel: `seesoft pixel-bar-chart recursive-pattern circle-segments space-filling-curve`,
   multivariate: `dust-magnet parallel radar andrews hyperslice`,
   projection: `pca-biplot radviz star-coordinates grand-tour cartogram-contiguous cartogram-noncontiguous demers tissot globe-3d spiral-plot ternary polar-plot poincare-section multi-planar-reconstruction pcoa tsne umap spectral-embedding time-curves`,
   focus: `perspective-wall table-lens hyperbolic-tree`,
@@ -62,16 +62,16 @@ process-map fault-tree word-tree lifelines`,
 /** Secondary principles; entries that are drawn with a second encoding that is part of the technique. */
 const SECOND_LIST: Record<string, string> = {
   position: 'metrosets semantic-substrates bubble heatmap parallel hive biofabric linesets bubble-sets tsne umap pca-biplot hops gradient-plot dorling streamline',
-  color: 'hexbin tile-grid recursive-pattern circle-segments space-filling-curve pixel-bar-chart dimensional-stacking hyperslice terrain-3d voronoi-map isosurface',
+  color: 'maptrix hexbin tile-grid recursive-pattern circle-segments space-filling-curve pixel-bar-chart dimensional-stacking hyperslice terrain-3d voronoi-map isosurface',
   multivariate: 'pairplot parallel-sets radviz star-coordinates dimensional-stacking chernoff-faces pca-biplot',
   temporal: 'perspective-wall wordstream sequence-braiding set-streams paohvis lifeflow connected-scatter streamgraph stacked-area line area candlestick calendar horizon storyline-chart lifelines marey-chart time-curves lexis event-raster gantt grand-tour space-time-cube',
   area: 'gosper-map mosaicsets treemap sunburst pack icicle mosaic marimekko voronoi-treemap cartogram-contiguous cartogram-noncontiguous demers',
   connection: 'sequence-braiding semantic-substrates pivot-graph timearcs timesets flowstrates textarc sankey alluvial parallel-sets flow-map storyline-chart time-curves clustered-heatmap bubble-sets kelp-diagram radial-sets upset spectral-embedding',
-  flow: 'ibfv chord streamgraph line-integral-convolution vector-field particle-flow force-directed-edge-bundling',
+  flow: 'vector-field-topology ibfv chord streamgraph line-integral-convolution vector-field particle-flow force-directed-edge-bundling',
   glyph: 'hyperstreamlines infocrystal radar molecule-viewer',
-  partition: 'od-maps rainbow-boxes venn choropleth',
+  partition: 'setnet od-maps rainbow-boxes venn choropleth',
   projection: 'dust-magnet andrews radial-sets hyperbolic-tree',
-  length: 'tilebars lifeflow table-lens pixel-bar-chart',
+  length: 'seesoft tilebars lifeflow table-lens pixel-bar-chart',
   spatial3d: 'globe-3d',
 }
 
