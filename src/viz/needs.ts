@@ -307,4 +307,7 @@ export const needs: Record<string, Slot[]> = {
   'textarc': [['category']],
   'parallel-tag-clouds': [['category'], ['category']],
   'phrase-net': [['category']],
+  'metrosets': [['number'], ['number']],
+  'mosaicsets': [['number'], ['number']],
+  'infocrystal': [['number'], ['number']],
 }

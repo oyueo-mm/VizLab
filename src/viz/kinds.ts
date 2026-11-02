@@ -70,6 +70,8 @@ radviz star-coordinates grand-tour dimensional-stacking table-lens recursive-pat
 quantile-dotplot hops gradient-plot wilkinson-dotplot punchcard parallel-sets word-cloud word-tree space-filling-curve voronoi-treemap time-curves
 lifelines line-integral-convolution globe-3d multi-planar-reconstruction hyperbolic-tree linear-set-diagram force-directed-edge-bundling storyline-chart
 bubble-sets linesets kelp-diagram rainbow-boxes radial-sets nodetrix power-graph confluent-drawing cone-tree stream-surface streamtube semantic-substrates pivot-graph timearcs lifeflow timesets flowstrates textarc parallel-tag-clouds phrase-net
+metrosets mosaicsets infocrystal
+metrosets mosaicsets infocrystal
 `).map((id) => [id, 'technique' as VizKind])),
   // forms with their own field conventions: specialized charts that are also independent techniques (see kindAlso)
   'marey-chart': 'specialized', tanglegram: 'specialized',
