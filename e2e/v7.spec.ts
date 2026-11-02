@@ -271,10 +271,12 @@ test.describe('v0.7: scientific and geospatial techniques', () => {
   test('LIC paints a canvas that changes with the integral length; the arrow overlay appears on demand', async ({ page }) => {
     await openViz(page, 'line-integral-convolution')
     const url = () => page.getByTestId('lic-canvas').evaluate((c) => (c as HTMLCanvasElement).toDataURL().length)
+    // the image is computed in a Web Worker (a low-resolution preview first), so wait until the full image has been painted
+    await expect(page.getByTestId('lic-status')).toHaveCount(0, { timeout: 20000 })
+    await expect.poll(url, { timeout: 20000 }).toBeGreaterThan(5000)
     const a = await url()
-    expect(a).toBeGreaterThan(5000)
     await page.getByTestId('ctl-length').fill('6')
-    await expect.poll(url).not.toBe(a)
+    await expect.poll(url, { timeout: 20000 }).not.toBe(a)
     await page.getByTestId('ctl-arrows').check({ force: true })
     await expect(page.locator('[data-testid=chart-svg] g[transform*=rotate]').first()).toBeVisible()
   })

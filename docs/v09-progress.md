@@ -7,8 +7,9 @@
 | 1 | 후보 조사와 서지 검증(웹 검색), 집합 3종(MetroSets·MosaicSets·InfoCrystal) + 엔진 `sets9.ts`, v9 등록 구조·데이터셋 | `af68b03` |
 | 2 | PAOHvis, Set Streams, Sequence Braiding, Dust & Magnet, GosperMap + 엔진 `tempo9.ts`·`multi9.ts` | `1c1a589` |
 | 3 | WordStream, TileBars, OD Maps, Perspective Wall(Bifocal 포함), IBFV, Hyperstreamlines, Fiber Surfaces, VSUP(이변량 코로플레스 모드) + 엔진 `text9`·`focus9`·`geo9`·`field9`·`vsup` | `2a901d8` |
-| 4 | Vector Field Topology, MapTrix, Seesoft, SetNet (320종 도달) | 4번째 커밋 |
-| 5 | 홈 애니메이션 80단계, 비교 프리셋 10개, 연동 강조, LIC Worker, 데이터셋 지연 로드, 설명 로딩 실패 e2e, v9 e2e, 버전 0.9.0, 문서 | 이 문서의 최종 커밋 |
+| 4 | Vector Field Topology, MapTrix, Seesoft, SetNet (320종 도달) | `55f0334` |
+| 5 | 홈 애니메이션 80단계, 비교 프리셋 10개, 연동 강조, LIC Worker, 데이터셋 지연 로드, 설명 로딩 실패 e2e, v9 e2e, 버전 0.9.0, 문서 | `dac92ee` |
+| 6 | CI에서 드러난 LIC e2e 테스트 수정(Worker 비동기 계산을 기다리도록), 기록 갱신 | 아래 ‘배포 확인’ 참조 |
 
 커밋 해시는 `git log`가 기준입니다. 배치 5 이후 문서만 갱신하는 커밋이 한 번 더 올라갈 수 있습니다.
 
@@ -78,6 +79,6 @@
 - 새 기법 19종은 모두 원 논문의 알고리즘을 단순화한 구현입니다. 단순화한 내용은 각 항목의 설명(‘주의사항’)과 `v09-research.md`에 적었고 완전한 재현이라고 주장하지 않습니다.
 - 홈 애니메이션 새 8단계(MetroSets 등)는 단순화한 정지 장면의 morph이고 인터랙티브하지 않습니다.
 
-## 배포 상태
+## 배포 확인
 
-(푸시와 CI 실행 결과는 아래 ‘배포 확인’에 기록합니다.)
+- 푸시 `dac92ee`의 첫 GitHub Actions 실행(41484376170): typecheck·lint·단위 테스트·build는 성공, **e2e 단계에서 실패**해 배포되지 않았습니다. 로컬 전체 실행(4 workers)은 428개 통과였지만, CI와 같은 설정(`CI=1`, 2 workers)으로 다시 실행하니 v7의 LIC 테스트 1개가 실패했습니다. 원인: LIC가 Web Worker에서 비동기로 계산되도록 바뀌었는데 테스트가 캔버스를 곧바로 읽었습니다(제품 결함이 아니라 테스트의 가정 오류). 테스트가 ‘계산 중’ 표시가 사라지고 캔버스가 칠해질 때까지 기다리도록 고쳤고 `CI=1`로 3회 반복해 통과를 확인했습니다. 이렇게 로컬 통과와 CI 실패가 갈린 것은 이번에 처음이며, 앞으로 전체 스위트를 CI 설정(`CI=1`)으로 한 번 더 돌려 보는 것이 안전합니다.
