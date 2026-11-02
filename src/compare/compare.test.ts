@@ -36,6 +36,9 @@ describe('recommended comparison presets', () => {
       ['bubble-sets', 'linesets', 'kelp-diagram'], ['venn', 'upset', 'radial-sets'], ['linear-set-diagram', 'rainbow-boxes', 'radial-sets'], ['network', 'nodetrix', 'biofabric'],
       ['power-graph', 'confluent-drawing', 'nodetrix'], ['semantic-substrates', 'pivot-graph', 'adjacency'], ['vector-field-3d', 'stream-surface', 'streamtube'],
       ['treemap', 'hyperbolic-tree', 'cone-tree'], ['word-cloud', 'parallel-tag-clouds', 'textarc'],
+      // v0.9
+      ['metrosets', 'mosaicsets', 'rainbow-boxes'], ['setnet', 'metrosets', 'mosaicsets'], ['venn', 'upset', 'infocrystal'], ['lifeflow', 'sequence-braiding'], ['radviz', 'star-coordinates', 'dust-magnet'],
+      ['treemap', 'voronoi-treemap', 'gosper-map'], ['ibfv', 'vector-field-topology'], ['tensor-glyph', 'hyperstreamlines'], ['od-maps', 'maptrix'], ['isosurface', 'fiber-surfaces'],
     ])
     for (const p of presets) { expect(p.charts.length).toBeLessThanOrEqual(MAX_PANES); expect(p.charts.length).toBeGreaterThanOrEqual(2) }
   })

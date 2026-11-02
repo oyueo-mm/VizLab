@@ -140,3 +140,50 @@ export function mprSlice(g: Grid3, plane: Plane, pos: readonly [number, number, 
   }
   return out
 }
+
+/**
+ * Faster line integral convolution with the same meaning as `lic`: the unit flow direction is sampled once per pixel and then
+ * interpolated bilinearly while stepping, instead of evaluating the field (all its sources) at every half step of every pixel.
+ */
+export function licFast(field: (px: number, py: number) => [number, number], noise: Float32Array, w: number, h: number, length: number): Float32Array {
+  const ux = new Float32Array(w * h), uy = new Float32Array(w * h)
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+    const [u, v] = field(i, j)
+    const m = Math.hypot(u, v)
+    if (m > 1e-12) { ux[j * w + i] = u / m; uy[j * w + i] = v / m }
+  }
+  const dir = (x: number, y: number): [number, number] => {
+    const cx = Math.min(w - 1.001, Math.max(0, x)), cy = Math.min(h - 1.001, Math.max(0, y))
+    const i = Math.floor(cx), j = Math.floor(cy), a = cx - i, b = cy - j
+    const k = j * w + i
+    const f = (arr: Float32Array) => arr[k] * (1 - a) * (1 - b) + arr[k + 1] * a * (1 - b) + arr[k + w] * (1 - a) * b + arr[k + w + 1] * a * b
+    return [f(ux), f(uy)]
+  }
+  const out = new Float32Array(w * h)
+  const n = (x: number, y: number) => { const i = Math.round(x), j = Math.round(y); return i < 0 || j < 0 || i >= w || j >= h ? -1 : noise[j * w + i] }
+  let lo = Infinity, hi = -Infinity
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+    let sum = noise[j * w + i], cnt = 1
+    for (const sgn of [1, -1]) {
+      let x = i, y = j
+      for (let s = 0; s < length; s++) {
+        const [u0, v0] = dir(x, y)
+        const m0 = Math.hypot(u0, v0)
+        if (m0 < 1e-6) break
+        const [u, v] = dir(x + (sgn * u0) / m0 * 0.5, y + (sgn * v0) / m0 * 0.5)
+        const m = Math.hypot(u, v)
+        if (m < 1e-6) break
+        x += (sgn * u) / m; y += (sgn * v) / m
+        const val = n(x, y)
+        if (val < 0) break
+        sum += val; cnt++
+      }
+    }
+    const val = sum / cnt
+    out[j * w + i] = val
+    if (val < lo) lo = val
+    if (val > hi) hi = val
+  }
+  if (hi > lo) for (let i = 0; i < out.length; i++) out[i] = (out[i] - lo) / (hi - lo)
+  return out
+}

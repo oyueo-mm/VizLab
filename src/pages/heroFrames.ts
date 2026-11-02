@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 import { allocate } from '../data/datasetsV3'
-import { generateDataset } from '../data/datasets'
+import { generateHeroDataset as generateDataset } from '../data/heroDatasets'
 import { columnIndex, toLabel, toNumber } from '../data/table'
 import { colorAt } from '../lib/colors'
 import { createRng } from '../lib/random'
@@ -21,11 +21,13 @@ import { v5Frame } from './heroFramesV5Lazy'
 import { v6Frame } from './heroFramesV6Lazy'
 import { v7Frame } from './heroFramesV7Lazy'
 import { v8Frame } from './heroFramesV8Lazy'
+import { v9Frame } from './heroFramesV9Lazy'
+import type { HeroV9Key } from './heroFramesV9'
 import type { HeroV8Key } from './heroFramesV8'
 
 // ─── stages ──────────────────────────────────────────────────────────────────
 
-export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network' | 'geo' | 'meta' | 'flame' | 'bundle' | 'v5' | 'v6' | 'v7' | 'v8'
+export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network' | 'geo' | 'meta' | 'flame' | 'bundle' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9'
 
 export const heroStages = [
   { key: 'scatter', label: '산점도', viz: 'scatter', group: 'dist' },
@@ -100,6 +102,14 @@ export const heroStages = [
   { key: 'confluent', label: '합류 그래프', viz: 'confluent-drawing', group: 'v8' },
   { key: 'tarcs', label: '타임아크', viz: 'timearcs', group: 'v8' },
   { key: 'lflow', label: '라이프플로', viz: 'lifeflow', group: 'v8' },
+  { key: 'metro', label: '메트로셋', viz: 'metrosets', group: 'v9' },
+  { key: 'mosaic', label: '모자이크셋', viz: 'mosaicsets', group: 'v9' },
+  { key: 'streams', label: '셋 스트림', viz: 'set-streams', group: 'v9' },
+  { key: 'dust', label: '더스트 앤 마그넷', viz: 'dust-magnet', group: 'v9' },
+  { key: 'gosper', label: '고스퍼맵', viz: 'gosper-map', group: 'v9' },
+  { key: 'wstream', label: '워드스트림', viz: 'wordstream', group: 'v9' },
+  { key: 'paoh', label: '파오브이스', viz: 'paohvis', group: 'v9' },
+  { key: 'braid', label: '시퀀스 브레이딩', viz: 'sequence-braiding', group: 'v9' },
 ] as const
 export type HeroStage = (typeof heroStages)[number]['key']
 
@@ -595,6 +605,7 @@ export function buildFrame(stage: HeroStage, data: HeroData, w: number, h: numbe
     case 'v6': return v6Frame(stage as HeroV6Key, data.cycle, w, h)
     case 'v7': return v7Frame(stage as HeroV7Key, data.cycle, w, h)
     case 'v8': return v8Frame(stage as HeroV8Key, data.cycle, w, h)
+    case 'v9': return v9Frame(stage as HeroV9Key, data.cycle, w, h)
     case 'compare': return compareFrame(stage, data.compare, w, h)
     case 'time': return timeFrame(stage, data.time, w, h)
     case 'hierarchy': return hierarchyFrame(stage, data.tree, w, h)

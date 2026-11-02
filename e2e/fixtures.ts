@@ -43,3 +43,18 @@ export async function dragBy(page: Page, target: Locator, dx: number, dy: number
 }
 
 export const settle = (page: Page) => page.waitForTimeout(550)
+
+/**
+ * For tests that block a request on purpose: the failed request of the blocked file is an expected console error, every other console error or
+ * uncaught exception still fails the test.
+ */
+export const testWithBlockedRequests = base.extend<{ consoleErrors: string[] }>({
+  consoleErrors: [async ({ page }, use) => {
+    const errors: string[] = []
+    page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()) })
+    page.on('pageerror', (e) => errors.push(e.message))
+    await use(errors)
+    const unexpected = errors.filter((e) => !/Failed to load resource|ERR_FAILED|ERR_BLOCKED_BY_CLIENT|dynamically imported module|Failed to fetch/i.test(e))
+    expect(unexpected, 'console errors other than the blocked request').toEqual([])
+  }, { auto: true }],
+})

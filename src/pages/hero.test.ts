@@ -6,12 +6,13 @@ import { loadHeroV5 } from './heroFramesV5Lazy'
 import { loadHeroV6 } from './heroFramesV6Lazy'
 import { loadHeroV7 } from './heroFramesV7Lazy'
 import { loadHeroV8 } from './heroFramesV8Lazy'
+import { loadHeroV9 } from './heroFramesV9Lazy'
 import { buildFrame, heroData, heroFlows, heroSample, heroStages, heroTree, HERO_N, type HeroStage, type Mark } from './heroFrames'
 
 const W = 560
 const H = 380
 
-beforeAll(async () => { await loadHeroGeo(); await loadHeroV5(); await loadHeroV6(); await loadHeroV7(); await loadHeroV8() })
+beforeAll(async () => { await loadHeroGeo(); await loadHeroV5(); await loadHeroV6(); await loadHeroV7(); await loadHeroV8(); await loadHeroV9() })
 
 describe('home animation timing', () => {
   it('shows each chart for about 1.8 s with a 0.5–0.65 s morph', () => {
@@ -27,15 +28,16 @@ describe('home animation frames', () => {
   const frame = (s: HeroStage, d = data) => buildFrame(s, d, W, H)
   const numbers = (m: Mark): number[] => Object.values(m).flatMap((v) => (typeof v === 'number' ? [v] : Array.isArray(v) && typeof v[0] !== 'string' ? (v as any[]).flat().filter((x) => typeof x === 'number') : []))
 
-  it('has 72 distinct stages, each drawn from real engines', () => {
-    expect(heroStages.length).toBe(72)
-    expect(new Set(heroStages.map((s) => s.key)).size).toBe(72)
-    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(72)
+  it('has 80 distinct stages, each drawn from real engines', () => {
+    expect(heroStages.length).toBe(80)
+    expect(new Set(heroStages.map((s) => s.key)).size).toBe(80)
+    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(80)
     expect(heroStages.slice(0, 24).map((s) => s.group)).toEqual([...Array(6).fill('dist'), 'path', ...Array(4).fill('compare'), 'pyramid', ...Array(4).fill('time'), ...Array(2).fill('hierarchy'), 'flame', 'flow', 'network', 'bundle', 'geo', 'meta'])
     expect(heroStages.slice(24, 36).every((s) => s.group === 'v5')).toBe(true)
     expect(heroStages.slice(36, 50).every((s) => s.group === 'v6')).toBe(true)
     expect(heroStages.slice(50, 64).every((s) => s.group === 'v7')).toBe(true)
-    expect(heroStages.slice(64).every((s) => s.group === 'v8')).toBe(true)
+    expect(heroStages.slice(64, 72).every((s) => s.group === 'v8')).toBe(true)
+    expect(heroStages.slice(72).every((s) => s.group === 'v9')).toBe(true)
     expect(heroStages.map((s) => s.viz)).toEqual(expect.arrayContaining(['connected-scatter', 'pyramid', 'network', 'horizon', 'choropleth', 'forest', 'flame', 'edge-bundling', 'isoline', 'kaplan-meier', 'manhattan', 'upset']))
   })
 

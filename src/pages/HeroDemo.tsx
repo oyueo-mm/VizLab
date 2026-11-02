@@ -10,6 +10,7 @@ import { heroV5Ready, loadHeroV5 } from './heroFramesV5Lazy'
 import { heroV6Ready, loadHeroV6 } from './heroFramesV6Lazy'
 import { heroV7Ready, loadHeroV7 } from './heroFramesV7Lazy'
 import { heroV8Ready, loadHeroV8 } from './heroFramesV8Lazy'
+import { heroV9Ready, loadHeroV9 } from './heroFramesV9Lazy'
 
 export { heroStages } from './heroFrames'
 export type { HeroStage } from './heroFrames'
@@ -35,6 +36,7 @@ export function HeroDemo() {
   const [v6Ready, setV6Ready] = useState(heroV6Ready())
   const [v7Ready, setV7Ready] = useState(heroV7Ready())
   const [v8Ready, setV8Ready] = useState(heroV8Ready())
+  const [v9Ready, setV9Ready] = useState(heroV9Ready())
   const width = size.width || 560
   const height = Math.max(260, Math.min(420, width * 0.68))
   const data = useMemo(() => heroData(cycle), [cycle])
@@ -80,6 +82,14 @@ export function HeroDemo() {
     return () => { live = false }
   }, [index, v8Ready, stage.group])
 
+  // The v0.9 stages' engines are one more chunk, fetched the same way.
+  useEffect(() => {
+    if (v9Ready || (index < heroStages.findIndex((s) => s.group === 'v9') - 5 && stage.group !== 'v9')) return
+    let live = true
+    void loadHeroV9().then(() => { if (live) setV9Ready(true) }).catch(() => {})
+    return () => { live = false }
+  }, [index, v9Ready, stage.group])
+
   // Pause when the chart is off-screen or the tab is hidden.
   useEffect(() => {
     const el = wrapRef.current
@@ -110,7 +120,7 @@ export function HeroDemo() {
     const resized = !last.current || last.current.w !== width || last.current.h !== height
     last.current = { w: width, h: height }
     engine.current.setFrame(buildFrame(stage.key, data, width, height), resized || reduced || !running ? 0 : MOVE_MS, width)
-  }, [stage.key, data, width, height, reduced, running, geoReady, v5Ready, v6Ready, v7Ready, v8Ready])
+  }, [stage.key, data, width, height, reduced, running, geoReady, v5Ready, v6Ready, v7Ready, v8Ready, v9Ready])
 
   useEffect(() => () => { engine.current?.destroy(); engine.current = null }, [])
 

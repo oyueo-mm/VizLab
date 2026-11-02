@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { generateDataset } from '../data/datasets'
+import { generateHeroDataset as generateDataset } from '../data/heroDatasets'
 import { columnIndex, toLabel, toNumber } from '../data/table'
 import { colorAt, schemes } from '../lib/colors'
 import { bundlePath, treeFromPaths, type PathTree } from '../stats/graphs'

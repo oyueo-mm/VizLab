@@ -9,7 +9,9 @@ import { schemes, type ColorScheme, type SequentialScheme } from '../../lib/colo
 import { fmt } from '../../lib/format'
 import { classBreaks, classIndex } from '../../stats/geo'
 import { gridFromRows, type Grid3 } from '../../stats/field3d'
-import { fieldAt, lic, mprSlice, whiteNoise, type FlowSource, type Plane } from '../../stats/sci7'
+import { fieldAt, mprSlice, type FlowSource, type Plane } from '../../stats/sci7'
+import { computeLic, type LicResult } from '../../stats/licJob'
+import type { LicMessage } from '../../stats/lic.worker'
 import { roleColumn } from '../mapping'
 import type { ChartProps, ControlsProps, VizModule } from '../types'
 import { regionData, regionRoles } from './geoShared'
@@ -31,31 +33,51 @@ function useSources(table: ChartProps<unknown>['table'], mapping: ChartProps<unk
   }, [table, cols.join(',')]) // eslint-disable-line react-hooks/exhaustive-deps
 }
 
+/**
+ * LIC image of the flow field. In the page it is computed in a Web Worker: a quick low-resolution preview first, then the full image, and a
+ * settings change terminates the running job (the previous image stays visible meanwhile). Without Worker support, and for thumbnails, it
+ * is computed directly.
+ */
+function useLicImage(sources: FlowSource[], res: number, length: number, seed: number, compact: boolean): { img: LicResult | null; busy: boolean } {
+  const canWorker = typeof Worker !== 'undefined' && !compact
+  const sync = useMemo(() => (!canWorker && sources.length ? computeLic({ sources, res, length, seed }) : null), [canWorker, sources, res, length, seed])
+  const [out, setOut] = useState<LicResult | null>(null)
+  const [busy, setBusy] = useState(false)
+  useEffect(() => {
+    if (!canWorker || !sources.length) return
+    let live = true
+    setBusy(true)
+    const req = { sources, res, length, seed }
+    let w: Worker | null = null
+    const finish = (r: LicResult) => { if (live) { setOut(r); setBusy(false) } }
+    try {
+      w = new Worker(new URL('../../stats/lic.worker.ts', import.meta.url), { type: 'module' })
+      w.onmessage = (e: MessageEvent<LicMessage>) => { if (!live) return; setOut(e.data.result); if (!e.data.preview) { setBusy(false); w?.terminate() } }
+      w.onerror = () => { w?.terminate(); finish(computeLic(req)) }
+      w.postMessage(req)
+    } catch { finish(computeLic(req)) }
+    return () => { live = false; w?.terminate() }
+  }, [canWorker, sources, res, length, seed])
+  return { img: canWorker ? out : sync, busy: canWorker && busy }
+}
+
 function LicChart({ table, mapping, params, width, height, compact }: ChartProps<LicParams>) {
   const sources = useSources(table, mapping)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const m = compact ? 6 : 36
   const side = Math.max(60, Math.min(width, height) - 2 * m)
   const res = compact ? 70 : RES[params.res]
-  const img = useMemo(() => {
-    if (!sources.length) return null
-    const noise = whiteNoise(res, res, params.seed)
-    // velocity in pixel space: world y points up, pixel y points down
-    const field = (px: number, py: number): [number, number] => { const [u, v] = fieldAt(sources, px / res, 1 - py / res); return [u, -v] }
-    const speed = new Float32Array(res * res)
-    let maxSp = 1e-9
-    for (let j = 0; j < res; j++) for (let i = 0; i < res; i++) { const [u, v] = fieldAt(sources, i / res, 1 - j / res); const s = Math.hypot(u, v); speed[j * res + i] = s; maxSp = Math.max(maxSp, s) }
-    return { noise, texture: lic(field, noise, res, res, Math.round(params.length * (res / 200))), speed, maxSp }
-  }, [sources, res, params.length, params.seed])
+  const { img, busy } = useLicImage(sources, res, params.length, params.seed, !!compact)
   useEffect(() => {
     const c = canvasRef.current
     if (!c || !img) return
-    c.width = res; c.height = res
+    const R = img.res
+    c.width = R; c.height = R
     const ctx = c.getContext('2d')
     if (!ctx) return
-    const out = ctx.createImageData(res, res)
+    const out = ctx.createImageData(R, R)
     const ramp = schemes.viridis.interpolate
-    for (let i = 0; i < res * res; i++) {
+    for (let i = 0; i < R * R; i++) {
       const t = params.noise ? img.noise[i] : img.texture[i]
       let r = 255 * t, g = 255 * t, b = 255 * t
       if (params.color === 'speed' && !params.noise) {
@@ -66,7 +88,7 @@ function LicChart({ table, mapping, params, width, height, compact }: ChartProps
       out.data[i * 4] = r; out.data[i * 4 + 1] = g; out.data[i * 4 + 2] = b; out.data[i * 4 + 3] = 255
     }
     ctx.putImageData(out, 0, 0)
-  }, [img, res, params.color, params.noise])
+  }, [img, params.color, params.noise])
   if (!sources.length) return <ChartMessage>유동장 원천(종류, x, y, 세기, 반경) 열을 선택하세요.</ChartMessage>
   const ox = (width - side) / 2, oy = (height - side) / 2
   const arrows: { x: number; y: number; a: number; len: number }[] = []
@@ -81,6 +103,7 @@ function LicChart({ table, mapping, params, width, height, compact }: ChartProps
   }
   return (
     <div className="chart-root" style={{ position: 'relative', width, height }}>
+      {busy && !compact && <p className="chart-note" role="status" data-testid="lic-status" style={{ left: 8, right: 'auto', top: 2, bottom: 'auto', zIndex: 2 }}>계산 중… 낮은 해상도 미리보기</p>}
       <canvas ref={canvasRef} data-testid="lic-canvas" style={{ position: 'absolute', left: ox, top: oy, width: side, height: side, imageRendering: 'auto', background: '#fff' }} />
       <svg width={width} height={height} className="chart-svg" role="img" data-testid="chart-svg" style={{ position: 'relative', zIndex: 1 }} aria-label={`Line Integral Convolution: 원천 ${sources.length}개로 만든 유동장의 방향을 노이즈 텍스처로 표현`}>
         <g transform={`translate(${ox},${oy})`}>

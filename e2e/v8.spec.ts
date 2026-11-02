@@ -15,7 +15,7 @@ test.describe('v0.8: encoding-principle filter', () => {
     await page.goto('./#/catalog')
     await expect(page.getByTestId('encoding-filters')).toBeVisible()
     const all = await cards(page).count()
-    expect(all).toBe(301)
+    expect(all).toBe(320)
     await page.getByTestId('enc-partition').click()
     await expect(page).toHaveURL(/[?&]e=partition/)
     const part = await cards(page).count()
@@ -300,7 +300,7 @@ test.describe('v0.8: home animation and comparison presets', () => {
   test('the home animation lists the eight new stages and each links to its lab', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('./')
-    await expect(page.getByTestId('hero-count')).toHaveText('1 / 72')
+    await expect(page.getByTestId('hero-count')).toHaveText('1 / 80')
     for (let i = 0; i < 64; i++) await page.getByTestId('hero-next').click()
     for (const [stage, viz] of [['bubble', 'bubble-sets'], ['nodetrix', 'nodetrix'], ['cone', 'cone-tree'], ['ssurface', 'stream-surface'], ['radial', 'radial-sets'], ['confluent', 'confluent-drawing'], ['tarcs', 'timearcs'], ['lflow', 'lifeflow']]) {
       await expect(page.getByTestId('hero-demo')).toHaveAttribute('data-stage', stage)

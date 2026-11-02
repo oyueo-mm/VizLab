@@ -69,6 +69,17 @@ export const presets: Preset[] = [
   { id: 'flow-3d', name: '3D 벡터장 · 스트림 서피스 · 스트림튜브', note: '같은 3차원 유동장을 화살표·유선, 시작선이 훑은 곡면, 속도를 반영한 튜브로', datasetId: 'vector-vortex', charts: ['vector-field-3d', 'stream-surface', 'streamtube'] },
   { id: 'hierarchy-3d', name: '트리맵 · 쌍곡 트리 · 콘 트리', note: '같은 조직 계층을 면적 분할, 쌍곡 초점+맥락, 3차원 원뿔 배치로', datasetId: 'org-tree', charts: ['treemap', 'hyperbolic-tree', 'cone-tree'] },
   { id: 'text-views', name: '워드 클라우드 · 패러럴 태그 클라우드 · 텍스트아크', note: '같은 문장 모음을 빈도 구름, 문서별 단어 열, 글 전체의 단어 분포로', datasetId: 'corpus-articles', charts: ['word-cloud', 'parallel-tag-clouds', 'textarc'] },
+  // v0.9
+  { id: 'set-metro', name: '메트로셋 · 모자이크셋 · 레인보우 박스', note: '같은 소속을 노선(선), 격자 영역(면), 원소 위의 상자로 — 한 원소를 가리키면 세 그림에서 모두 강조됩니다', datasetId: 'lab-members', n: 26, charts: ['metrosets', 'mosaicsets', 'rainbow-boxes'] },
+  { id: 'set-network', name: '셋넷 · 메트로셋 · 모자이크셋', note: '같은 동아리 소속을 영역 안의 인맥 네트워크(셋넷), 노선, 격자 영역으로', datasetId: 'club-network', n: 22, charts: ['setnet', 'metrosets', 'mosaicsets'] },
+  { id: 'set-query', name: '벤·오일러 · UpSet · 인포크리스털', note: '같은 소속을 영역, 교집합 막대, 불리언 조합 결정체로 — 조건 조합별 개수와 질의 결과의 차이', datasetId: 'set-members', n: 120, charts: ['venn', 'upset', 'infocrystal'] },
+  { id: 'seq-braiding', name: '라이프플로 · 시퀀스 브레이딩', note: '같은 이벤트열을 접두사 트리(라이프플로)와 사건 유형 노드를 지나는 가닥(시퀀스 브레이딩)으로', datasetId: 'care-braids', n: 60, charts: ['lifeflow', 'sequence-braiding'] },
+  { id: 'multivar-dust', name: 'RadViz · 스타 좌표 · 더스트 앤 마그넷', note: '같은 다변량 관측값을 고정 원형 투영, 축 벡터 합, 자유롭게 옮기는 자석으로 — 한 점을 가리키면 모두에서 강조됩니다', datasetId: 'phone-specs', n: 40, charts: ['radviz', 'star-coordinates', 'dust-magnet'] },
+  { id: 'hier-gosper', name: '트리맵 · 보로노이 트리맵 · 고스퍼맵', note: '같은 계층을 사각 분할, 보로노이 분할, 고스퍼 곡선의 지도형 영역으로', datasetId: 'budget', charts: ['treemap', 'voronoi-treemap', 'gosper-map'] },
+  { id: 'flow-textures', name: 'IBFV · 벡터장 위상', note: '같은 2차원 흐름을 움직이는 질감과 임계점·분리선의 골격으로', datasetId: 'flow-2d', n: 24, charts: ['ibfv', 'vector-field-topology'] },
+  { id: 'tensor-paths', name: '텐서 글리프 · 하이퍼스트림라인', note: '같은 텐서장을 점마다의 타원체와 고유벡터를 따라 이어진 관으로', datasetId: 'tensor-twist', n: 9, charts: ['tensor-glyph', 'hyperstreamlines'] },
+  { id: 'od-views', name: 'OD 지도 · 맵트릭스', note: '같은 이동량을 지도 모양으로 접은 중첩 격자와 지시선으로 지도에 묶은 행렬로', datasetId: 'grid-flows', n: 6, charts: ['od-maps', 'maptrix'] },
+  { id: 'bivariate-surface', name: '3D 등치면 · 파이버 곡면', note: '같은 부피 자료를 한 스칼라장의 등값면과 두 스칼라장의 범위 평면 다각형으로 뽑은 곡면으로', datasetId: 'bivariate-volume', n: 14, charts: ['isosurface', 'fiber-surfaces'] },
 ]
 
 export const presetById = new Map(presets.map((p) => [p.id, p]))

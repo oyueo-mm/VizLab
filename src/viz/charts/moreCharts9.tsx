@@ -348,7 +348,7 @@ function readSetNet(table: DataTable, mapping: Mapping) {
   return { cols, names, member, edges }
 }
 
-function SetNetChart({ table, mapping, params, setParams, width, height, compact }: ChartProps<SetNetParams>) {
+function SetNetChart({ table, mapping, params, setParams, width, height, compact, linked }: ChartProps<SetNetParams>) {
   const { tip, show, hide } = useTooltip()
   const svgRef = useRef<SVGSVGElement>(null)
   const data = useMemo(() => readSetNet(table, mapping), [table, mapping])
@@ -393,12 +393,12 @@ function SetNetChart({ table, mapping, params, setParams, width, height, compact
         {data.names.map((nm, i) => {
           const p = posOf(i)
           const sets = data.cols.map((_, s) => s).filter((s) => data.member[s][i])
-          const hot = sel === i || nbr.has(i)
+          const hot = sel === i || nbr.has(i) || (linked?.rows.includes(i) ?? false)
           const dim = (params.focus >= 0 && !sets.includes(params.focus)) || (sel >= 0 && !hot)
           return (
             <g key={i} data-testid="setnet-node" data-item={i} data-mask={model.mask[i]} opacity={dim ? 0.25 : 1} style={{ cursor: compact ? undefined : 'grab' }}
               onPointerDown={compact ? undefined : (e) => { drag.current = i; setParams({ selected: sel === i ? -1 : i }); e.currentTarget.closest('svg')?.setPointerCapture(e.pointerId) }}
-              onPointerEnter={compact ? undefined : (e) => { const lp = localPoint(svgRef.current!, e); show(lp.x, lp.y, <><b>{nm}</b><br />{sets.length ? sets.map((s) => data.cols[s]).join(' · ') : '어느 동아리에도 없음'}<br />친구 {data.edges.filter(([a, b]) => a === i || b === i).length}명</>) }} onPointerLeave={hide}>
+              onPointerEnter={(e) => { linked?.set([i]); if (!compact) { const lp = localPoint(svgRef.current!, e); show(lp.x, lp.y, <><b>{nm}</b><br />{sets.length ? sets.map((s) => data.cols[s]).join(' · ') : '어느 동아리에도 없음'}<br />친구 {data.edges.filter(([a, b]) => a === i || b === i).length}명</>) } }} onPointerLeave={() => { linked?.set(null); hide() }}>
               <circle cx={X(p[0])} cy={Y(p[1])} r={compact ? 3 : sel === i ? 8 : 6} fill={sets.length ? color(data.cols[sets[0]]) : '#b6bec4'} stroke={sel === i ? '#d4452f' : '#fff'} strokeWidth={sel === i ? 2.4 : 1.4} />
               {!compact && params.labels && <text x={X(p[0]) + 8} y={Y(p[1]) - 6} fontSize={9.5} fill="#374151" pointerEvents="none">{nm}</text>}
             </g>

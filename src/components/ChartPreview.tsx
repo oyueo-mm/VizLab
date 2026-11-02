@@ -1,5 +1,5 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { initialLabState } from '../lab/state'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import type { LabState } from '../lab/state'
 import { useVizModule } from '../viz/charts'
 import { ChartBoundary } from './ChartBoundary'
 
@@ -29,7 +29,14 @@ export function ChartPreview({ id }: { id: string }) {
     return () => { ro.disconnect(); io?.disconnect() }
   }, [])
   const { mod } = useVizModule(id, visible)
-  const state = useMemo(() => (visible && mod ? initialLabState(id, mod) : null), [visible, id, mod])
+  // The default tables come from the dataset generators, which are a separate chunk loaded with the first thumbnail (not with the home page).
+  const [state, setState] = useState<LabState | null>(null)
+  useEffect(() => {
+    if (!visible || !mod) return
+    let live = true
+    void import('../lab/state').then((m) => { if (live) setState(m.initialLabState(id, mod)) }).catch(() => {})
+    return () => { live = false }
+  }, [visible, id, mod])
   return (
     <div ref={ref} className="chart-preview" aria-hidden="true" data-testid={`preview-${id}`}>
       {state && mod && size && size.width > 0 && (
