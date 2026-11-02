@@ -5,6 +5,7 @@ import { useMediaQuery } from '../hooks/useMediaQuery'
 import { routeHref, type Route } from '../router'
 import { catalog, categories, categoryById, dataKinds, inCategory, searchCatalog, subcategories } from '../viz/catalog'
 import { hasModule } from '../viz/charts'
+import { encodingDefs, type EncodingId } from '../viz/encodings'
 import { kindDefs, kindTotals, type VizKind } from '../viz/kinds'
 import type { CategoryId, DataKind } from '../viz/types'
 
@@ -19,26 +20,29 @@ interface Props {
   sub: string
   /** Nature of the entry (technique / specialized / analysis / application); '' = all. */
   kind: VizKind | ''
+  /** Visual-encoding principle; '' = all. */
+  encoding: EncodingId | ''
   navigate: (r: Route, options?: { replace?: boolean }) => void
 }
 
-export function Catalog({ category, query, kinds, sub, kind, navigate }: Props) {
+export function Catalog({ category, query, kinds, sub, kind, encoding, navigate }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const narrow = useMediaQuery('(max-width: 760px)')
   const [filtersOpen, setFiltersOpen] = useState(false)
   // Category, data type and search text are independent filters; all three live in the URL so Back, reload and shared links restore them.
-  const go = (patch: Partial<{ category: CategoryId | 'all'; q: string; kinds: DataKind[]; sub: string; kind: VizKind | '' }>, replace = false) =>
-    navigate({ page: 'catalog', category: patch.category ?? category, q: patch.q ?? query, kinds: patch.kinds ?? kinds, sub: patch.category !== undefined && patch.category !== category ? '' : patch.sub ?? sub, kind: (patch.kind ?? kind) || undefined }, { replace })
+  const go = (patch: Partial<{ category: CategoryId | 'all'; q: string; kinds: DataKind[]; sub: string; kind: VizKind | ''; encoding: EncodingId | '' }>, replace = false) =>
+    navigate({ page: 'catalog', category: patch.category ?? category, q: patch.q ?? query, kinds: patch.kinds ?? kinds, sub: patch.category !== undefined && patch.category !== category ? '' : patch.sub ?? sub, kind: (patch.kind ?? kind) || undefined, encoding: (patch.encoding ?? encoding) || undefined }, { replace })
   const subs = category === 'all' ? undefined : subcategories[category]
   const activeSub = subs?.some((x) => x.id === sub) ? sub : ''
-  const results = searchCatalog(query, category, available, kinds, activeSub, kind)
-  const categoryCount = (c: CategoryId | 'all') => searchCatalog(query, c, available, kinds, undefined, kind).length
-  const subCount = (id: string) => searchCatalog(query, category, available, kinds, id, kind).length
-  const kindCount = (k: DataKind) => searchCatalog(query, category, available, [k], undefined, kind).length
-  const kindOfCount = (k: VizKind | '') => searchCatalog(query, category, available, kinds, activeSub, k).length
+  const results = searchCatalog(query, category, available, kinds, activeSub, kind, encoding)
+  const categoryCount = (c: CategoryId | 'all') => searchCatalog(query, c, available, kinds, undefined, kind, encoding).length
+  const subCount = (id: string) => searchCatalog(query, category, available, kinds, id, kind, encoding).length
+  const kindCount = (k: DataKind) => searchCatalog(query, category, available, [k], undefined, kind, encoding).length
+  const kindOfCount = (k: VizKind | '') => searchCatalog(query, category, available, kinds, activeSub, k, encoding).length
+  const encodingCount = (e: EncodingId | '') => searchCatalog(query, category, available, kinds, activeSub, kind, e).length
   const totals = kindTotals(available)
   const title = category === 'all' ? '시각화 도감' : `${categoryById.get(category)?.name} 시각화`
-  const active = (category !== 'all' ? 1 : 0) + (activeSub ? 1 : 0) + kinds.length + (kind ? 1 : 0) + (query.trim() ? 1 : 0)
+  const active = (category !== 'all' ? 1 : 0) + (activeSub ? 1 : 0) + kinds.length + (kind ? 1 : 0) + (encoding ? 1 : 0) + (query.trim() ? 1 : 0)
   const kindNames = kinds.map((k) => dataKinds.find((d) => d.id === k)?.name).filter(Boolean).join('·')
 
   useEffect(() => { document.title = `${title} — VizLab` }, [title])
@@ -80,6 +84,15 @@ export function Catalog({ category, query, kinds, sub, kind, navigate }: Props) 
             </button>
           ))}
         </div>
+        <div className="filter-chips filter-encodings" role="group" aria-label="표현 원리 필터" data-testid="encoding-filters">
+          <span className="filter-label">표현 원리</span>
+          <button type="button" className="chip" aria-pressed={!encoding} onClick={() => go({ encoding: '' })} data-testid="enc-all">전체 <span>{encodingCount('')}</span></button>
+          {encodingDefs.map((e) => (
+            <button key={e.id} type="button" className="chip" aria-pressed={encoding === e.id} disabled={encodingCount(e.id) === 0 && encoding !== e.id} title={e.description} onClick={() => go({ encoding: e.id })} data-testid={`enc-${e.id}`}>
+              {e.name} <span>{encodingCount(e.id)}</span>
+            </button>
+          ))}
+        </div>
         <div className="filter-chips" role="group" aria-label="카테고리 필터">
           <button type="button" className="chip" aria-pressed={category === 'all'} onClick={() => go({ category: 'all' })} data-testid="chip-all">
             전체 <span>{categoryCount('all')}</span>
@@ -115,7 +128,7 @@ export function Catalog({ category, query, kinds, sub, kind, navigate }: Props) 
         </div>
       </div>
       <div className="result-bar" role="status" aria-live="polite">
-        <span data-testid="result-count"><b>{results.length}</b>개 시각화{active > 0 && <small>{[category !== 'all' && categoryById.get(category)?.name, kind && kindDefs.find((d) => d.id === kind)?.name, activeSub && subs?.find((x) => x.id === activeSub)?.name, kindNames, query.trim() && `‘${query.trim()}’`].filter(Boolean).join(' · ')}</small>}</span>
+        <span data-testid="result-count"><b>{results.length}</b>개 시각화{active > 0 && <small>{[category !== 'all' && categoryById.get(category)?.name, kind && kindDefs.find((d) => d.id === kind)?.name, encoding && encodingDefs.find((d) => d.id === encoding)?.name, activeSub && subs?.find((x) => x.id === activeSub)?.name, kindNames, query.trim() && `‘${query.trim()}’`].filter(Boolean).join(' · ')}</small>}</span>
         {active > 0 && <button type="button" className="link-btn" onClick={() => navigate({ page: 'catalog', category: 'all', q: '', kinds: [], sub: '' })} data-testid="filter-reset"><X size={13} aria-hidden="true" />필터 초기화</button>}
       </div>
       {results.length ? (

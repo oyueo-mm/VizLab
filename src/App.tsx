@@ -48,7 +48,7 @@ export default function App() {
         )}
         <main id="main" ref={main} tabIndex={-1} className="page" inert={drawer && drawerOpen}>
           {route.page === 'home' && <Home />}
-          {route.page === 'catalog' && <Catalog category={route.category} query={route.q ?? ''} kinds={route.kinds ?? []} sub={route.sub ?? ''} kind={route.kind ?? ''} navigate={navigate} />}
+          {route.page === 'catalog' && <Catalog category={route.category} query={route.q ?? ''} kinds={route.kinds ?? []} sub={route.sub ?? ''} kind={route.kind ?? ''} encoding={route.encoding ?? ''} navigate={navigate} />}
           {route.page === 'compare' && <Suspense fallback={<div className="lab-loading" aria-busy="true" />}><ComparePage preset={route.preset} navigate={navigate} /></Suspense>}
           {route.page === 'viz' && (known
             ? <Suspense fallback={<div className="lab-loading" aria-busy="true" />}><LabPage key={route.id} id={route.id} /></Suspense>

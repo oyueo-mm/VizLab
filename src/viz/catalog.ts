@@ -3,6 +3,7 @@ import { catalogV6 } from './catalogV6'
 import { catalogV7 } from './catalogV7'
 import { catalogV8 } from './catalogV8'
 import { hasKind, techniqueResultLinks, type VizKind } from './kinds'
+import { hasEncoding, type EncodingId } from './encodings'
 import { purposeTerms } from './purposes'
 import type { CategoryId, DataKind, VizMeta } from './types'
 
@@ -203,12 +204,13 @@ const normalize = (s: string) => s.toLowerCase().replace(/[\s·/()-]/g, '')
  * The category and the data kinds are independent filters: a chart must be in the category
  * and support at least one of the selected data kinds.
  */
-export function searchCatalog(query: string, category: CategoryId | 'all' = 'all', list: readonly VizMeta[] = catalog, kinds: readonly DataKind[] = [], sub?: string, kind?: VizKind | '') {
+export function searchCatalog(query: string, category: CategoryId | 'all' = 'all', list: readonly VizMeta[] = catalog, kinds: readonly DataKind[] = [], sub?: string, kind?: VizKind | '', encoding?: EncodingId | '') {
   const terms = query.split(/\s+/).map(normalize).filter(Boolean)
   return list.filter((meta) => {
     if (category !== 'all' && !inCategory(meta, category)) return false
     if (sub && meta.sub !== sub) return false
     if (kind && !hasKind(meta, kind)) return false
+    if (encoding && !hasEncoding(meta, encoding)) return false
     if (kinds.length && !kinds.some((k) => meta.dataKinds.includes(k))) return false
     if (!terms.length) return true
     return terms.every((t) => haystack(meta).includes(t))
