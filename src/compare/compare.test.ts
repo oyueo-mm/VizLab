@@ -15,7 +15,7 @@ beforeAll(async () => { modules = await loadAllModules() })
 const issueFor = (viz: string, table = generateDataset('normal'), remembered = {}) => compareIssue(modules[viz], table, paneMapping(modules[viz], table, remembered))
 
 describe('recommended comparison presets', () => {
-  it('has the v0.3 combinations the v0.4 geo, agreement, calibration, network and mosaic ones, ten v0.5 ones, nine v0.6 ones and seven v0.7 ones and nine v0.8 ones', () => {
+  it('has the v0.3 combinations the v0.4 geo, agreement, calibration, network and mosaic ones, ten v0.5 ones, nine v0.6 ones and seven v0.7 ones and nine v0.8 ones and eight v1.0 ones', () => {
     expect(presets.map((p) => p.charts)).toEqual([
       ['histogram', 'kde', 'ecdf'], ['box', 'violin', 'raincloud'], ['scatter', 'hexbin', 'kde2d'], ['bar', 'lollipop', 'bullet'],
       ['line', 'area', 'step'], ['treemap', 'sunburst', 'icicle'], ['roc', 'pr'],
@@ -39,6 +39,9 @@ describe('recommended comparison presets', () => {
       // v0.9
       ['metrosets', 'mosaicsets', 'rainbow-boxes'], ['setnet', 'metrosets', 'mosaicsets'], ['venn', 'upset', 'infocrystal'], ['lifeflow', 'sequence-braiding'], ['radviz', 'star-coordinates', 'dust-magnet'],
       ['treemap', 'voronoi-treemap', 'gosper-map'], ['ibfv', 'vector-field-topology'], ['tensor-glyph', 'hyperstreamlines'], ['od-maps', 'maptrix'], ['isosurface', 'fiber-surfaces'],
+      // v1.0
+      ['scatter', 'bagplot', 'kde2d'], ['scatter', 'splatterplot', 'hexbin'], ['stem-and-leaf', 'histogram', 'box'], ['lorenz-curve', 'ecdf', 'histogram'],
+      ['contour-tree', 'persistence-diagram', 'topological-landscape'], ['spacetree', 'hyperbolic-tree', 'treemap'], ['decision-curve', 'roc', 'calibration'], ['hanging-rootogram', 'histogram'],
     ])
     for (const p of presets) { expect(p.charts.length).toBeLessThanOrEqual(MAX_PANES); expect(p.charts.length).toBeGreaterThanOrEqual(2) }
   })

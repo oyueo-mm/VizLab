@@ -10,11 +10,11 @@ const openDetails = async (page: Page) => { const t = page.getByTestId('details-
 const num = (s: string | null, re: RegExp) => Number(re.exec(s ?? '')?.[1] ?? NaN)
 
 test.describe('v0.9: catalog and explanations', () => {
-  test('the catalog lists 320 entries and the 19 new techniques are searchable by Korean and English names', async ({ page }) => {
+  test('the catalog lists 340 entries and the 19 new techniques are searchable by Korean and English names', async ({ page }) => {
     expect(V9.length).toBe(19)
     await page.goto('./#/catalog')
     await expect(page.getByTestId('catalog-grid')).toBeVisible()
-    expect(await cards(page).count()).toBe(320)
+    expect(await cards(page).count()).toBe(340)
     for (const [q, id] of [['메트로', 'metrosets'], ['MosaicSets', 'mosaicsets'], ['불리언', 'infocrystal'], ['hypergraph', 'paohvis'], ['braiding', 'sequence-braiding'], ['자석', 'dust-magnet'], ['gosper', 'gosper-map'], ['wordstream', 'wordstream'], ['tilebars', 'tilebars'], ['flow topology', 'vector-field-topology'], ['seesoft', 'seesoft'], ['setnet', 'setnet'], ['ibfv', 'ibfv'], ['fiber', 'fiber-surfaces'], ['perspective', 'perspective-wall']]) {
       await page.goto(`./#/catalog?q=${encodeURIComponent(q)}`)
       await expect(page.getByTestId(`card-${id}`), `${q} → ${id}`).toBeVisible()
@@ -389,7 +389,7 @@ test.describe('v0.9: home animation and comparison presets', () => {
   test('the home animation lists the eight new stages and each links to its lab', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('./')
-    await expect(page.getByTestId('hero-count')).toHaveText('1 / 80')
+    await expect(page.getByTestId('hero-count')).toHaveText('1 / 90')
     for (let i = 0; i < 72; i++) await page.getByTestId('hero-next').click()
     for (const [stage, viz] of [['metro', 'metrosets'], ['mosaic', 'mosaicsets'], ['streams', 'set-streams'], ['dust', 'dust-magnet'], ['gosper', 'gosper-map'], ['wstream', 'wordstream'], ['paoh', 'paohvis'], ['braid', 'sequence-braiding']]) {
       await expect(page.getByTestId('hero-demo')).toHaveAttribute('data-stage', stage)

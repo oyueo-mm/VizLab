@@ -7,12 +7,13 @@ import { loadHeroV6 } from './heroFramesV6Lazy'
 import { loadHeroV7 } from './heroFramesV7Lazy'
 import { loadHeroV8 } from './heroFramesV8Lazy'
 import { loadHeroV9 } from './heroFramesV9Lazy'
+import { loadHeroV10 } from './heroFramesV10Lazy'
 import { buildFrame, heroData, heroFlows, heroSample, heroStages, heroTree, HERO_N, type HeroStage, type Mark } from './heroFrames'
 
 const W = 560
 const H = 380
 
-beforeAll(async () => { await loadHeroGeo(); await loadHeroV5(); await loadHeroV6(); await loadHeroV7(); await loadHeroV8(); await loadHeroV9() })
+beforeAll(async () => { await loadHeroGeo(); await loadHeroV5(); await loadHeroV6(); await loadHeroV7(); await loadHeroV8(); await loadHeroV9(); await loadHeroV10() })
 
 describe('home animation timing', () => {
   it('shows each chart for about 1.8 s with a 0.5–0.65 s morph', () => {
@@ -28,16 +29,17 @@ describe('home animation frames', () => {
   const frame = (s: HeroStage, d = data) => buildFrame(s, d, W, H)
   const numbers = (m: Mark): number[] => Object.values(m).flatMap((v) => (typeof v === 'number' ? [v] : Array.isArray(v) && typeof v[0] !== 'string' ? (v as any[]).flat().filter((x) => typeof x === 'number') : []))
 
-  it('has 80 distinct stages, each drawn from real engines', () => {
-    expect(heroStages.length).toBe(80)
-    expect(new Set(heroStages.map((s) => s.key)).size).toBe(80)
-    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(80)
+  it('has 90 distinct stages, each drawn from real engines', () => {
+    expect(heroStages.length).toBe(90)
+    expect(new Set(heroStages.map((s) => s.key)).size).toBe(90)
+    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(90)
     expect(heroStages.slice(0, 24).map((s) => s.group)).toEqual([...Array(6).fill('dist'), 'path', ...Array(4).fill('compare'), 'pyramid', ...Array(4).fill('time'), ...Array(2).fill('hierarchy'), 'flame', 'flow', 'network', 'bundle', 'geo', 'meta'])
     expect(heroStages.slice(24, 36).every((s) => s.group === 'v5')).toBe(true)
     expect(heroStages.slice(36, 50).every((s) => s.group === 'v6')).toBe(true)
     expect(heroStages.slice(50, 64).every((s) => s.group === 'v7')).toBe(true)
     expect(heroStages.slice(64, 72).every((s) => s.group === 'v8')).toBe(true)
-    expect(heroStages.slice(72).every((s) => s.group === 'v9')).toBe(true)
+    expect(heroStages.slice(72, 80).every((s) => s.group === 'v9')).toBe(true)
+    expect(heroStages.slice(80).every((s) => s.group === 'v10')).toBe(true)
     expect(heroStages.map((s) => s.viz)).toEqual(expect.arrayContaining(['connected-scatter', 'pyramid', 'network', 'horizon', 'choropleth', 'forest', 'flame', 'edge-bundling', 'isoline', 'kaplan-meier', 'manhattan', 'upset']))
   })
 
@@ -419,5 +421,52 @@ describe('v0.7 home stages use the technique engines', () => {
     expect(lines(0).length).toBe(lines(1).length)
     expect(lines(0)[0].pts.length).toBe(lines(1)[0].pts.length)
     expect(lines(0)[0].pts).not.toEqual(lines(1)[0].pts)
+  })
+})
+
+describe('v1.0 home stages use the technique engines', () => {
+  const frame = (s: HeroStage, cycle = 0) => buildFrame(s, heroData(cycle), W, H)
+  const polys = (s: HeroStage, prefix: string, cycle = 0) => frame(s, cycle).filter((m) => m.t === 'poly' && m.k.startsWith(prefix)) as Extract<Mark, { t: 'poly' }>[]
+  const rects = (s: HeroStage, prefix: string, cycle = 0) => frame(s, cycle).filter((m) => m.t === 'rect' && m.k.startsWith(prefix)) as Extract<Mark, { t: 'rect' }>[]
+
+  it('the Lorenz curve never rises above the diagonal (screen y of the curve is never above the equality line)', () => {
+    const c = polys('lorenz', 'lz:curve')[0]
+    const eq = frame('lorenz').find((m) => m.k === 'lz:eq') as Extract<Mark, { t: 'line' }>
+    const slope = (eq.y2 - eq.y1) / (eq.x2 - eq.x1)
+    for (const [x, y] of c.pts) expect(y).toBeGreaterThanOrEqual(eq.y1 + slope * (x - eq.x1) - 1e-6)
+  })
+  it('the tornado bars are sorted by swing, the largest first', () => {
+    const lows = rects('tornado', 'tn:l'), highs = rects('tornado', 'tn:h')
+    const swing = lows.map((l, i) => l.w + highs[i].w)
+    for (let i = 1; i < swing.length; i++) expect(swing[i]).toBeLessThanOrEqual(swing[i - 1] + 1e-6)
+  })
+  it('the diverging bars are centred on one zero line: each row has five segments and the neutral one straddles it', () => {
+    const zero = (frame('divbar').find((m) => m.k === 'dv:zero') as Extract<Mark, { t: 'line' }>).x1
+    for (let i = 0; i < 8; i++) {
+      const seg = rects('divbar', `dv:${i}:`)
+      expect(seg.length).toBe(5)
+      expect(seg[2].x).toBeLessThan(zero)
+      expect(seg[2].x + seg[2].w).toBeGreaterThan(zero)
+    }
+  })
+  it('the bagplot bag lies inside its fence and the decision curve of the better model is higher over the middle thresholds', () => {
+    const bag = polys('bag', 'bg:bag')[0], fence = polys('bag', 'bg:fence')[0]
+    const area = (p: [number, number][]) => Math.abs(d3.polygonArea(p))
+    expect(area(bag.pts as [number, number][])).toBeLessThan(area(fence.pts as [number, number][]))
+    const one = (k: string) => (frame('dca').find((m) => m.k === k) as Extract<Mark, { t: 'poly' }>).pts
+    const a = one('dc:a'), b = one('dc:b')
+    // screen y is inverted: a smaller y is a larger net benefit
+    expect(d3.mean(a.slice(10, 30), (p) => p[1])!).toBeLessThan(d3.mean(b.slice(10, 30), (p) => p[1])!)
+  })
+  it('the rootogram bars hang from the expected curve; the SpaceTree opens only a path; every stage reproduces', () => {
+    const exp = polys('rootogram', 'rt:exp')[0].pts
+    const bars = rects('rootogram', 'rt:b')
+    bars.forEach((r, i) => expect(r.y).toBeCloseTo(exp[i][1], 5))
+    const open = rects('spacetree', 'sp:n').filter((r) => r.fill === '#cfe6dd').length
+    expect(open).toBeGreaterThan(0)
+    expect(open).toBeLessThan(rects('spacetree', 'sp:n').length)
+    for (const k of ['fbox', 'lorenz', 'tornado', 'bag', 'divbar', 'dca', 'cbox', 'rootogram', 'persist', 'spacetree'] as const) {
+      expect(JSON.stringify(frame(k, 1)), k).toBe(JSON.stringify(frame(k, 1)))
+    }
   })
 })

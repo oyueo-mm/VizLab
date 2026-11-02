@@ -80,6 +80,15 @@ export const presets: Preset[] = [
   { id: 'tensor-paths', name: '텐서 글리프 · 하이퍼스트림라인', note: '같은 텐서장을 점마다의 타원체와 고유벡터를 따라 이어진 관으로', datasetId: 'tensor-twist', n: 9, charts: ['tensor-glyph', 'hyperstreamlines'] },
   { id: 'od-views', name: 'OD 지도 · 맵트릭스', note: '같은 이동량을 지도 모양으로 접은 중첩 격자와 지시선으로 지도에 묶은 행렬로', datasetId: 'grid-flows', n: 6, charts: ['od-maps', 'maptrix'] },
   { id: 'bivariate-surface', name: '3D 등치면 · 파이버 곡면', note: '같은 부피 자료를 한 스칼라장의 등값면과 두 스칼라장의 범위 평면 다각형으로 뽑은 곡면으로', datasetId: 'bivariate-volume', n: 14, charts: ['isosurface', 'fiber-surfaces'] },
+  // v1.0
+  { id: 'bag-views', name: '산점도 · 백플롯 · 2차원 KDE', note: '같은 두 변수 표본을 점, 깊이 기반 가방과 울타리, 밀도 윤곽으로', datasetId: 'bag-points', n: 100, charts: ['scatter', 'bagplot', 'kde2d'] },
+  { id: 'overdraw', name: '산점도 · 스플래터플롯 · 헥스빈', note: '겹친 점을 그냥 찍은 모습, 밀도 윤곽과 바깥 점으로 바꾼 모습, 육각 칸으로 센 모습', datasetId: 'class-scatter', n: 600, charts: ['scatter', 'splatterplot', 'hexbin'] },
+  { id: 'score-digits', name: '줄기-잎 그림 · 히스토그램 · 박스 플롯', note: '같은 점수를 원 값이 보이는 숫자 그림, 구간 막대, 요약 상자로', datasetId: 'exam-scores', n: 60, charts: ['stem-and-leaf', 'histogram', 'box'] },
+  { id: 'inequality', name: '로렌츠 곡선 · ECDF · 히스토그램', note: '같은 소득 분포를 누적 몫의 곡선, 누적 비율, 구간 막대로', datasetId: 'income-dist', n: 100, charts: ['lorenz-curve', 'ecdf', 'histogram'] },
+  { id: 'terrain-topology', name: '컨투어 트리 · 지속성 · 토폴로지컬 랜드스케이프', note: '같은 스칼라장의 위상을 나무, 생성·소멸 막대, 지형으로', datasetId: 'terrain-field', charts: ['contour-tree', 'persistence-diagram', 'topological-landscape'] },
+  { id: 'tree-browsers', name: '스페이스트리 · 쌍곡 트리 · 트리맵', note: '같은 계층을 펼친 경로 중심의 노드-링크, 쌍곡 압축, 면적으로', datasetId: 'org-tree', charts: ['spacetree', 'hyperbolic-tree', 'treemap'] },
+  { id: 'model-utility', name: '결정 곡선 · ROC · 보정 곡선', note: '같은 예측 모형을 결정의 순이득, 변별력, 확률의 보정으로', datasetId: 'risk-prediction', n: 500, charts: ['decision-curve', 'roc', 'calibration'] },
+  { id: 'count-fit', name: '걸린 루트그램 · 히스토그램', note: '같은 계수 자료를 포아송 기대 곡선에 매단 막대와 구간 막대로', datasetId: 'count-data', n: 300, charts: ['hanging-rootogram', 'histogram'] },
 ]
 
 export const presetById = new Map(presets.map((p) => [p.id, p]))

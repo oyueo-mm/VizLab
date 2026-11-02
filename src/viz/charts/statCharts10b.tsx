@@ -12,15 +12,18 @@ import type { ChartProps, ControlsProps, VizModule } from '../types'
 
 export interface BagParams { factor: number; showFence: boolean }
 
-function BagChart({ table, mapping, params, width, height, compact }: ChartProps<BagParams>) {
+function BagChart({ table, mapping, params, width, height, compact, linked }: ChartProps<BagParams>) {
   const { tip, show, hide } = useTooltip()
   const svgRef = useRef<SVGSVGElement>(null)
-  const pts = useMemo(() => {
+  const data = useMemo(() => {
     const xi = columnIndex(table, roleColumn(mapping, 'x')), yi = columnIndex(table, roleColumn(mapping, 'y'))
     if (xi < 0 || yi < 0) return null
-    const p = table.rows.map((r) => [toNumber(r[xi]), toNumber(r[yi])] as const).filter((q): q is readonly [number, number] => q[0] != null && q[1] != null)
-    return p.length >= 8 ? p.map((q) => [q[0], q[1]] as [number, number]) : null
+    const pts: [number, number][] = [], rows: number[] = []
+    table.rows.forEach((r, i) => { const x = toNumber(r[xi]), y = toNumber(r[yi]); if (x != null && y != null) { pts.push([x, y]); rows.push(i) } })
+    return pts.length >= 8 ? { pts, rows } : null
   }, [table, mapping])
+  const pts = data?.pts ?? null
+  const linkedSet = useMemo(() => new Set(linked?.rows ?? []), [linked?.rows])
   const bp = useMemo(() => (pts ? bagplot(pts, params.factor) : null), [pts, params.factor])
   if (!pts || !bp) return <ChartMessage>숫자 열 X, Y를 고르세요(점 8개 이상).</ChartMessage>
   const pad = compact ? 6 : 36
@@ -35,8 +38,8 @@ function BagChart({ table, mapping, params, width, height, compact }: ChartProps
         {params.showFence && <path d={poly(bp.fence)} fill="#e8f1ee" stroke="#9fc4b8" strokeDasharray="4 3" data-testid="bag-fence" />}
         <path d={poly(bp.bag)} fill="#a9d3c4" fillOpacity={0.75} stroke="#3f8f78" strokeWidth={1.4} data-testid="bag-bag" />
         {pts.map((p, i) => (
-          <circle key={i} cx={sx(p[0])} cy={sy(p[1])} r={out.has(i) ? 4 : 2.6} fill={out.has(i) ? '#d4452f' : '#3b4a52'} fillOpacity={out.has(i) ? 1 : 0.7} data-testid={out.has(i) ? 'bag-outlier' : 'bag-point'}
-            onPointerEnter={compact ? undefined : (e) => { const lp = localPoint(svgRef.current!, e); show(lp.x, lp.y, <>점 {i + 1} · 깊이 <b>{bp.depth[i]}</b> / {pts.length}<br />{out.has(i) ? '울타리 밖 (이상점)' : '울타리 안'}</>) }} onPointerLeave={hide} />
+          <circle key={i} cx={sx(p[0])} cy={sy(p[1])} r={linkedSet.has(data!.rows[i]) ? 6 : out.has(i) ? 4 : 2.6} fill={out.has(i) ? '#d4452f' : '#3b4a52'} fillOpacity={out.has(i) || linkedSet.has(data!.rows[i]) ? 1 : 0.7} stroke={linkedSet.has(data!.rows[i]) ? '#f59e0b' : 'none'} strokeWidth={2.2} data-testid={out.has(i) ? 'bag-outlier' : 'bag-point'}
+            onPointerEnter={compact ? undefined : (e) => { const lp = localPoint(svgRef.current!, e); linked?.set([data!.rows[i]]); show(lp.x, lp.y, <>점 {i + 1} · 깊이 <b>{bp.depth[i]}</b> / {pts.length}<br />{out.has(i) ? '울타리 밖 (이상점)' : '울타리 안'}</>) }} onPointerLeave={() => { hide(); linked?.set(null) }} />
         ))}
         <g data-testid="bag-center"><circle cx={sx(bp.center[0])} cy={sy(bp.center[1])} r={5.5} fill="#fff" stroke="#1f2937" strokeWidth={2} /><line x1={sx(bp.center[0]) - 8} x2={sx(bp.center[0]) + 8} y1={sy(bp.center[1])} y2={sy(bp.center[1])} stroke="#1f2937" /><line y1={sy(bp.center[1]) - 8} y2={sy(bp.center[1]) + 8} x1={sx(bp.center[0])} x2={sx(bp.center[0])} stroke="#1f2937" /></g>
         {!compact && <text x={pad} y={14} fontSize={11} fill="#374151" data-testid="bag-summary">가방 = 깊이가 큰 쪽 절반 · 이상점 {bp.outliers.length}개</text>}

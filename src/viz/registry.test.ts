@@ -138,9 +138,9 @@ describe('visualization registry', () => {
 
 describe('home animation stages', () => {
   it('only shows charts that exist in the catalog', () => {
-    expect(heroStages.length).toBe(80)
+    expect(heroStages.length).toBe(90)
     for (const s of heroStages) expect(vizById.has(s.viz) && hasModule(s.viz), s.viz).toBe(true)
-    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(80)
+    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(90)
   })
 })
 

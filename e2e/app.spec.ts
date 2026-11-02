@@ -8,7 +8,7 @@ test.describe('home', () => {
     const demo = page.getByTestId('hero-demo')
     await expect(demo.getByTestId('hero-marks').locator('circle')).toHaveCount(140)
     await expect(demo).toHaveAttribute('data-stage', 'scatter')
-    await expect(demo.getByTestId('hero-count')).toHaveText('1 / 80')
+    await expect(demo.getByTestId('hero-count')).toHaveText('1 / 90')
     // auto-advances to the next representation of the same data after ~1.8 s
     await expect(demo).toHaveAttribute('data-stage', 'histogram', { timeout: 4000 })
     await expect(page.getByTestId('featured-scatter')).toBeVisible()
@@ -44,7 +44,7 @@ test.describe('home', () => {
     await page.goto('./')
     await page.getByTestId('hero-cta').click()
     await expect(page).toHaveURL(/#\/catalog$/)
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(320)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(340)
   })
 })
 
@@ -69,17 +69,17 @@ test.describe('sidebar', () => {
     await page.goto('./')
     await page.getByTestId('nav-cat-timeseries').click()
     await expect(page).toHaveURL(/#\/catalog\/timeseries$/)
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(60)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(61)
     await expect(page.getByTestId('sidebar').getByText('준비 중')).toHaveCount(0)
     await page.getByTestId('nav-cat-hierarchy').click()
     await expect(page).toHaveURL(/#\/catalog\/hierarchy$/)
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(23)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(24)
     await page.getByTestId('nav-cat-uncertainty').click()
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(47)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(54)
     for (const c of ['geo', 'network', 'special', 'science', 'bio', 'finance']) {
       await page.getByTestId(`nav-cat-${c}`).click()
       await expect(page).toHaveURL(new RegExp(`#/catalog/${c}$`))
-      await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount({ geo: 57, network: 54, special: 19, science: 43, bio: 13, finance: 20 }[c]!)
+      await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount({ geo: 60, network: 56, special: 20, science: 48, bio: 13, finance: 21 }[c]!)
     }
   })
 })
@@ -93,7 +93,7 @@ test.describe('catalog', () => {
 
   test('shows real chart previews for every card', async ({ page }) => {
     const cards = page.getByTestId('catalog-grid').locator('.viz-card')
-    await expect(cards).toHaveCount(320)
+    await expect(cards).toHaveCount(340)
     await cards.last().scrollIntoViewIfNeeded()
     for (const id of ['scatter', 'heatmap', 'radar', 'ridgeline', 'sankey', 'ci']) {
       await page.getByTestId(`card-${id}`).scrollIntoViewIfNeeded()
@@ -125,14 +125,14 @@ test.describe('catalog', () => {
     const comparison = await cards.count()
     expect(comparison).toBeGreaterThan(8)
     await page.getByTestId('catalog-search').fill('막대')
-    await expect(cards).toHaveCount(11) // the v0.5 polar and radial bar charts and the v0.7 pixel bar chart and punchcard match too
+    await expect(cards).toHaveCount(13) // the v1.0 diverging stacked bar and tornado chart match too; the v0.5 polar and radial bar charts and the v0.7 pixel bar chart and punchcard match too
     await page.getByTestId('chip-composition').click()
-    await expect(cards).toHaveCount(3)
+    await expect(cards).toHaveCount(4)
     await expect(page.getByTestId('card-stacked-bar')).toBeVisible()
     await expect(page.getByTestId('card-stacked-bar-100')).toBeVisible()
     await expect(page.getByTestId('card-pyramid')).toBeVisible()
     await page.getByTestId('chip-all').click()
-    await expect(cards).toHaveCount(15)
+    await expect(cards).toHaveCount(17)
     // the search box survives a reload
     await page.reload()
     await expect(page.getByTestId('catalog-search')).toHaveValue('막대')

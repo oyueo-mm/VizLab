@@ -193,7 +193,7 @@ export function unitLayout(recs: readonly UnitRecord[], splits: number, leaf: Un
     const n = c.recs.length
     if (!n) { laid.push({ cell: ci, local: [] }); return }
     const sorted = [...c.recs].sort((a, b) => a.value - b.value || a.id - b.id)
-    let local: { id: number; x: number; y: number; r: number }[] = []
+    let local: { id: number; x: number; y: number; r: number }[]
     if (leaf === 'grid') {
       // the largest square unit for which n units fit in the cell
       let s = Math.min(c.w, c.h)

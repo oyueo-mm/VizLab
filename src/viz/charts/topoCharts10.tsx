@@ -76,7 +76,9 @@ function ContourTreeChart({ table, mapping, params, setParams, width, height, co
   const full = useMemo(() => (data ? contourTree(data.g) : null), [data])
   const range = data ? Math.max(...data.g.v) - Math.min(...data.g.v) : 1
   const tree = useMemo(() => (data && full ? (params.simplify > 0 ? simplifyContourTree(full, data.g, params.simplify * range) : full) : null), [data, full, params.simplify, range])
-  if (!data || !full || !tree) return <ChartMessage>x, y 좌표와 값 열을 고르세요. 규칙적인 이차원 격자(최대 6,000점)여야 합니다.</ChartMessage>
+  const levelValue = data ? Math.min(...data.g.v) + params.level * range : 0
+  const iso = useMemo(() => (data ? d3.contours().size([data.g.nx, data.g.ny]).thresholds([levelValue])(Array.from(data.g.v))[0] : null), [data, levelValue])
+  if (!data || !full || !tree || !iso) return <ChartMessage>x, y 좌표와 값 열을 고르세요. 규칙적인 이차원 격자(최대 6,000점)여야 합니다.</ChartMessage>
   const g = data.g
   const lo = Math.min(...g.v), hi = Math.max(...g.v)
   const stacked = width < 640
@@ -91,7 +93,6 @@ function ContourTreeChart({ table, mapping, params, setParams, width, height, co
   const crossing = tree.arcs.filter((a) => (g.v[a.a] - levelV) * (g.v[a.b] - levelV) < 0).length
   const sel = params.selArc >= 0 ? tree.arcs[params.selArc] : null
   const pos = (v: number) => [(v % g.nx + 0.5) * c, (g.ny - 1 - Math.floor(v / g.nx) + 0.5) * c] as const
-  const iso = useMemo(() => d3.contours().size([g.nx, g.ny]).thresholds([levelV])(Array.from(g.v))[0], [g, levelV])
   const ctOff = { x: 10, y: 20 }
   return (
     <div className="chart-root">

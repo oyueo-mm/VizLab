@@ -23,11 +23,13 @@ import { v7Frame } from './heroFramesV7Lazy'
 import { v8Frame } from './heroFramesV8Lazy'
 import { v9Frame } from './heroFramesV9Lazy'
 import type { HeroV9Key } from './heroFramesV9'
+import { v10Frame } from './heroFramesV10Lazy'
+import type { HeroV10Key } from './heroFramesV10'
 import type { HeroV8Key } from './heroFramesV8'
 
 // ─── stages ──────────────────────────────────────────────────────────────────
 
-export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network' | 'geo' | 'meta' | 'flame' | 'bundle' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9'
+export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network' | 'geo' | 'meta' | 'flame' | 'bundle' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'v10'
 
 export const heroStages = [
   { key: 'scatter', label: '산점도', viz: 'scatter', group: 'dist' },
@@ -110,6 +112,16 @@ export const heroStages = [
   { key: 'wstream', label: '워드스트림', viz: 'wordstream', group: 'v9' },
   { key: 'paoh', label: '파오브이스', viz: 'paohvis', group: 'v9' },
   { key: 'braid', label: '시퀀스 브레이딩', viz: 'sequence-braiding', group: 'v9' },
+  { key: 'fbox', label: '함수형 상자그림', viz: 'functional-boxplot', group: 'v10' },
+  { key: 'lorenz', label: '로렌츠 곡선', viz: 'lorenz-curve', group: 'v10' },
+  { key: 'tornado', label: '토네이도 차트', viz: 'tornado-chart', group: 'v10' },
+  { key: 'bag', label: '백플롯', viz: 'bagplot', group: 'v10' },
+  { key: 'divbar', label: '발산형 쌓은 막대', viz: 'diverging-stacked-bar', group: 'v10' },
+  { key: 'dca', label: '결정 곡선 분석', viz: 'decision-curve', group: 'v10' },
+  { key: 'cbox', label: '윤곽 상자그림', viz: 'contour-boxplot', group: 'v10' },
+  { key: 'rootogram', label: '걸린 루트그램', viz: 'hanging-rootogram', group: 'v10' },
+  { key: 'persist', label: '지속성 바코드', viz: 'persistence-diagram', group: 'v10' },
+  { key: 'spacetree', label: '스페이스트리', viz: 'spacetree', group: 'v10' },
 ] as const
 export type HeroStage = (typeof heroStages)[number]['key']
 
@@ -606,6 +618,7 @@ export function buildFrame(stage: HeroStage, data: HeroData, w: number, h: numbe
     case 'v7': return v7Frame(stage as HeroV7Key, data.cycle, w, h)
     case 'v8': return v8Frame(stage as HeroV8Key, data.cycle, w, h)
     case 'v9': return v9Frame(stage as HeroV9Key, data.cycle, w, h)
+    case 'v10': return v10Frame(stage as HeroV10Key, data.cycle, w, h)
     case 'compare': return compareFrame(stage, data.compare, w, h)
     case 'time': return timeFrame(stage, data.time, w, h)
     case 'hierarchy': return hierarchyFrame(stage, data.tree, w, h)

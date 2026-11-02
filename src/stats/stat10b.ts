@@ -31,7 +31,7 @@ export function halfspaceDepth(pts: readonly [number, number][], dirs = 360): nu
 export function bagplot(pts: readonly [number, number][], factor = 3, dirs = 360): Bagplot {
   const n = pts.length
   const depth = halfspaceDepth(pts, dirs)
-  const order = depth.map((d, i) => i).sort((a, b) => depth[b] - depth[a] || a - b)
+  const order = depth.map((_, i) => i).sort((a, b) => depth[b] - depth[a] || a - b)
   const k = Math.ceil(n / 2)
   const cut = depth[order[k - 1]]
   const inBag = order.filter((i) => depth[i] >= cut)

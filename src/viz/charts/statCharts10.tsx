@@ -199,10 +199,12 @@ export const sunModule: VizModule<SunParams> = {
 
 export interface RootParams { hanging: boolean; maxK: number }
 
-function RootChart({ table, mapping, params, width, height, compact }: ChartProps<RootParams>) {
+function RootChart({ table, mapping, params, width, height, compact, linked }: ChartProps<RootParams>) {
   const { tip, show, hide } = useTooltip()
   const svgRef = useRef<SVGSVGElement>(null)
-  const counts = useMemo(() => { const vi = columnIndex(table, roleColumn(mapping, 'count')); return vi < 0 ? null : table.rows.map((r) => toNumber(r[vi])).filter((v): v is number => v != null && v >= 0 && Number.isInteger(v)) }, [table, mapping])
+  const rowCounts = useMemo(() => { const vi = columnIndex(table, roleColumn(mapping, 'count')); return vi < 0 ? null : table.rows.map((r, row) => ({ row, c: toNumber(r[vi]) })).filter((r): r is { row: number; c: number } => r.c != null && r.c >= 0 && Number.isInteger(r.c)) }, [table, mapping])
+  const counts = useMemo(() => rowCounts?.map((r) => r.c) ?? null, [rowCounts])
+  const linkedKs = useMemo(() => new Set((rowCounts ?? []).filter((r) => linked?.rows.includes(r.row)).map((r) => r.c)), [rowCounts, linked?.rows])
   if (!counts || counts.length < 5) return <ChartMessage>사건 수(0 이상의 정수) 열을 고르세요.</ChartMessage>
   const K = Math.min(params.maxK, Math.max(...counts))
   const obs = Array.from({ length: K + 1 }, (_, k) => counts.filter((c) => c === k).length)
@@ -218,8 +220,8 @@ function RootChart({ table, mapping, params, width, height, compact }: ChartProp
       <svg ref={svgRef} width={width} height={height} className="chart-svg" role="img" data-testid="chart-svg" aria-label={`걸린 루트그램: 평균 ${fmt(mean, 3)}의 포아송 적합과 관측`} onPointerLeave={hide}>
         <line x1={pad} x2={width - pad} y1={sy(0)} y2={sy(0)} stroke="#6b7280" />
         {bars.map((b) => (
-          <rect key={b.k} x={sx(b.k)} y={params.hanging ? sy(b.top) : sy(Math.sqrt(b.observed))} width={sx.bandwidth()} height={Math.abs(params.hanging ? sy(b.bottom) - sy(b.top) : sy(0) - sy(Math.sqrt(b.observed)))} fill={params.hanging && b.bottom < -1e-9 ? '#e07a3f' : '#4c6fb5'} fillOpacity={0.75} data-testid="root-bar" data-k={b.k} data-bottom={b.bottom.toFixed(3)}
-            onPointerEnter={compact ? undefined : (e) => { const lp = localPoint(svgRef.current!, e); show(lp.x, lp.y, <><b>{b.k}회</b><br />관측 {b.observed}명 · 기대 {fmt(b.expected, 3)}명<br />{b.bottom < 0 ? '관측이 기대보다 많음(0선 아래)' : b.bottom > 0 ? '관측이 기대보다 적음(0선 위)' : '일치'}</>) }} onPointerLeave={hide} />
+          <rect key={b.k} x={sx(b.k)} y={params.hanging ? sy(b.top) : sy(Math.sqrt(b.observed))} width={sx.bandwidth()} height={Math.abs(params.hanging ? sy(b.bottom) - sy(b.top) : sy(0) - sy(Math.sqrt(b.observed)))} fill={params.hanging && b.bottom < -1e-9 ? '#e07a3f' : '#4c6fb5'} fillOpacity={0.75} stroke={linkedKs.has(b.k) ? '#f59e0b' : 'none'} strokeWidth={2.4} data-testid="root-bar" data-k={b.k} data-bottom={b.bottom.toFixed(3)}
+            onPointerEnter={compact ? undefined : (e) => { const lp = localPoint(svgRef.current!, e); linked?.set(rowCounts!.filter((r) => r.c === b.k).map((r) => r.row)); show(lp.x, lp.y, <><b>{b.k}회</b><br />관측 {b.observed}명 · 기대 {fmt(b.expected, 3)}명<br />{b.bottom < 0 ? '관측이 기대보다 많음(0선 아래)' : b.bottom > 0 ? '관측이 기대보다 적음(0선 위)' : '일치'}</>) }} onPointerLeave={() => { hide(); linked?.set(null) }} />
         ))}
         <path d={d3.line<number>().x((_, i) => (sx(bars[i].k) ?? 0) + sx.bandwidth() / 2).y((_, i) => sy(bars[i].top))(bars.map((b) => b.top)) ?? ''} fill="none" stroke="#d4452f" strokeWidth={2} data-testid="root-curve" />
         {!compact && bars.map((b) => <text key={b.k} x={(sx(b.k) ?? 0) + sx.bandwidth() / 2} y={height - 18} textAnchor="middle" fontSize={10} fill="#6b7280">{b.k}</text>)}
