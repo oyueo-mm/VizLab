@@ -7,6 +7,7 @@ import { MarkEngine } from './heroEngine'
 import { buildFrame, heroData, heroStages } from './heroFrames'
 import { heroGeoReady, loadHeroGeo } from './heroFramesV4'
 import { heroV5Ready, loadHeroV5 } from './heroFramesV5Lazy'
+import { heroV6Ready, loadHeroV6 } from './heroFramesV6Lazy'
 
 export { heroStages } from './heroFrames'
 export type { HeroStage } from './heroFrames'
@@ -29,6 +30,7 @@ export function HeroDemo() {
   const stage = heroStages[index]
   const [geoReady, setGeoReady] = useState(heroGeoReady())
   const [v5Ready, setV5Ready] = useState(heroV5Ready())
+  const [v6Ready, setV6Ready] = useState(heroV6Ready())
   const width = size.width || 560
   const height = Math.max(260, Math.min(420, width * 0.68))
   const data = useMemo(() => heroData(cycle), [cycle])
@@ -49,6 +51,14 @@ export function HeroDemo() {
     void loadHeroV5().then(() => { if (live) setV5Ready(true) }).catch(() => {})
     return () => { live = false }
   }, [index, v5Ready, stage.group])
+
+  // The v0.6 stages' engines are one more chunk, fetched the same way.
+  useEffect(() => {
+    if (v6Ready || (index < heroStages.findIndex((s) => s.group === 'v6') - 5 && stage.group !== 'v6')) return
+    let live = true
+    void loadHeroV6().then(() => { if (live) setV6Ready(true) }).catch(() => {})
+    return () => { live = false }
+  }, [index, v6Ready, stage.group])
 
   // Pause when the chart is off-screen or the tab is hidden.
   useEffect(() => {
@@ -80,7 +90,7 @@ export function HeroDemo() {
     const resized = !last.current || last.current.w !== width || last.current.h !== height
     last.current = { w: width, h: height }
     engine.current.setFrame(buildFrame(stage.key, data, width, height), resized || reduced || !running ? 0 : MOVE_MS, width)
-  }, [stage.key, data, width, height, reduced, running, geoReady, v5Ready])
+  }, [stage.key, data, width, height, reduced, running, geoReady, v5Ready, v6Ready])
 
   useEffect(() => () => { engine.current?.destroy(); engine.current = null }, [])
 

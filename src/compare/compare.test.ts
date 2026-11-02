@@ -25,6 +25,10 @@ describe('recommended comparison presets', () => {
       ['hillshade', 'slope-aspect', 'isoline'], ['vector-field', 'streamline', 'particle-flow'], ['choropleth', 'cartogram-contiguous', 'demers'],
       ['residual-plot', 'scale-location', 'influence-plot'], ['kaplan-meier', 'nelson-aalen'], ['candlestick', 'heikin-ashi', 'renko'],
       ['spectrogram', 'scalogram', 'recurrence-plot'], ['volcano', 'ma-plot'], ['venn', 'upset', 'hypergraph'], ['pcoa', 'phylogenetic-tree'],
+      // v0.6
+      ['tsne', 'umap'], ['acf-plot', 'pacf-plot', 'lag-plot'], ['stl', 'seasonal-subseries'], ['efficient-frontier', 'risk-return-scatter', 'risk-contribution'],
+      ['community-blockmodel', 'spectral-embedding', 'adjacency'], ['dag-layout', 'max-flow'], ['collocation-matrix', 'lexical-dispersion', 'zipf-plot'], ['contact-map', 'ramachandran'],
+      ['permutation-importance', 'ice-plot', 'ale-plot'],
     ])
     for (const p of presets) { expect(p.charts.length).toBeLessThanOrEqual(MAX_PANES); expect(p.charts.length).toBeGreaterThanOrEqual(2) }
   })

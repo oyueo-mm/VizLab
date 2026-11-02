@@ -47,14 +47,14 @@ test.describe('mobile: v0.5', () => {
     await expect.poll(async () => legend.innerText()).not.toBe(before)
   })
 
-  test('the catalog sub-category filters fit the phone, and the home animation runs 36 charts', async ({ page }) => {
+  test('the catalog sub-category filters fit the phone, and the home animation runs 50 charts', async ({ page }) => {
     await page.goto('./#/catalog/geo')
     if (await page.getByTestId('filter-toggle').isVisible()) await page.getByTestId('filter-toggle').click()
     await expect(page.getByTestId('sub-filters')).toBeVisible()
     await page.getByTestId('sub-surface').click()
     await noHorizontalScroll(page)
     await page.goto('./')
-    await expect(page.getByTestId('hero-count')).toHaveText('1 / 36')
+    await expect(page.getByTestId('hero-count')).toHaveText('1 / 50')
     await noHorizontalScroll(page)
   })
 

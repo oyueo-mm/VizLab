@@ -41,6 +41,16 @@ export const presets: Preset[] = [
   { id: 'differential-expression', name: '화산 도표 · MA 도표', note: '같은 유전자 결과를 효과 크기와 유의성, 발현량과 배수 변화로 — 한쪽에서 가리킨 유전자가 다른 쪽에서도 강조됩니다', datasetId: 'de-genes', n: 1500, charts: ['volcano', 'ma-plot'] },
   { id: 'set-overlap', name: '벤·오일러 · UpSet · 하이퍼그래프', note: '같은 소속 데이터를 원의 겹침, 조합 막대, 집합 영역으로 — 한쪽에서 고른 조합의 항목이 다른 쪽에서도 강조됩니다', datasetId: 'set-members', charts: ['venn', 'upset', 'hypergraph'] },
   { id: 'community-distance', name: 'PCoA · 계통수', note: '같은 거리 행렬을 평면 배치와 가지 모양으로', datasetId: 'microbiome-dist', charts: ['pcoa', 'phylogenetic-tree'] },
+  // v0.6
+  { id: 'embedding', name: 't-SNE · UMAP', note: '같은 고차원 자료를 두 가지 비선형 차원 축소로 — 국소 구조를 보존하는 방식의 차이', datasetId: 'ml-highdim', charts: ['tsne', 'umap'] },
+  { id: 'autocorrelation', name: 'ACF · PACF · 시차 도표', note: '같은 시계열의 자기상관을 누적 상관, 직접 상관, 산점도로', datasetId: 'ts-ar2', charts: ['acf-plot', 'pacf-plot', 'lag-plot'] },
+  { id: 'seasonal', name: 'STL 분해 · 계절 부분계열', note: '같은 계절 시계열을 추세·계절·잔차로, 계절별 변화로', datasetId: 'ts-seasonal', charts: ['stl', 'seasonal-subseries'] },
+  { id: 'asset-allocation', name: '효율적 투자선 · 위험–수익 · 위험 기여도', note: '같은 자산 수익률을 최적 조합, 개별 자산 비교, 위험 분해로 (합성 자료, 투자 조언 아님)', datasetId: 'asset-returns', charts: ['efficient-frontier', 'risk-return-scatter', 'risk-contribution'] },
+  { id: 'communities', name: '군집 블록 모형 · 스펙트럼 임베딩 · 인접 행렬', note: '같은 네트워크의 군집을 정렬한 행렬, 고유벡터 좌표, 원래 행렬로', datasetId: 'net-communities', charts: ['community-blockmodel', 'spectral-embedding', 'adjacency'] },
+  { id: 'workflow', name: '층별 방향 그래프 · 최대 유량', note: '같은 방향 그래프를 선행 관계의 층별 배치와 용량 흐름으로', datasetId: 'flow-supply', charts: ['dag-layout', 'max-flow'] },
+  { id: 'corpus', name: '공기어 · 어휘 분산 · 지프 도표', note: '같은 말뭉치를 단어 연관, 위치별 분포, 순위–빈도로', datasetId: 'corpus-topics', charts: ['collocation-matrix', 'lexical-dispersion', 'zipf-plot'] },
+  { id: 'protein-geometry', name: '접촉 지도 · 라마찬드란 도표', note: '같은 골격 좌표를 거리 기반 접촉과 각도 기반 이면각으로', datasetId: 'backbone-bundle', charts: ['contact-map', 'ramachandran'] },
+  { id: 'model-explain', name: '순열 중요도 · ICE · ALE', note: '같은 표 형식 자료에서 변수 영향을 세 가지 설명 기법으로', datasetId: 'ml-tabular', charts: ['permutation-importance', 'ice-plot', 'ale-plot'] },
 ]
 
 export const presetById = new Map(presets.map((p) => [p.id, p]))

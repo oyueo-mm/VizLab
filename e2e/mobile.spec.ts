@@ -16,7 +16,7 @@ test.describe('mobile', () => {
     await page.getByTestId('nav-catalog').click()
     await expect(page).toHaveURL(/#\/catalog$/)
     await expect(page.getByTestId('sidebar')).not.toHaveClass(/is-open/)
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(167)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(250)
     await noHorizontalScroll(page)
   })
 
@@ -67,7 +67,7 @@ test.describe('mobile: v0.3', () => {
     await expect(page.getByTestId('kind-timeseries')).toBeHidden()
     expect(closed.height).toBeGreaterThan(0)
     await page.getByTestId('filter-reset').click()
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(167)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(250)
   })
 
   test('every new lab fits a phone without sideways page scrolling', async ({ page }) => {

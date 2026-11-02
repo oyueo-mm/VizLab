@@ -15,11 +15,13 @@ import { collectFlows, sankeyLayout } from '../stats/sankey'
 import { stackRows } from '../stats/stack'
 import { bundlingFrame, choroplethFrame, flameFrame, forestFrame } from './heroFramesV4'
 import type { HeroV5Key } from './heroFramesV5'
+import type { HeroV6Key } from './heroFramesV6'
 import { v5Frame } from './heroFramesV5Lazy'
+import { v6Frame } from './heroFramesV6Lazy'
 
 // ─── stages ──────────────────────────────────────────────────────────────────
 
-export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network' | 'geo' | 'meta' | 'flame' | 'bundle' | 'v5'
+export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network' | 'geo' | 'meta' | 'flame' | 'bundle' | 'v5' | 'v6'
 
 export const heroStages = [
   { key: 'scatter', label: '산점도', viz: 'scatter', group: 'dist' },
@@ -58,6 +60,20 @@ export const heroStages = [
   { key: 'venn', label: '벤·오일러 다이어그램', viz: 'venn', group: 'v5' },
   { key: 'bifurcation', label: '분기 다이어그램', viz: 'bifurcation', group: 'v5' },
   { key: 'spiral', label: '나선형 시계열 그래프', viz: 'spiral-plot', group: 'v5' },
+  { key: 'mandelbrot', label: '만델브로 집합', viz: 'mandelbrot-set', group: 'v6' },
+  { key: 'spectral', label: '스펙트럼 임베딩', viz: 'spectral-embedding', group: 'v6' },
+  { key: 'dag', label: '층별 방향 그래프', viz: 'dag-layout', group: 'v6' },
+  { key: 'flow', label: '최대 유량과 최소 절단', viz: 'max-flow', group: 'v6' },
+  { key: 'weibull', label: '와이블 확률지', viz: 'weibull-plot', group: 'v6' },
+  { key: 'gsea', label: '유전자 집합 농축 곡선', viz: 'gsea-running-sum', group: 'v6' },
+  { key: 'zipf', label: '지프 도표', viz: 'zipf-plot', group: 'v6' },
+  { key: 'blockmodel', label: '군집 블록 모형', viz: 'community-blockmodel', group: 'v6' },
+  { key: 'frontier', label: '효율적 투자선', viz: 'efficient-frontier', group: 'v6' },
+  { key: 'smile', label: '내재변동성 스마일', viz: 'iv-smile', group: 'v6' },
+  { key: 'acf', label: '자기상관 도표 (ACF)', viz: 'acf-plot', group: 'v6' },
+  { key: 'tolerance', label: '공차 누적 해석', viz: 'tolerance-stackup', group: 'v6' },
+  { key: 'queue', label: '대기행렬 시뮬레이션', viz: 'queue-simulation', group: 'v6' },
+  { key: 'rama', label: '라마찬드란 도표', viz: 'ramachandran', group: 'v6' },
 ] as const
 export type HeroStage = (typeof heroStages)[number]['key']
 
@@ -550,6 +566,7 @@ export function buildFrame(stage: HeroStage, data: HeroData, w: number, h: numbe
     case 'flame': return flameFrame(data.cycle, w, h)
     case 'bundle': return bundlingFrame(data.cycle, w, h)
     case 'v5': return v5Frame(stage as HeroV5Key, data.cycle, w, h)
+    case 'v6': return v6Frame(stage as HeroV6Key, data.cycle, w, h)
     case 'compare': return compareFrame(stage, data.compare, w, h)
     case 'time': return timeFrame(stage, data.time, w, h)
     case 'hierarchy': return hierarchyFrame(stage, data.tree, w, h)

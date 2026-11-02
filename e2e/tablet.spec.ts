@@ -16,7 +16,7 @@ test.describe('tablet', () => {
     await expect(page.getByTestId('hero-marks').locator('circle')).toHaveCount(140)
     await noHorizontalScroll(page)
     await page.getByTestId('hero-cta').click()
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(167)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(250)
     await noHorizontalScroll(page)
   })
 

@@ -3,12 +3,13 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { MOVE_MS, STAGE_MS } from './HeroDemo'
 import { bundleCurve, heroGeoValue, loadHeroGeo, resample } from './heroFramesV4'
 import { loadHeroV5 } from './heroFramesV5Lazy'
+import { loadHeroV6 } from './heroFramesV6Lazy'
 import { buildFrame, heroData, heroFlows, heroSample, heroStages, heroTree, HERO_N, type HeroStage, type Mark } from './heroFrames'
 
 const W = 560
 const H = 380
 
-beforeAll(async () => { await loadHeroGeo(); await loadHeroV5() })
+beforeAll(async () => { await loadHeroGeo(); await loadHeroV5(); await loadHeroV6() })
 
 describe('home animation timing', () => {
   it('shows each chart for about 1.8 s with a 0.5–0.65 s morph', () => {
@@ -24,12 +25,13 @@ describe('home animation frames', () => {
   const frame = (s: HeroStage, d = data) => buildFrame(s, d, W, H)
   const numbers = (m: Mark): number[] => Object.values(m).flatMap((v) => (typeof v === 'number' ? [v] : Array.isArray(v) && typeof v[0] !== 'string' ? (v as any[]).flat().filter((x) => typeof x === 'number') : []))
 
-  it('has 36 distinct stages, each drawn from real engines', () => {
-    expect(heroStages.length).toBe(36)
-    expect(new Set(heroStages.map((s) => s.key)).size).toBe(36)
-    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(36)
+  it('has 50 distinct stages, each drawn from real engines', () => {
+    expect(heroStages.length).toBe(50)
+    expect(new Set(heroStages.map((s) => s.key)).size).toBe(50)
+    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(50)
     expect(heroStages.slice(0, 24).map((s) => s.group)).toEqual([...Array(6).fill('dist'), 'path', ...Array(4).fill('compare'), 'pyramid', ...Array(4).fill('time'), ...Array(2).fill('hierarchy'), 'flame', 'flow', 'network', 'bundle', 'geo', 'meta'])
-    expect(heroStages.slice(24).every((s) => s.group === 'v5')).toBe(true)
+    expect(heroStages.slice(24, 36).every((s) => s.group === 'v5')).toBe(true)
+    expect(heroStages.slice(36).every((s) => s.group === 'v6')).toBe(true)
     expect(heroStages.map((s) => s.viz)).toEqual(expect.arrayContaining(['connected-scatter', 'pyramid', 'network', 'horizon', 'choropleth', 'forest', 'flame', 'edge-bundling', 'isoline', 'kaplan-meier', 'manhattan', 'upset']))
   })
 

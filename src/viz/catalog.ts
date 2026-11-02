@@ -1,5 +1,6 @@
 import { catalogV5 } from './catalogV5'
 import { catalogV6 } from './catalogV6'
+import { purposeTerms } from './purposes'
 import type { CategoryId, DataKind, VizMeta } from './types'
 
 export interface CategoryDef {
@@ -203,7 +204,7 @@ function haystack(meta: VizMeta): string {
   if (!h) {
     const cats = [meta.category, ...(meta.alsoIn ?? [])].map((c) => categoryById.get(c)?.name ?? '')
     const kinds = meta.dataKinds.map((k) => dataKindById.get(k)?.name ?? '')
-    h = [meta.name, meta.nameEn, ...meta.keywords, meta.id, ...cats, subcategoryName(meta.category, meta.sub) ?? '', ...kinds].map(normalize).join('|')
+    h = [meta.name, meta.nameEn, ...meta.keywords, meta.id, ...cats, subcategoryName(meta.category, meta.sub) ?? '', ...kinds, ...purposeTerms(meta.id)].map(normalize).join('|')
     haystackCache.set(meta.id, h)
   }
   return h
