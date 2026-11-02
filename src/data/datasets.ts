@@ -9,6 +9,7 @@ import type { DatasetIdV8 } from './datasetIdsV8'
 import { datasetsV7 } from './datasetsV7'
 import { datasetsV7b } from './datasetsV7b'
 import { datasetsV8 } from './datasetsV8'
+import { datasetsV8b } from './datasetsV8b'
 import type { Cell, Column, DataTable } from './table'
 
 export type DatasetId =
@@ -397,6 +398,7 @@ export const datasets: DatasetDef[] = [
   ...datasetsV7,
   ...datasetsV7b,
   ...datasetsV8,
+  ...datasetsV8b,
 ]
 
 export const datasetById = new Map(datasets.map((d) => [d.id, d]))

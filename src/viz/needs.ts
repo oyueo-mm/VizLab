@@ -298,4 +298,13 @@ export const needs: Record<string, Slot[]> = {
   'cone-tree': [['category']],
   'stream-surface': [['number'], ['number'], ['number'], ['number'], ['number'], ['number']],
   'streamtube': [['number'], ['number'], ['number'], ['number'], ['number'], ['number']],
+  'semantic-substrates': [['category'], ['category'], ['category'], ['number'], ['number']],
+  'pivot-graph': [['category'], ['category'], ['category'], ['category']],
+  'timearcs': [['number'], ['category'], ['category']],
+  'lifeflow': [['category'], ['category'], ['number']],
+  'timesets': [['number'], ['number'], ['number']],
+  'flowstrates': [['category'], ['category'], ['number'], ['number'], ['number'], ['number'], ['number'], ['number']],
+  'textarc': [['category']],
+  'parallel-tag-clouds': [['category'], ['category']],
+  'phrase-net': [['category']],
 }

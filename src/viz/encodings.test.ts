@@ -4,7 +4,7 @@ import { encodingById, encodingDefs, encodingsOf, hasEncoding } from './encoding
 
 describe('encoding principles', () => {
   it('assigns a main principle to every catalog entry exactly once', () => {
-    const missing = catalog.filter((m) => !encodingById.has(encodingsOf(m.id).main) || encodingsOf(m.id).main === 'composite' && !['raincloud', 'joint-distribution', 'shap-summary'].includes(m.id))
+    const missing = catalog.filter((m) => !encodingById.has(encodingsOf(m.id).main) || encodingsOf(m.id).main === 'composite' && !['raincloud', 'joint-distribution', 'shap-summary', 'flowstrates'].includes(m.id))
     expect(missing.map((m) => m.id)).toEqual([])
   })
   it('secondary principles differ from the main one and are known', () => {

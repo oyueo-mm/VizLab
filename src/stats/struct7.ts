@@ -64,7 +64,7 @@ export function parallelSets(rows: readonly { cats: readonly string[]; w: number
 
 // ───────────────────────────── Words ─────────────────────────────
 
-const PARTICLES = ['에서는', '으로는', '에서', '으로', '에게', '까지', '부터', '하고', '이다', '은', '는', '이', '가', '을', '를', '의', '에', '와', '과', '로', '도', '만']
+export const PARTICLES = ['에서는', '으로는', '에서', '으로', '에게', '까지', '부터', '하고', '이다', '은', '는', '이', '가', '을', '를', '의', '에', '와', '과', '로', '도', '만']
 
 /** Splits text into word tokens and removes one trailing Korean particle (a conservative rule: the stem must keep two or more characters). */
 export function tokenize(text: string, stop: ReadonlySet<string> = new Set()): string[] {
