@@ -9,11 +9,11 @@ const openDetails = async (page: Page) => { const t = page.getByTestId('details-
 const num = (s: string | null, re: RegExp) => Number(re.exec(s ?? '')?.[1] ?? NaN)
 
 test.describe('v1.0: catalog and explanations', () => {
-  test('the catalog lists 340 entries and the 20 new techniques are searchable by Korean and English names', async ({ page }) => {
+  test('the catalog lists 360 entries and the 20 new techniques are searchable by Korean and English names', async ({ page }) => {
     expect(V10.length).toBe(20)
     await page.goto('./#/catalog')
     await expect(page.getByTestId('catalog-grid')).toBeVisible()
-    expect(await cards(page).count()).toBe(340)
+    expect(await cards(page).count()).toBe(360)
     for (const [q, id] of [['자메', 'zame'], ['Excentric', 'excentric-labeling'], ['LineUp', 'lineup'], ['단위 시각화', 'unit-visualization'], ['splatter', 'splatterplot'], ['컨투어 트리', 'contour-tree'], ['persistence', 'persistence-diagram'], ['토폴로지컬', 'topological-landscape'], ['확률적 등치선', 'probabilistic-isocontour'], ['band depth', 'functional-boxplot'], ['줄기', 'stem-and-leaf'], ['sunflower', 'sunflower-plot'], ['rootogram', 'hanging-rootogram'], ['지니', 'lorenz-curve'], ['tornado', 'tornado-chart'], ['bagplot', 'bagplot'], ['리커트', 'diverging-stacked-bar'], ['net benefit', 'decision-curve'], ['윤곽 상자', 'contour-boxplot'], ['SpaceTree', 'spacetree']]) {
       await page.goto(`./#/catalog?q=${encodeURIComponent(q)}`)
       await expect(page.getByTestId(`card-${id}`), `${q} → ${id}`).toBeVisible()
@@ -172,12 +172,12 @@ test.describe('v1.0: information visualization labs', () => {
 })
 
 test.describe('v1.0: home animation, comparison presets and linking', () => {
-  test('the home animation runs 90 charts and ends on the ten v1.0 stages', async ({ page }) => {
+  test('the home animation runs 100 charts and ends on the ten v1.0 stages', async ({ page }) => {
     await page.goto('./')
-    await expect(page.getByTestId('hero-count')).toHaveText('1 / 90')
+    await expect(page.getByTestId('hero-count')).toHaveText('1 / 100')
     for (let i = 0; i < 80; i++) await page.getByTestId('hero-next').click()
     await expect(page.getByTestId('hero-demo')).toHaveAttribute('data-stage', 'fbox')
-    await expect(page.getByTestId('hero-count')).toHaveText('81 / 90')
+    await expect(page.getByTestId('hero-count')).toHaveText('81 / 100')
   })
 
   test('the eight new comparison presets draw every chart from one table', async ({ page }) => {

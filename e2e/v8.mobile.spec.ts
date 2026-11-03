@@ -47,7 +47,7 @@ test.describe('mobile: v0.8', () => {
 
   test('the new home stages and presets work on a phone', async ({ page }) => {
     await page.goto('./')
-    await expect(page.getByTestId('hero-count')).toHaveText('1 / 90')
+    await expect(page.getByTestId('hero-count')).toHaveText('1 / 100')
     for (const id of ['set-regions', 'network-hybrid', 'flow-3d']) {
       await page.goto(`./#/compare/${id}`)
       await expect(page.getByTestId('pane-chart-0').locator('svg').first()).toBeVisible({ timeout: 15000 })

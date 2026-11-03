@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures'
 
-const STAGES = ['scatter', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'connected', 'bar', 'grouped', 'stacked', 'stacked100', 'pyramid', 'line', 'area', 'stream', 'horizon', 'treemap', 'sunburst', 'flame', 'sankey', 'network', 'bundle', 'choropleth', 'forest', 'isoline', 'streamline', 'voronoi', 'km', 'renko', 'manhattan', 'phase', 'upset', 'rose', 'venn', 'bifurcation', 'spiral', 'mandelbrot', 'spectral', 'dag', 'flow', 'weibull', 'gsea', 'zipf', 'blockmodel', 'frontier', 'smile', 'acf', 'tolerance', 'queue', 'rama', 'radviz', 'chernoff', 'star', 'tour', 'stacking', 'psets', 'vtreemap', 'qdot', 'hops', 'tcurve', 'lic', 'fdeb', 'story', 'lens', 'bubble', 'nodetrix', 'cone', 'ssurface', 'radial', 'confluent', 'tarcs', 'lflow', 'metro', 'mosaic', 'streams', 'dust', 'gosper', 'wstream', 'paoh', 'braid', 'fbox', 'lorenz', 'tornado', 'bag', 'divbar', 'dca', 'cbox', 'rootogram', 'persist', 'spacetree']
+const STAGES = ['scatter', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'connected', 'bar', 'grouped', 'stacked', 'stacked100', 'pyramid', 'line', 'area', 'stream', 'horizon', 'treemap', 'sunburst', 'flame', 'sankey', 'network', 'bundle', 'choropleth', 'forest', 'isoline', 'streamline', 'voronoi', 'km', 'renko', 'manhattan', 'phase', 'upset', 'rose', 'venn', 'bifurcation', 'spiral', 'mandelbrot', 'spectral', 'dag', 'flow', 'weibull', 'gsea', 'zipf', 'blockmodel', 'frontier', 'smile', 'acf', 'tolerance', 'queue', 'rama', 'radviz', 'chernoff', 'star', 'tour', 'stacking', 'psets', 'vtreemap', 'qdot', 'hops', 'tcurve', 'lic', 'fdeb', 'story', 'lens', 'bubble', 'nodetrix', 'cone', 'ssurface', 'radial', 'confluent', 'tarcs', 'lflow', 'metro', 'mosaic', 'streams', 'dust', 'gosper', 'wstream', 'paoh', 'braid', 'fbox', 'lorenz', 'tornado', 'bag', 'divbar', 'dca', 'cbox', 'rootogram', 'persist', 'spacetree', 'hinton', 'taylor', 'piper', 'pyth', 'cactus', 'hflow', 'hasse', 'nomo', 'contscat', 'rectcarto']
 
 /** Records the time at which `data-stage` changes, in ms since the first call. */
 async function watchStages(page: import('@playwright/test').Page) {
@@ -27,7 +27,7 @@ test.describe('home animation', () => {
     expect(await marks.locator('*').count()).toBeGreaterThan(100)
   })
 
-  test('walks through all 90 charts and wraps around with new data', async ({ page }) => {
+  test('walks through all 100 charts and wraps around with new data', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('./')
     const demo = page.getByTestId('hero-demo')
@@ -44,13 +44,13 @@ test.describe('home animation', () => {
     await expect(demo).toHaveAttribute('data-stage', 'scatter')
     await expect(marks.locator('circle')).toHaveCount(140)
     await page.getByTestId('hero-prev').click()
-    await expect(demo).toHaveAttribute('data-stage', 'spacetree')
+    await expect(demo).toHaveAttribute('data-stage', 'rectcarto')
     expect(new Set(sig).size).toBeGreaterThan(10)
   })
 
   test('each chart links to its own lab', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    const viz = ['scatter', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'connected-scatter', 'bar', 'grouped-bar', 'stacked-bar', 'stacked-bar-100', 'pyramid', 'line', 'area', 'streamgraph', 'horizon', 'treemap', 'sunburst', 'flame', 'sankey', 'network', 'edge-bundling', 'choropleth', 'forest', 'isoline', 'streamline', 'voronoi-map', 'kaplan-meier', 'renko', 'manhattan', 'phase-portrait', 'upset', 'nightingale-rose', 'venn', 'bifurcation', 'spiral-plot', 'mandelbrot-set', 'spectral-embedding', 'dag-layout', 'max-flow', 'weibull-plot', 'gsea-running-sum', 'zipf-plot', 'community-blockmodel', 'efficient-frontier', 'iv-smile', 'acf-plot', 'tolerance-stackup', 'queue-simulation', 'ramachandran', 'radviz', 'chernoff-faces', 'star-coordinates', 'grand-tour', 'dimensional-stacking', 'parallel-sets', 'voronoi-treemap', 'quantile-dotplot', 'hops', 'time-curves', 'line-integral-convolution', 'force-directed-edge-bundling', 'storyline-chart', 'table-lens', 'bubble-sets', 'nodetrix', 'cone-tree', 'stream-surface', 'radial-sets', 'confluent-drawing', 'timearcs', 'lifeflow', 'metrosets', 'mosaicsets', 'set-streams', 'dust-magnet', 'gosper-map', 'wordstream', 'paohvis', 'sequence-braiding', 'functional-boxplot', 'lorenz-curve', 'tornado-chart', 'bagplot', 'diverging-stacked-bar', 'decision-curve', 'contour-boxplot', 'hanging-rootogram', 'persistence-diagram', 'spacetree']
+    const viz = ['scatter', 'histogram', 'kde', 'ecdf', 'box', 'violin', 'connected-scatter', 'bar', 'grouped-bar', 'stacked-bar', 'stacked-bar-100', 'pyramid', 'line', 'area', 'streamgraph', 'horizon', 'treemap', 'sunburst', 'flame', 'sankey', 'network', 'edge-bundling', 'choropleth', 'forest', 'isoline', 'streamline', 'voronoi-map', 'kaplan-meier', 'renko', 'manhattan', 'phase-portrait', 'upset', 'nightingale-rose', 'venn', 'bifurcation', 'spiral-plot', 'mandelbrot-set', 'spectral-embedding', 'dag-layout', 'max-flow', 'weibull-plot', 'gsea-running-sum', 'zipf-plot', 'community-blockmodel', 'efficient-frontier', 'iv-smile', 'acf-plot', 'tolerance-stackup', 'queue-simulation', 'ramachandran', 'radviz', 'chernoff-faces', 'star-coordinates', 'grand-tour', 'dimensional-stacking', 'parallel-sets', 'voronoi-treemap', 'quantile-dotplot', 'hops', 'time-curves', 'line-integral-convolution', 'force-directed-edge-bundling', 'storyline-chart', 'table-lens', 'bubble-sets', 'nodetrix', 'cone-tree', 'stream-surface', 'radial-sets', 'confluent-drawing', 'timearcs', 'lifeflow', 'metrosets', 'mosaicsets', 'set-streams', 'dust-magnet', 'gosper-map', 'wordstream', 'paohvis', 'sequence-braiding', 'functional-boxplot', 'lorenz-curve', 'tornado-chart', 'bagplot', 'diverging-stacked-bar', 'decision-curve', 'contour-boxplot', 'hanging-rootogram', 'persistence-diagram', 'spacetree', 'hinton-diagram', 'taylor-diagram', 'piper-diagram', 'pythagoras-tree', 'cactus-tree', 'history-flow', 'hasse-diagram', 'nomogram', 'continuous-scatterplot', 'rectangular-cartogram']
     await page.goto('./')
     for (let i = 0; i < STAGES.length; i++) {
       await expect(page.getByTestId('hero-link')).toHaveAttribute('href', `#/viz/${viz[i]}`)
@@ -58,8 +58,8 @@ test.describe('home animation', () => {
     }
     await page.getByTestId('hero-prev').click()
     await page.getByTestId('hero-link').click()
-    await expect(page).toHaveURL(/#\/viz\/spacetree$/)
-    await expect(page.getByTestId('lab')).toHaveAttribute('data-viz', 'spacetree')
+    await expect(page).toHaveURL(/#\/viz\/rectangular-cartogram$/)
+    await expect(page.getByTestId('lab')).toHaveAttribute('data-viz', 'rectangular-cartogram')
   })
 
   test('pauses while scrolled out of view and resumes when it is visible again', async ({ page }) => {

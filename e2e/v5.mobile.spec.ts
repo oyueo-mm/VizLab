@@ -54,7 +54,7 @@ test.describe('mobile: v0.5', () => {
     await page.getByTestId('sub-surface').click()
     await noHorizontalScroll(page)
     await page.goto('./')
-    await expect(page.getByTestId('hero-count')).toHaveText('1 / 90')
+    await expect(page.getByTestId('hero-count')).toHaveText('1 / 100')
     await noHorizontalScroll(page)
   })
 

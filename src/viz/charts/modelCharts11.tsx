@@ -15,17 +15,18 @@ const numbers = (table: DataTable, col: string | null) => { const i = columnInde
 
 export interface HintonParams { scale: 'global' | 'row'; values: boolean }
 
-function HintonChart({ table, mapping, params, width, height, compact }: ChartProps<HintonParams>) {
+function HintonChart({ table, mapping, params, width, height, compact, linked }: ChartProps<HintonParams>) {
   const { tip, show, hide } = useTooltip()
   const svgRef = useRef<SVGSVGElement>(null)
   const m = useMemo(() => {
     const ri = columnIndex(table, roleColumn(mapping, 'row')), ci = columnIndex(table, roleColumn(mapping, 'col')), vi = columnIndex(table, roleColumn(mapping, 'value'))
     if (ri < 0 || ci < 0 || vi < 0) return null
     const rows: string[] = [], cols: string[] = []
-    const cell = new Map<string, number>()
-    for (const r of table.rows) { const a = toLabel(r[ri]), b = toLabel(r[ci]), v = toNumber(r[vi]); if (v == null) continue; if (!rows.includes(a)) rows.push(a); if (!cols.includes(b)) cols.push(b); cell.set(`${a}\u0000${b}`, (cell.get(`${a}\u0000${b}`) ?? 0) + v) }
-    return rows.length >= 2 && cols.length >= 2 && rows.length * cols.length <= 900 ? { rows, cols, cell } : null
+    const cell = new Map<string, number>(), rowsOf = new Map<string, number[]>()
+    table.rows.forEach((r, row) => { const a = toLabel(r[ri]), b = toLabel(r[ci]), v = toNumber(r[vi]); if (v == null) return; if (!rows.includes(a)) rows.push(a); if (!cols.includes(b)) cols.push(b); const k = `${a}\u0000${b}`; cell.set(k, (cell.get(k) ?? 0) + v); if (!rowsOf.has(k)) rowsOf.set(k, []); rowsOf.get(k)!.push(row) })
+    return rows.length >= 2 && cols.length >= 2 && rows.length * cols.length <= 900 ? { rows, cols, cell, rowsOf } : null
   }, [table, mapping])
+  const linkedSet = new Set(linked?.rows ?? [])
   if (!m) return <ChartMessage>행, 열(범주형)과 값(숫자형) 열을 고르세요. 행렬은 2×2 이상, 900칸 이하여야 합니다.</ChartMessage>
   const left = compact ? 4 : 84, top = compact ? 4 : 56
   const cw = Math.min((width - left - 12) / m.cols.length, (height - top - 12) / m.rows.length)
@@ -33,7 +34,7 @@ function HintonChart({ table, mapping, params, width, height, compact }: ChartPr
   const rowMax = m.rows.map((r) => Math.max(...m.cols.map((c) => Math.abs(m.cell.get(`${r}\u0000${c}`) ?? 0)), 1e-12))
   return (
     <div className="chart-root">
-      <svg ref={svgRef} width={width} height={height} className="chart-svg" role="img" data-testid="chart-svg" aria-label={`힌턴 도표: ${m.rows.length}×${m.cols.length} 행렬`} onPointerLeave={hide}>
+      <svg ref={svgRef} width={width} height={height} className="chart-svg" role="img" data-testid="chart-svg" aria-label={`힌턴 도표: ${m.rows.length}×${m.cols.length} 행렬`} onPointerLeave={() => { hide(); linked?.set(null) }}>
         {!compact && m.cols.map((c, j) => <text key={c} x={left + j * cw + cw / 2} y={top - 8} textAnchor="start" fontSize={10} fill="#6b7280" transform={`rotate(-40 ${left + j * cw + cw / 2} ${top - 8})`}>{c}</text>)}
         {!compact && m.rows.map((r, i) => <text key={r} x={left - 8} y={top + i * cw + cw / 2} dy="0.34em" textAnchor="end" fontSize={10} fill="#6b7280">{r}</text>)}
         <rect x={left} y={top} width={cw * m.cols.length} height={cw * m.rows.length} fill="#f7f9f9" stroke="#dbe3e3" />
@@ -42,8 +43,8 @@ function HintonChart({ table, mapping, params, width, height, compact }: ChartPr
           const side = hintonSide(v, params.scale === 'row' ? rowMax[i] : maxAll) * cw * 0.92
           return (
             <g key={`${i}-${j}`} data-testid="hinton-cell" data-sign={v >= 0 ? 1 : -1} data-side={side.toFixed(2)} data-value={v}>
-              <rect x={left + j * cw + (cw - side) / 2} y={top + i * cw + (cw - side) / 2} width={side} height={side} fill={v >= 0 ? '#2a8c82' : '#d4452f'} fillOpacity={0.9}
-                onPointerEnter={compact ? undefined : (e) => { const lp = localPoint(svgRef.current!, e); show(lp.x, lp.y, <><b>{r} → {c}</b><br />값 {fmt(v, 3)} ({v >= 0 ? '양수' : '음수'})<br />변 길이 ∝ √|값|, 면적 ∝ |값|</>) }} onPointerLeave={hide} />
+              <rect x={left + j * cw + (cw - side) / 2} y={top + i * cw + (cw - side) / 2} width={side} height={side} fill={v >= 0 ? '#2a8c82' : '#d4452f'} fillOpacity={0.9} stroke={(m.rowsOf.get(`${r}\u0000${c}`) ?? []).some((q) => linkedSet.has(q)) ? '#f59e0b' : 'none'} strokeWidth={2.2}
+                onPointerEnter={compact ? undefined : (e) => { const lp = localPoint(svgRef.current!, e); linked?.set(m.rowsOf.get(`${r}\u0000${c}`) ?? null); show(lp.x, lp.y, <><b>{r} → {c}</b><br />값 {fmt(v, 3)} ({v >= 0 ? '양수' : '음수'})<br />변 길이 ∝ √|값|, 면적 ∝ |값|</>) }} onPointerLeave={() => { hide(); linked?.set(null) }} />
               {params.values && !compact && cw > 34 && <text x={left + j * cw + cw / 2} y={top + i * cw + cw - 3} textAnchor="middle" fontSize={8} fill="#6b7280">{fmt(v, 2)}</text>}
             </g>
           )

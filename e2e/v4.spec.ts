@@ -32,12 +32,12 @@ test.describe('v0.4: every new chart opens, draws and explains itself', () => {
 })
 
 test.describe('v0.4: catalog', () => {
-  test('lists 340 charts, the four new categories and the geospatial data-type filter', async ({ page }) => {
+  test('lists 360 charts, the four new categories and the geospatial data-type filter', async ({ page }) => {
     await page.goto('./#/catalog')
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(340)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(360)
     for (const c of ['geo', 'network', 'special']) await expect(page.getByTestId(`chip-${c}`)).toBeVisible()
     await page.getByTestId('chip-geo').click()
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(60)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(65)
     await page.getByTestId('chip-all').click()
     if (await page.getByTestId('filter-toggle').isVisible()) await page.getByTestId('filter-toggle').click()
     await page.getByTestId('kind-geospatial').click()
@@ -557,7 +557,7 @@ test.describe('v0.4: home animation and persistence', () => {
   test('the animation has 80 charts including the v0.4 and v0.5 ones, each linking to its lab', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('./')
-    await expect(page.getByTestId('hero-count')).toHaveText('1 / 90')
+    await expect(page.getByTestId('hero-count')).toHaveText('1 / 100')
     for (const [stage, viz] of [['flame', 'flame'], ['bundle', 'edge-bundling'], ['choropleth', 'choropleth'], ['forest', 'forest']] as const) {
       for (let i = 0; i < 80 && (await page.getByTestId('hero-demo').getAttribute('data-stage')) !== stage; i++) await page.getByTestId('hero-next').click()
       await expect(page.getByTestId('hero-link')).toHaveAttribute('href', `#/viz/${viz}`)

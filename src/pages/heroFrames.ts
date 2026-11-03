@@ -24,12 +24,14 @@ import { v8Frame } from './heroFramesV8Lazy'
 import { v9Frame } from './heroFramesV9Lazy'
 import type { HeroV9Key } from './heroFramesV9'
 import { v10Frame } from './heroFramesV10Lazy'
+import { v11Frame } from './heroFramesV11Lazy'
+import type { HeroV11Key } from './heroFramesV11'
 import type { HeroV10Key } from './heroFramesV10'
 import type { HeroV8Key } from './heroFramesV8'
 
 // ─── stages ──────────────────────────────────────────────────────────────────
 
-export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network' | 'geo' | 'meta' | 'flame' | 'bundle' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'v10'
+export type HeroGroup = 'dist' | 'path' | 'compare' | 'pyramid' | 'time' | 'hierarchy' | 'flow' | 'network' | 'geo' | 'meta' | 'flame' | 'bundle' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'v10' | 'v11'
 
 export const heroStages = [
   { key: 'scatter', label: '산점도', viz: 'scatter', group: 'dist' },
@@ -122,6 +124,16 @@ export const heroStages = [
   { key: 'rootogram', label: '걸린 루트그램', viz: 'hanging-rootogram', group: 'v10' },
   { key: 'persist', label: '지속성 바코드', viz: 'persistence-diagram', group: 'v10' },
   { key: 'spacetree', label: '스페이스트리', viz: 'spacetree', group: 'v10' },
+  { key: 'hinton', label: '힌턴 도표', viz: 'hinton-diagram', group: 'v11' },
+  { key: 'taylor', label: '테일러 도표', viz: 'taylor-diagram', group: 'v11' },
+  { key: 'piper', label: '파이퍼 도표', viz: 'piper-diagram', group: 'v11' },
+  { key: 'pyth', label: '피타고라스 트리', viz: 'pythagoras-tree', group: 'v11' },
+  { key: 'cactus', label: '캑터스트리', viz: 'cactus-tree', group: 'v11' },
+  { key: 'hflow', label: '히스토리 플로', viz: 'history-flow', group: 'v11' },
+  { key: 'hasse', label: '하세 도표', viz: 'hasse-diagram', group: 'v11' },
+  { key: 'nomo', label: '노모그램', viz: 'nomogram', group: 'v11' },
+  { key: 'contscat', label: '연속 산점도', viz: 'continuous-scatterplot', group: 'v11' },
+  { key: 'rectcarto', label: '직사각형 카토그램', viz: 'rectangular-cartogram', group: 'v11' },
 ] as const
 export type HeroStage = (typeof heroStages)[number]['key']
 
@@ -619,6 +631,7 @@ export function buildFrame(stage: HeroStage, data: HeroData, w: number, h: numbe
     case 'v8': return v8Frame(stage as HeroV8Key, data.cycle, w, h)
     case 'v9': return v9Frame(stage as HeroV9Key, data.cycle, w, h)
     case 'v10': return v10Frame(stage as HeroV10Key, data.cycle, w, h)
+    case 'v11': return v11Frame(stage as HeroV11Key, data.cycle, w, h)
     case 'compare': return compareFrame(stage, data.compare, w, h)
     case 'time': return timeFrame(stage, data.time, w, h)
     case 'hierarchy': return hierarchyFrame(stage, data.tree, w, h)

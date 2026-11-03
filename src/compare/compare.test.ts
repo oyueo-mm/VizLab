@@ -15,7 +15,7 @@ beforeAll(async () => { modules = await loadAllModules() })
 const issueFor = (viz: string, table = generateDataset('normal'), remembered = {}) => compareIssue(modules[viz], table, paneMapping(modules[viz], table, remembered))
 
 describe('recommended comparison presets', () => {
-  it('has the v0.3 combinations the v0.4 geo, agreement, calibration, network and mosaic ones, ten v0.5 ones, nine v0.6 ones and seven v0.7 ones and nine v0.8 ones and eight v1.0 ones', () => {
+  it('has the v0.3 combinations the v0.4 geo, agreement, calibration, network and mosaic ones, ten v0.5 ones, nine v0.6 ones and seven v0.7 ones and nine v0.8 ones and eight v1.0 ones and eleven v1.1 ones', () => {
     expect(presets.map((p) => p.charts)).toEqual([
       ['histogram', 'kde', 'ecdf'], ['box', 'violin', 'raincloud'], ['scatter', 'hexbin', 'kde2d'], ['bar', 'lollipop', 'bullet'],
       ['line', 'area', 'step'], ['treemap', 'sunburst', 'icicle'], ['roc', 'pr'],
@@ -42,6 +42,9 @@ describe('recommended comparison presets', () => {
       // v1.0
       ['scatter', 'bagplot', 'kde2d'], ['scatter', 'splatterplot', 'hexbin'], ['stem-and-leaf', 'histogram', 'box'], ['lorenz-curve', 'ecdf', 'histogram'],
       ['contour-tree', 'persistence-diagram', 'topological-landscape'], ['spacetree', 'hyperbolic-tree', 'treemap'], ['decision-curve', 'roc', 'calibration'], ['hanging-rootogram', 'histogram'],
+      // v1.1
+      ['matrix-cube', 'parallel-edge-splatting'], ['pythagoras-tree', 'treemap', 'spacetree'], ['hinton-diagram', 'heatmap'], ['continuous-scatterplot', 'continuous-parallel-coordinates'], ['spot-noise', 'ibfv', 'vector-field-topology'],
+      ['stream-ribbons', 'streamtube', 'stream-surface'], ['taylor-diagram', 'target-diagram', 'scatter'], ['piper-diagram', 'stiff-diagram'], ['rectangular-cartogram', 'cartogram-contiguous', 'tile-grid'], ['ring-map', 'choropleth'], ['hasse-diagram', 'dag-layout'],
     ])
     for (const p of presets) { expect(p.charts.length).toBeLessThanOrEqual(MAX_PANES); expect(p.charts.length).toBeGreaterThanOrEqual(2) }
   })

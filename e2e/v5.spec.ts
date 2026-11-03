@@ -4,14 +4,14 @@ import { expect, openViz, test } from './fixtures'
 export const V5_LABS: string[] = ["point-map","kde-map","square-grid","cluster-map","spike-map","isoline","hillshade","slope-aspect","vector-field","streamline","particle-flow","bivariate","chorochromatic","vba-map","glyph-map","cartogram-contiguous","cartogram-noncontiguous","demers","gridded-cartogram","voronoi-map","isochrone","buffer-map","hotspot","lisa","trajectory","tissot","raster-map","terrain-profile","terrain-3d","prism-map","space-time-cube","dasymetric","residual-plot","scale-location","influence-plot","coefficient-plot","partial-dependence","kaplan-meier","nelson-aalen","bootstrap","ewma","cusum","lift-gain","pit-histogram","surface-3d","scatter-3d","phase-portrait","bifurcation","spectrogram","scalogram","recurrence-plot","ternary","wind-rose","polar-plot","polar-heatmap","delaunay","renko","heikin-ashi","kagi","point-figure","equivolume","volume-profile","line-break","drawdown","yield-curve","order-book","pictogram","nightingale-rose","radial-bar","event-raster","barcode-plot","lexis","cumulative-flow","spiral-plot","volcano","ma-plot","manhattan","sequence-logo","coverage","pcoa","phylogenetic-tree","clustered-heatmap","venn","upset","hypergraph","biofabric","radial-tree"]
 
 test.describe('v0.5: catalog', () => {
-  test('lists 340 charts in 17 categories with the geo sub-category filters', async ({ page }) => {
+  test('lists 360 charts in 17 categories with the geo sub-category filters', async ({ page }) => {
     await page.goto('./#/catalog')
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(340)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(360)
     for (const c of ['science', 'bio', 'finance']) await expect(page.getByTestId(`chip-${c}`)).toBeVisible()
     await page.getByTestId('chip-geo').click()
     await expect(page.getByTestId('sub-filters')).toBeVisible()
     const all = await page.getByTestId('catalog-grid').locator('.viz-card').count()
-    expect(all).toBe(60)
+    expect(all).toBe(65)
     for (const s of ['sub-point', 'sub-surface', 'sub-thematic', 'sub-distort', 'sub-analysis', 'sub-stats', 'sub-spacetime', 'sub-map3d']) await expect(page.getByTestId(s), s).toBeVisible()
     await page.getByTestId('sub-surface').click()
     await expect(page).toHaveURL(/\?s=surface/)

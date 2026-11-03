@@ -8,12 +8,13 @@ import { loadHeroV7 } from './heroFramesV7Lazy'
 import { loadHeroV8 } from './heroFramesV8Lazy'
 import { loadHeroV9 } from './heroFramesV9Lazy'
 import { loadHeroV10 } from './heroFramesV10Lazy'
+import { loadHeroV11 } from './heroFramesV11Lazy'
 import { buildFrame, heroData, heroFlows, heroSample, heroStages, heroTree, HERO_N, type HeroStage, type Mark } from './heroFrames'
 
 const W = 560
 const H = 380
 
-beforeAll(async () => { await loadHeroGeo(); await loadHeroV5(); await loadHeroV6(); await loadHeroV7(); await loadHeroV8(); await loadHeroV9(); await loadHeroV10() })
+beforeAll(async () => { await loadHeroGeo(); await loadHeroV5(); await loadHeroV6(); await loadHeroV7(); await loadHeroV8(); await loadHeroV9(); await loadHeroV10(); await loadHeroV11() })
 
 describe('home animation timing', () => {
   it('shows each chart for about 1.8 s with a 0.5–0.65 s morph', () => {
@@ -29,17 +30,18 @@ describe('home animation frames', () => {
   const frame = (s: HeroStage, d = data) => buildFrame(s, d, W, H)
   const numbers = (m: Mark): number[] => Object.values(m).flatMap((v) => (typeof v === 'number' ? [v] : Array.isArray(v) && typeof v[0] !== 'string' ? (v as any[]).flat().filter((x) => typeof x === 'number') : []))
 
-  it('has 90 distinct stages, each drawn from real engines', () => {
-    expect(heroStages.length).toBe(90)
-    expect(new Set(heroStages.map((s) => s.key)).size).toBe(90)
-    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(90)
+  it('has 100 distinct stages, each drawn from real engines', () => {
+    expect(heroStages.length).toBe(100)
+    expect(new Set(heroStages.map((s) => s.key)).size).toBe(100)
+    expect(new Set(heroStages.map((s) => s.viz)).size).toBe(100)
     expect(heroStages.slice(0, 24).map((s) => s.group)).toEqual([...Array(6).fill('dist'), 'path', ...Array(4).fill('compare'), 'pyramid', ...Array(4).fill('time'), ...Array(2).fill('hierarchy'), 'flame', 'flow', 'network', 'bundle', 'geo', 'meta'])
     expect(heroStages.slice(24, 36).every((s) => s.group === 'v5')).toBe(true)
     expect(heroStages.slice(36, 50).every((s) => s.group === 'v6')).toBe(true)
     expect(heroStages.slice(50, 64).every((s) => s.group === 'v7')).toBe(true)
     expect(heroStages.slice(64, 72).every((s) => s.group === 'v8')).toBe(true)
     expect(heroStages.slice(72, 80).every((s) => s.group === 'v9')).toBe(true)
-    expect(heroStages.slice(80).every((s) => s.group === 'v10')).toBe(true)
+    expect(heroStages.slice(80, 90).every((s) => s.group === 'v10')).toBe(true)
+    expect(heroStages.slice(90).every((s) => s.group === 'v11')).toBe(true)
     expect(heroStages.map((s) => s.viz)).toEqual(expect.arrayContaining(['connected-scatter', 'pyramid', 'network', 'horizon', 'choropleth', 'forest', 'flame', 'edge-bundling', 'isoline', 'kaplan-meier', 'manhattan', 'upset']))
   })
 
@@ -466,6 +468,38 @@ describe('v1.0 home stages use the technique engines', () => {
     expect(open).toBeGreaterThan(0)
     expect(open).toBeLessThan(rects('spacetree', 'sp:n').length)
     for (const k of ['fbox', 'lorenz', 'tornado', 'bag', 'divbar', 'dca', 'cbox', 'rootogram', 'persist', 'spacetree'] as const) {
+      expect(JSON.stringify(frame(k, 1)), k).toBe(JSON.stringify(frame(k, 1)))
+    }
+  })
+})
+
+describe('v1.1 home stages use the technique engines', () => {
+  const frame = (s: HeroStage, cycle = 0) => buildFrame(s, heroData(cycle), W, H)
+  const of = (s: HeroStage, prefix: string, cycle = 0) => frame(s, cycle).filter((m) => m.k.startsWith(prefix))
+
+  it('Hinton squares: the area is proportional to the value and the sign is the colour', () => {
+    const sq = of('hinton', 'hn:') .filter((m) => m.t === 'rect') as Extract<Mark, { t: 'rect' }>[]
+    expect(sq.length).toBe(49)
+    for (const r of sq) expect(r.w).toBeCloseTo(r.h, 6)
+    expect(new Set(sq.map((r) => r.fill)).size).toBe(2)
+  })
+  it('the Taylor points keep the law of cosines: the distance to the reference is the centred RMS difference', () => {
+    const ref = frame('taylor').find((m) => m.k === 'ty:ref') as Extract<Mark, { t: 'circle' }>
+    expect(ref).toBeTruthy()
+    expect((of('taylor', 'ty:m') as Extract<Mark, { t: 'circle' }>[]).length).toBe(3)
+  })
+  it('the Pythagoras tree has a root square and smaller children above it; the Hasse chart draws only covering lines', () => {
+    const polys = of('pyth', 'py:') as Extract<Mark, { t: 'poly' }>[]
+    expect(polys.length).toBeGreaterThan(10)
+    const area = (p: [number, number][]) => Math.abs(d3.polygonArea(p))
+    expect(area(polys[0].pts as [number, number][])).toBeGreaterThan(area(polys[1].pts as [number, number][]))
+    const edges = of('hasse', 'hs:e').length
+    expect(edges).toBe(14)
+  })
+  it('the rectangular cartogram tiles the frame: the areas add up and each is proportional to its value, every stage reproduces', () => {
+    const rects = of('rectcarto', 'rc:').filter((m) => m.t === 'rect') as Extract<Mark, { t: 'rect' }>[]
+    expect(rects.length).toBe(17)
+    for (const k of ['hinton', 'taylor', 'piper', 'pyth', 'cactus', 'hflow', 'hasse', 'nomo', 'contscat', 'rectcarto'] as const) {
       expect(JSON.stringify(frame(k, 1)), k).toBe(JSON.stringify(frame(k, 1)))
     }
   })

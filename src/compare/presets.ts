@@ -89,6 +89,18 @@ export const presets: Preset[] = [
   { id: 'tree-browsers', name: '스페이스트리 · 쌍곡 트리 · 트리맵', note: '같은 계층을 펼친 경로 중심의 노드-링크, 쌍곡 압축, 면적으로', datasetId: 'org-tree', charts: ['spacetree', 'hyperbolic-tree', 'treemap'] },
   { id: 'model-utility', name: '결정 곡선 · ROC · 보정 곡선', note: '같은 예측 모형을 결정의 순이득, 변별력, 확률의 보정으로', datasetId: 'risk-prediction', n: 500, charts: ['decision-curve', 'roc', 'calibration'] },
   { id: 'count-fit', name: '걸린 루트그램 · 히스토그램', note: '같은 계수 자료를 포아송 기대 곡선에 매단 막대와 구간 막대로', datasetId: 'count-data', n: 300, charts: ['hanging-rootogram', 'histogram'] },
+  // v1.1
+  { id: 'dynamic-matrix', name: '행렬 큐브 · 평행 간선 스플래팅', note: '같은 동적 네트워크를 시점별 행렬을 쌓은 큐브와 시간 띠의 간선 밀도로', datasetId: 'dynamic-network', n: 24, charts: ['matrix-cube', 'parallel-edge-splatting'] },
+  { id: 'hierarchy-forms', name: '피타고라스 트리 · 트리맵 · 스페이스트리', note: '같은 계층을 가지가 뻗는 정사각형, 포함하는 면적, 펼친 경로 중심의 노드-링크로', datasetId: 'org-tree', charts: ['pythagoras-tree', 'treemap', 'spacetree'] },
+  { id: 'signed-matrix', name: '힌턴 도표 · 히트맵', note: '같은 부호 있는 행렬을 정사각형의 면적과 색의 진하기로', datasetId: 'signed-matrix', n: 8, charts: ['hinton-diagram', 'heatmap'] },
+  { id: 'field-density', name: '연속 산점도 · 연속 평행 좌표', note: '같은 다변량 필드를 속성 평면의 밀도와 평행 좌표 위의 밀도로', datasetId: 'multi-field', n: 24, charts: ['continuous-scatterplot', 'continuous-parallel-coordinates'] },
+  { id: 'flow-synthesis', name: '스폿 노이즈 · IBFV · 벡터장 위상', note: '같은 2차원 흐름을 늘어난 반점의 합성, 움직이는 질감, 임계점의 골격으로', datasetId: 'flow-2d', n: 24, charts: ['spot-noise', 'ibfv', 'vector-field-topology'] },
+  { id: 'ribbon-tube-surface', name: '스트림 리본 · 스트림튜브 · 스트림 서피스', note: '같은 3차원 벡터장의 유선을 비틀리는 띠, 굵기가 변하는 관, 시작선이 쓸고 간 곡면으로', datasetId: 'vector-vortex', charts: ['stream-ribbons', 'streamtube', 'stream-surface'] },
+  { id: 'skill-summary', name: '테일러 도표 · 타깃 도표 · 산점도', note: '같은 모형 예측을 상관·표준편차·RMS 오차, 편향과 변동, 점 하나하나로', datasetId: 'model-skill', n: 120, charts: ['taylor-diagram', 'target-diagram', 'scatter'] },
+  { id: 'water-diagrams', name: '파이퍼 도표 · 스티프 도표', note: '같은 지하수 시료를 세 좌표 위의 점과 시료별 다각형으로', datasetId: 'water-chem', n: 24, charts: ['piper-diagram', 'stiff-diagram'] },
+  { id: 'rect-carto', name: '직사각형 카토그램 · 연속형 카토그램 · 타일 그리드', note: '같은 지역별 값을 사각형 분할, 모양을 변형한 지도, 같은 크기 칸으로', datasetId: 'kr-regions', charts: ['rectangular-cartogram', 'cartogram-contiguous', 'tile-grid'] },
+  { id: 'ring-choropleth', name: '링 맵 · 코로플레스', note: '같은 시도별 연도 지표를 지도 둘레의 고리와 지도 위 색으로', datasetId: 'kr-series', charts: ['ring-map', 'choropleth'] },
+  { id: 'poset-order', name: '하세 도표 · 층별 방향 그래프', note: '같은 순서 관계를 이행적 축약(피복 관계)과 일반 DAG 배치로', datasetId: 'poset', n: 12, charts: ['hasse-diagram', 'dag-layout'] },
 ]
 
 export const presetById = new Map(presets.map((p) => [p.id, p]))

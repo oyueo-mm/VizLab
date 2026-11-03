@@ -375,7 +375,7 @@ function RingMapChart({ table, mapping, params, width, height, compact, linked }
   const D = Math.min(width, height)
   const mapSide = D * 0.42
   const st = useRegionStage(table, mapping, params, mapSide, mapSide, compact, RKEYS, undefined, false)
-  const { tip, show, hide, svgRef } = st
+  const { tip, show, hide, svgRef, map: rmap, projection: rproj } = st
   const names = roleColumns(mapping, 'series')
   const ri = columnIndex(table, roleColumn(mapping, 'region'))
   const data = useMemo(() => {
@@ -389,10 +389,10 @@ function RingMapChart({ table, mapping, params, width, height, compact, linked }
   const sectors = useMemo(() => {
     if (!data) return []
     const cx = mapSide / 2, cy = mapSide / 2
-    const list = st.map.regions.filter((r) => data.has(r.id)).map((r) => { const p = st.projection(r.centroid); return p ? { r, p: p as [number, number], ang: Math.atan2(p[1] - cy, p[0] - cx) } : null }).filter((q): q is NonNullable<typeof q> => !!q)
+    const list = rmap.regions.filter((r) => data.has(r.id)).map((r) => { const p = rproj(r.centroid); return p ? { r, p: p as [number, number], ang: Math.atan2(p[1] - cy, p[0] - cx) } : null }).filter((q): q is NonNullable<typeof q> => !!q)
     list.sort((a, b) => a.ang - b.ang)
     return list
-  }, [data, st.map, st.projection, mapSide])
+  }, [data, rmap, rproj, mapSide])
   if (!data || sectors.length < 3) return <ChartMessage>지역 ID 열과 값 열(연도 등) 둘 이상을 고르세요. 지도와 맞는 지역이 3곳 이상이어야 합니다.</ChartMessage>
   const n = names.length
   const all = [...data.values()].flatMap((d) => d.values.filter((v): v is number => v != null))

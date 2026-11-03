@@ -16,17 +16,17 @@ async function editCell(page: import('@playwright/test').Page, label: string, va
   await input.press('Enter')
 }
 
-test.describe('catalog: 340 charts and data-type filters', () => {
+test.describe('catalog: 360 charts and data-type filters', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('./#/catalog')
     await page.evaluate(() => localStorage.clear())
     await page.reload()
   })
 
-  test('lists 340 charts and every card opens a working lab', async ({ page }) => {
+  test('lists 360 charts and every card opens a working lab', async ({ page }) => {
     const cards = page.getByTestId('catalog-grid').locator('.viz-card')
-    await expect(cards).toHaveCount(340)
-    await expect(page.getByTestId('result-count')).toContainText('340')
+    await expect(cards).toHaveCount(360)
+    await expect(page.getByTestId('result-count')).toContainText('360')
     for (const id of NEW) await expect(page.getByTestId(`card-${id}`)).toBeVisible()
     await page.getByTestId('card-fan').scrollIntoViewIfNeeded()
     await expect(page.getByTestId('preview-fan').locator('svg')).toBeVisible()
@@ -81,7 +81,7 @@ test.describe('catalog: 340 charts and data-type filters', () => {
     await expect(cards).toHaveCount(n)
     await page.getByTestId('filter-reset').click()
     await expect(page).toHaveURL(/#\/catalog$/)
-    await expect(cards).toHaveCount(340)
+    await expect(cards).toHaveCount(360)
     await expect(page.getByTestId('filter-reset')).toHaveCount(0)
   })
 
@@ -90,7 +90,7 @@ test.describe('catalog: 340 charts and data-type filters', () => {
     await page.getByTestId('catalog-search').fill('히스토그램')
     await expect(page.getByTestId('catalog-empty')).toBeVisible()
     await page.getByTestId('empty-reset').click()
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(340)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(360)
   })
 })
 

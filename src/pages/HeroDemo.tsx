@@ -12,6 +12,7 @@ import { heroV7Ready, loadHeroV7 } from './heroFramesV7Lazy'
 import { heroV8Ready, loadHeroV8 } from './heroFramesV8Lazy'
 import { heroV9Ready, loadHeroV9 } from './heroFramesV9Lazy'
 import { heroV10Ready, loadHeroV10 } from './heroFramesV10Lazy'
+import { heroV11Ready, loadHeroV11 } from './heroFramesV11Lazy'
 
 export { heroStages } from './heroFrames'
 export type { HeroStage } from './heroFrames'
@@ -39,6 +40,7 @@ export function HeroDemo() {
   const [v8Ready, setV8Ready] = useState(heroV8Ready())
   const [v9Ready, setV9Ready] = useState(heroV9Ready())
   const [v10Ready, setV10Ready] = useState(heroV10Ready())
+  const [v11Ready, setV11Ready] = useState(heroV11Ready())
   const width = size.width || 560
   const height = Math.max(260, Math.min(420, width * 0.68))
   const data = useMemo(() => heroData(cycle), [cycle])
@@ -100,6 +102,14 @@ export function HeroDemo() {
     return () => { live = false }
   }, [index, v10Ready, stage.group])
 
+  // The v1.1 stages' engines are one more chunk, fetched the same way.
+  useEffect(() => {
+    if (v11Ready || (index < heroStages.findIndex((s) => s.group === 'v11') - 5 && stage.group !== 'v11')) return
+    let live = true
+    void loadHeroV11().then(() => { if (live) setV11Ready(true) }).catch(() => {})
+    return () => { live = false }
+  }, [index, v11Ready, stage.group])
+
   // Pause when the chart is off-screen or the tab is hidden.
   useEffect(() => {
     const el = wrapRef.current
@@ -130,7 +140,7 @@ export function HeroDemo() {
     const resized = !last.current || last.current.w !== width || last.current.h !== height
     last.current = { w: width, h: height }
     engine.current.setFrame(buildFrame(stage.key, data, width, height), resized || reduced || !running ? 0 : MOVE_MS, width)
-  }, [stage.key, data, width, height, reduced, running, geoReady, v5Ready, v6Ready, v7Ready, v8Ready, v9Ready, v10Ready])
+  }, [stage.key, data, width, height, reduced, running, geoReady, v5Ready, v6Ready, v7Ready, v8Ready, v9Ready, v10Ready, v11Ready])
 
   useEffect(() => () => { engine.current?.destroy(); engine.current = null }, [])
 

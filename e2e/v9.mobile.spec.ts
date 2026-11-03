@@ -59,11 +59,11 @@ test.describe('mobile: v0.9', () => {
     }
   })
 
-  test('the home animation runs 80 charts and the catalog lists 340 entries', async ({ page }) => {
+  test('the home animation runs 80 charts and the catalog lists 360 entries', async ({ page }) => {
     await page.goto('./')
-    await expect(page.getByTestId('hero-count')).toHaveText('1 / 90')
+    await expect(page.getByTestId('hero-count')).toHaveText('1 / 100')
     await page.goto('./#/catalog')
-    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(340)
+    await expect(page.getByTestId('catalog-grid').locator('.viz-card')).toHaveCount(360)
     const { sw, iw } = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: window.innerWidth }))
     expect(sw).toBeLessThanOrEqual(iw + 1)
   })
