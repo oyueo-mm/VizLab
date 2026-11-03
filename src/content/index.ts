@@ -6,6 +6,7 @@ import { contentV7 } from './v7'
 import { contentV8 } from './v8'
 import { contentV9 } from './v9'
 import { contentV10 } from './v10'
+import { contentV11 } from './v11'
 import type { VizContent } from './types'
 
 export type { Formula, VizContent } from './types'
@@ -13,6 +14,6 @@ export type { Formula, VizContent } from './types'
 /**
  * Every explanation in one object. The app does not import this (the lab loads one group at a time through `loader.ts`); tests and tools do.
  */
-export const content: Record<string, VizContent> = { ...contentLegacy, ...contentV5, ...contentV6, ...contentV7, ...contentV8, ...contentV9, ...contentV10 }
+export const content: Record<string, VizContent> = { ...contentLegacy, ...contentV5, ...contentV6, ...contentV7, ...contentV8, ...contentV9, ...contentV10, ...contentV11 }
 
 for (const [id, note] of Object.entries(conceptNotes)) if (content[id]) content[id] = { ...content[id], note }

@@ -13,22 +13,22 @@ import { drawQuads, type Projector, type Quad } from './scene3d'
 import { Scene3D } from './kit3d'
 
 /** The seed line is given in the normalised cube [-1, 1]³: its centre, length and direction (azimuth, elevation). */
-interface SeedParams { cx: number; cy: number; cz: number; length: number; az: number; el: number }
+export interface SeedParams { cx: number; cy: number; cz: number; length: number; az: number; el: number }
 
-const seedDefaults: SeedParams = { cx: -0.4, cy: 0, cz: -0.3, length: 0.9, az: 90, el: 0 }
+export const seedDefaults: SeedParams = { cx: -0.4, cy: 0, cz: -0.3, length: 0.9, az: 90, el: 0 }
 
-const useField = (table: ChartProps<unknown>['table'], mapping: ChartProps<unknown>['mapping']): VecGrid | null =>
+export const useField = (table: ChartProps<unknown>['table'], mapping: ChartProps<unknown>['mapping']): VecGrid | null =>
   useMemo(() => { const c = columns(table, mapping, ['x', 'y', 'z', 'u', 'v', 'w']); return c ? vecGridFromRows(c.map(([x, y, z, a, b, cc]) => ({ x, y, z, a, b, c: cc }))) : null }, [table, mapping])
 
 /** Maximum |v| over the grid, used to choose the time step and the colour scale. */
-function maxSpeed(f: VecGrid) {
+export function maxSpeed(f: VecGrid) {
   let m = 0
   const g = f.u
   for (let k = 0; k < g.nz; k++) for (let j = 0; j < g.ny; j++) for (let i = 0; i < g.nx; i++) { const v = vecAt(f, [g.x0 + i * g.dx, g.y0 + j * g.dy, g.z0 + k * g.dz]); const s = Math.hypot(...v); if (Number.isFinite(s)) m = Math.max(m, s) }
   return m
 }
 
-function seedLine(p: SeedParams, cm: ReturnType<typeof cubeMap>, ext: number[], f: VecGrid) {
+export function seedLine(p: SeedParams, cm: ReturnType<typeof cubeMap>, ext: number[], f: VecGrid) {
   const a = (p.az * Math.PI) / 180, e = (p.el * Math.PI) / 180
   const dir: V3 = [Math.cos(e) * Math.cos(a), Math.cos(e) * Math.sin(a), Math.sin(e)]
   const c: V3 = [p.cx, p.cy, p.cz]
@@ -41,8 +41,8 @@ function seedLine(p: SeedParams, cm: ReturnType<typeof cubeMap>, ext: number[], 
   return { n0, n1, d0: back(n0), d1: back(n1) }
 }
 
-const lookDir = (view: ViewParams): V3 => { const y = (view.yaw * Math.PI) / 180, p = (view.pitch * Math.PI) / 180; return [Math.sin(y) * Math.cos(p), Math.cos(y) * Math.cos(p), -Math.sin(p)] }
-const shade = (col: string, k: number) => { const c = d3.rgb(col); return `rgb(${Math.round(c.r * k)},${Math.round(c.g * k)},${Math.round(c.b * k)})` }
+export const lookDir = (view: ViewParams): V3 => { const y = (view.yaw * Math.PI) / 180, p = (view.pitch * Math.PI) / 180; return [Math.sin(y) * Math.cos(p), Math.cos(y) * Math.cos(p), -Math.sin(p)] }
+export const shade = (col: string, k: number) => { const c = d3.rgb(col); return `rgb(${Math.round(c.r * k)},${Math.round(c.g * k)},${Math.round(c.b * k)})` }
 const triNormal = (a: V3, b: V3, c: V3): V3 => {
   const u: V3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], v: V3 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]]
   const n: V3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]
@@ -50,7 +50,7 @@ const triNormal = (a: V3, b: V3, c: V3): V3 => {
   return [n[0] / l, n[1] / l, n[2] / l]
 }
 
-function SeedControls<P extends SeedParams>({ params, setParams }: { params: P; setParams: (p: Partial<P>) => void }) {
+export function SeedControls<P extends SeedParams>({ params, setParams }: { params: P; setParams: (p: Partial<P>) => void }) {
   const set = (patch: Partial<SeedParams>) => setParams(patch as Partial<P>)
   return (
     <ControlGroup title="시작선 (씨앗)">
@@ -64,7 +64,7 @@ function SeedControls<P extends SeedParams>({ params, setParams }: { params: P; 
   )
 }
 
-const colorOf = (mode: 'speed' | 'plain', s: number, vmax: number) => (mode === 'speed' ? schemes.viridis.interpolate(0.1 + 0.85 * Math.min(1, s / Math.max(1e-9, vmax))) : '#4c78b5')
+export const colorOf = (mode: 'speed' | 'plain', s: number, vmax: number) => (mode === 'speed' ? schemes.viridis.interpolate(0.1 + 0.85 * Math.min(1, s / Math.max(1e-9, vmax))) : '#4c78b5')
 
 // ───────────────────────────── Stream Surface ─────────────────────────────
 

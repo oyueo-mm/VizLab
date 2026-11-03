@@ -15,6 +15,7 @@ import { catalogV8Rel } from './catalogV8Rel'
 import { catalogV8Sci } from './catalogV8Sci'
 import { catalogV9 } from './catalogV9'
 import { catalogV10 } from './catalogV10'
+import { catalogV11 } from './catalogV11'
 import { catalog, categories, categoryById, dataKinds, inCategory, searchCatalog, vizById } from './catalog'
 import { hasModule, loadAllModules, moduleIds } from './charts'
 import { autoMapping, incompatibility, mappingErrors } from './mapping'
@@ -30,7 +31,8 @@ const V7 = catalogV7.map((c) => c.id)
 const V8 = [...catalogV8, ...catalogV8Net, ...catalogV8Sci, ...catalogV8Rel].map((c) => c.id)
 const V9 = catalogV9.map((c) => c.id)
 const V10 = catalogV10.map((c) => c.id)
-const ALL = [...V1, ...V2, ...V3, ...V4, ...V5, ...V6, ...V7, ...V8, ...V9, ...V10]
+const V11 = catalogV11.map((c) => c.id)
+const ALL = [...V1, ...V2, ...V3, ...V4, ...V5, ...V6, ...V7, ...V8, ...V9, ...V10, ...V11]
 
 let modules: Record<string, VizModule>
 beforeAll(async () => { modules = await loadAllModules() })
@@ -40,8 +42,8 @@ const render = (id: string, table: DataTable, mapping: Record<string, any>, para
 
 describe('visualization registry', () => {
   it('lists the 80 charts of v0.1–v0.4 plus every v0.5 and v0.6 chart, each with an implementation and content', () => {
-    expect(catalog.length).toBe(80 + V5.length + V6.length + V7.length + V8.length + V9.length + V10.length)
-    expect(new Set(catalog.map((c) => c.id)).size).toBe(80 + V5.length + V6.length + V7.length + V8.length + V9.length + V10.length)
+    expect(catalog.length).toBe(80 + V5.length + V6.length + V7.length + V8.length + V9.length + V10.length + V11.length)
+    expect(new Set(catalog.map((c) => c.id)).size).toBe(80 + V5.length + V6.length + V7.length + V8.length + V9.length + V10.length + V11.length)
     expect([...catalog.map((c) => c.id)].sort()).toEqual([...ALL].sort())
     expect(moduleIds.sort()).toEqual([...ALL].sort())
     for (const meta of catalog) {
@@ -102,7 +104,7 @@ describe('visualization registry', () => {
   })
 
   it('survives broken data without throwing (empty table, text in numeric cells, missing numbers)', { timeout: 120000 }, () => {
-    for (const id of [...V2, ...V3, ...V4, ...V5, ...V6, ...V7, ...V8, ...V9, ...V10]) {
+    for (const id of [...V2, ...V3, ...V4, ...V5, ...V6, ...V7, ...V8, ...V9, ...V10, ...V11]) {
       const mod = modules[id]
       const s = initialLabState(id, mod)
       const empty: DataTable = { columns: s.table.columns, rows: [] }
@@ -218,7 +220,7 @@ describe('catalog search', () => {
   })
 
   it('finds every new chart by its Korean and English names', () => {
-    for (const id of [...V2, ...V3, ...V4, ...V5, ...V6, ...V7, ...V8, ...V9, ...V10]) {
+    for (const id of [...V2, ...V3, ...V4, ...V5, ...V6, ...V7, ...V8, ...V9, ...V10, ...V11]) {
       const m = vizById.get(id)!
       expect(searchCatalog(m.name).map((v) => v.id), `ko ${id}`).toContain(id)
       expect(searchCatalog(m.nameEn).map((v) => v.id), `en ${id}`).toContain(id)
