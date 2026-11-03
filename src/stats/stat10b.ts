@@ -27,7 +27,40 @@ export function halfspaceDepth(pts: readonly [number, number][], dirs = 360): nu
   })
 }
 
-/** Bagplot (Rousseeuw, Ruts & Tukey 1999), computed from the depths at the data points: the bag is the hull of the deepest half of the points, the fence inflates it by `factor` about the depth median. */
+/** One Sutherland–Hodgman step: the part of a convex polygon inside the half-plane u·x ≤ c. */
+function clipHalfPlane(poly: [number, number][], ux: number, uy: number, c: number): [number, number][] {
+  const out: [number, number][] = []
+  const val = (p: [number, number]) => ux * p[0] + uy * p[1] - c
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i], b = poly[(i + 1) % poly.length], va = val(a), vb = val(b)
+    if (va <= 0) out.push(a)
+    if ((va < 0 && vb > 0) || (va > 0 && vb < 0)) { const t = va / (va - vb); out.push([a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])]) }
+  }
+  return out
+}
+
+/**
+ * Halfspace depth region D_k = {x : depth(x) ≥ k}: the intersection, over all directions u, of the half-planes {x : u·x ≤ c_k(u)} where c_k(u) is the k-th
+ * largest projection u·p of the data. It is convex, contains every point of depth ≥ k and is exactly what Rousseeuw et al. call the contour of depth k.
+ */
+export function depthRegion(pts: readonly [number, number][], k: number, dirs = 360): [number, number][] {
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1])
+  const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 1e-9) * 20
+  const cx = d3.mean(xs)!, cy = d3.mean(ys)!
+  let poly: [number, number][] = [[cx - span, cy - span], [cx + span, cy - span], [cx + span, cy + span], [cx - span, cy + span]]
+  for (let a = 0; a < 2 * dirs && poly.length >= 3; a++) {
+    const th = (Math.PI * a) / dirs, ux = Math.cos(th), uy = Math.sin(th)
+    const proj = pts.map((p) => ux * p[0] + uy * p[1]).sort((p, q) => q - p)
+    poly = clipHalfPlane(poly, ux, uy, proj[Math.min(proj.length - 1, k - 1)])
+  }
+  return poly
+}
+
+/**
+ * Bagplot (Rousseeuw, Ruts & Tukey 1999): the bag is the depth region D_k of the largest k that still holds at least half of the points (the exact convex
+ * depth contour, computed from the half-planes of `dirs` directions; the hull of the deepest points is the fallback when the region degenerates); the fence
+ * inflates the bag by `factor` about the depth median; points outside the fence are outliers.
+ */
 export function bagplot(pts: readonly [number, number][], factor = 3, dirs = 360): Bagplot {
   const n = pts.length
   const depth = halfspaceDepth(pts, dirs)
@@ -35,15 +68,18 @@ export function bagplot(pts: readonly [number, number][], factor = 3, dirs = 360
   const k = Math.ceil(n / 2)
   const cut = depth[order[k - 1]]
   const inBag = order.filter((i) => depth[i] >= cut)
+  let region = depthRegion(pts, cut, dirs)
+  const hull = (d3.polygonHull(inBag.map((i) => pts[i])) ?? inBag.map((i) => pts[i])) as [number, number][]
+  if (region.length < 3 || Math.abs(d3.polygonArea(region)) < Math.abs(d3.polygonArea(hull)) * 0.999) region = hull
   const dmax = depth[order[0]]
   const deepest = order.filter((i) => depth[i] === dmax)
   const center: [number, number] = [d3.mean(deepest, (i) => pts[i][0])!, d3.mean(deepest, (i) => pts[i][1])!]
-  const bag = (d3.polygonHull(inBag.map((i) => pts[i])) ?? inBag.map((i) => pts[i])) as [number, number][]
+  const bag = region
   const fence = bag.map(([x, y]) => [center[0] + factor * (x - center[0]), center[1] + factor * (y - center[1])] as [number, number])
   const outliers: number[] = [], loop: number[] = []
   const inBagSet = new Set(inBag)
   for (let i = 0; i < n; i++) {
-    if (inBagSet.has(i)) continue
+    if (inBagSet.has(i) || (bag.length >= 3 && d3.polygonContains(bag, pts[i]))) continue
     if (fence.length >= 3 && d3.polygonContains(fence, pts[i])) loop.push(i)
     else outliers.push(i)
   }

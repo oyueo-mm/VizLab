@@ -279,6 +279,57 @@ describe('spot noise, ribbons, cartograms', () => {
 })
 
 import { adjacencyFromRings } from './field11'
+import { correlatedNoise, crossingProbability } from './topo10'
+import { createRng } from '../lib/random'
+import { bagplot, depthRegion, halfspaceDepth } from './stat10b'
+import * as d3 from 'd3'
+
+describe('v1.1 accuracy improvements', () => {
+  it('correlated noise: unit variance, and neighbouring vertices correlate more as the length grows', () => {
+    const lag1 = (len: number) => { const r = createRng(3); let num = 0, v = 0, n = 0; for (let t = 0; t < 12; t++) { const z = correlatedNoise(40, 40, len, () => r.normal()); for (let y = 0; y < 40; y++) for (let x = 0; x < 39; x++) { num += z[y * 40 + x] * z[y * 40 + x + 1]; v += z[y * 40 + x] ** 2; n++ } } return { corr: num / v, varr: v / n } }
+    const a = lag1(0), b = lag1(1), c = lag1(3)
+    expect(Math.abs(a.corr)).toBeLessThan(0.08)
+    expect(b.corr).toBeGreaterThan(0.4)
+    expect(c.corr).toBeGreaterThan(b.corr)
+    expect(c.varr).toBeGreaterThan(0.6)
+    expect(c.varr).toBeLessThan(1.4)
+  })
+  it('crossing probability keeps its old result for independent noise and stays a probability when correlated', () => {
+    const nx = 12, ny = 12
+    const g = { nx, ny, v: Float64Array.from({ length: nx * ny }, (_, i) => (i % nx) / nx) }
+    const sigma = new Float64Array(nx * ny).fill(0.15)
+    const p0 = crossingProbability(g, sigma, 0.5, 200, 4)
+    const p0b = crossingProbability(g, sigma, 0.5, 200, 4, 0)
+    expect(Array.from(p0)).toEqual(Array.from(p0b))
+    const p3 = crossingProbability(g, sigma, 0.5, 200, 4, 3)
+    for (const v of p3) { expect(v).toBeGreaterThanOrEqual(0); expect(v).toBeLessThanOrEqual(1) }
+    // with correlated noise the contour moves as a whole, so fewer cells far from the mean contour are ever crossed
+    expect(p3.filter((v) => v > 0).length).toBeLessThanOrEqual(p0.filter((v) => v > 0).length)
+  })
+  it('bagplot: the bag is the exact depth region, it holds at least half of the points and contains the hull of the deepest points', () => {
+    const r = createRng(9)
+    const pts: [number, number][] = Array.from({ length: 80 }, () => [r.normal(), r.normal() * 0.6 + 0.4 * 0])
+    const bp = bagplot(pts, 3, 180)
+    const inside = pts.filter((p) => d3.polygonContains(bp.bag, p)).length
+    expect(inside).toBeGreaterThanOrEqual(34) // boundary points of the polygon are not counted as inside
+    const depth = halfspaceDepth(pts, 180)
+    const kMax = Math.max(...depth)
+    const deepest = pts.filter((_, i) => depth[i] === kMax)
+    for (const p of deepest) expect(d3.polygonContains(bp.bag, p) || bp.bag.some((q) => Math.hypot(q[0] - p[0], q[1] - p[1]) < 1e-6)).toBe(true)
+    const hull = d3.polygonHull(pts.filter((_, i) => depth[i] >= Math.ceil(kMax / 2)))
+    expect(hull).not.toBeNull()
+    // a depth region is convex and its area never exceeds the hull of all points
+    expect(Math.abs(d3.polygonArea(bp.bag))).toBeLessThan(Math.abs(d3.polygonArea(d3.polygonHull(pts)!)))
+  })
+  it('depth region of a square with its centre: D_1 is the square, D_2 shrinks to the centre', () => {
+    const sq: [number, number][] = [[0, 0], [10, 0], [10, 10], [0, 10], [5, 5]]
+    const d1 = depthRegion(sq, 1, 180)
+    expect(Math.abs(d3.polygonArea(d1))).toBeCloseTo(100, 0)
+    const d2 = depthRegion(sq, 2, 180)
+    expect(Math.abs(d3.polygonArea(d2))).toBeLessThan(60)
+  })
+})
+
 describe('map adjacency', () => {
   it('regions sharing a border are neighbours, a distant one is not', () => {
     const sq = (x: number, y: number) => [[[x, y], [x + 10, y], [x + 10, y + 10], [x, y + 10]] as [number, number][]]

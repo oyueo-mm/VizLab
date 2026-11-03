@@ -22,7 +22,7 @@ export const contentV10Tree: Record<string, VizContent> = {
     math: [{ tex: 'h=\\operatorname{clip}\\Big(\\tfrac{H_{\\text{avail}}}{\\max_d n_d}-g,\\ h_{\\min},\\ h_{\\max}\\Big)', caption: '노드 높이: 가장 붐비는 열의 노드 수 n_d에 맞춘 화면 높이 H_avail과 간격 g' }],
     pros: ['큰 트리도 현재 경로 주변만 보여 줘서 복잡도가 낮아집니다.', '접힌 가지의 크기를 삼각형으로 짐작할 수 있습니다.', '경로를 따라가는 탐색이 직관적입니다.'],
     cons: ['한 번에 한 경로만 펼쳐 다른 가지를 비교하기는 불편합니다.', '같은 깊이의 노드가 아주 많으면 글자가 사라집니다.', '노드 크기로 값을 표현할 수 없습니다.'],
-    cautions: ['이 구현은 구조를 보존한 단순화입니다: 논문의 노드 이동 애니메이션, 카메라 이동, 검색·필터, 부분 트리 크기에 맞춘 열 너비 조정은 구현하지 않았습니다.', '열 안의 위치는 부모 높이를 기준으로 한 단순 탐욕 배치이며 논문의 정확한 배치 알고리즘이 아닙니다.', '서지: Plaisant, Grosjean, Bederson (2002), SpaceTree: Supporting Exploration in Large Node Link Tree, Design Evolution and Empirical Evaluation, IEEE Symposium on Information Visualization (InfoVis 2002), 57–64, DOI 10.1109/INFVIS.2002.1173148 (University of Maryland HCIL 페이지와 서지 기록으로 확인).'],
+    cautions: ['이 구현은 구조를 보존한 단순화입니다: v1.1에서 노드의 위치 이동에 0.3초 전환(CSS 트랜지션, 동작 줄이기 설정이면 끔)을 추가했습니다. 논문의 카메라 이동, 새 노드가 부모 위치에서 펼쳐지는 전환, 검색·필터, 부분 트리 크기에 맞춘 열 너비 조정은 구현하지 않았습니다.', '열 안의 위치는 부모 높이를 기준으로 한 단순 탐욕 배치이며 논문의 정확한 배치 알고리즘이 아닙니다.', '서지: Plaisant, Grosjean, Bederson (2002), SpaceTree: Supporting Exploration in Large Node Link Tree, Design Evolution and Empirical Evaluation, IEEE Symposium on Information Visualization (InfoVis 2002), 57–64, DOI 10.1109/INFVIS.2002.1173148 (University of Maryland HCIL 페이지와 서지 기록으로 확인).'],
     differs: ['하이퍼볼릭 트리는 기하 변환으로 주변을 압축하고, 스페이스트리는 가지를 접고 펼쳐 크기를 맞춥니다.', '덴드로그램은 전체 트리를 한꺼번에 보이고, 스페이스트리는 현재 경로만 보입니다.', '트리맵은 영역으로 값을 표현하고 스페이스트리는 노드-링크로 구조를 보입니다.'],
     references: ['Plaisant, Grosjean, Bederson (2002), SpaceTree, IEEE InfoVis 2002, 57–64, DOI 10.1109/INFVIS.2002.1173148 (서지 검증: UMD HCIL 페이지)'],
   },

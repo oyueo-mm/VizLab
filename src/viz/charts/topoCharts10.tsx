@@ -6,7 +6,7 @@ import { columnIndex, toNumber, type DataTable } from '../../data/table'
 import { createRng } from '../../lib/random'
 import { schemes } from '../../lib/colors'
 import { fmt } from '../../lib/format'
-import { contourTree, crossingProbability, filterHills, landscapeHeights, landscapeHills, persistence, simplifyContourTree, type ContourTree, type Grid2 } from '../../stats/topo10'
+import { contourTree, correlatedNoise, crossingProbability, filterHills, landscapeHeights, landscapeHills, persistence, simplifyContourTree, type ContourTree, type Grid2 } from '../../stats/topo10'
 import { roleColumn } from '../mapping'
 import type { ChartProps, ControlsProps, Mapping, RoleSpec, VizModule } from '../types'
 import { ViewControls, type ViewParams } from './geo3dCharts'
@@ -279,7 +279,7 @@ export const landscapeModule: VizModule<LandParams> = {
 
 // ───────────────────────────── Probabilistic isocontours ─────────────────────────────
 
-export interface ProbParams { level: number; samples: number; spread: number; showSamples: boolean; selCell: number }
+export interface ProbParams { level: number; samples: number; spread: number; showSamples: boolean; selCell: number; corr: number }
 
 function ProbChart({ table, mapping, params, setParams, width, height, compact }: ChartProps<ProbParams>) {
   const { tip, show, hide } = useTooltip()
@@ -288,12 +288,12 @@ function ProbChart({ table, mapping, params, setParams, width, height, compact }
   const lo = data ? Math.min(...data.g.v) : 0, hi = data ? Math.max(...data.g.v) : 1
   const level = lo + params.level * (hi - lo)
   const sigma = useMemo(() => (data ? data.extra.map((s) => s * params.spread) : null), [data, params.spread])
-  const prob = useMemo(() => (data && sigma ? crossingProbability(data.g, sigma, level, compact ? 60 : params.samples, 11) : null), [data, sigma, level, params.samples, compact])
+  const prob = useMemo(() => (data && sigma ? crossingProbability(data.g, sigma, level, compact ? 60 : params.samples, 11, params.corr) : null), [data, sigma, level, params.samples, compact, params.corr])
   const samples = useMemo(() => {
     if (!data || !sigma || !params.showSamples || compact) return []
     const r = createRng(5)
-    return Array.from({ length: 8 }, () => d3.contours().size([data.g.nx, data.g.ny]).thresholds([level])(Array.from(data.g.v, (v, i) => v + sigma[i] * r.normal()))[0])
-  }, [data, sigma, level, params.showSamples, compact])
+    return Array.from({ length: 8 }, () => { const z = correlatedNoise(data.g.nx, data.g.ny, params.corr, () => r.normal()); return d3.contours().size([data.g.nx, data.g.ny]).thresholds([level])(Array.from(data.g.v, (v, i) => v + sigma[i] * z[i]))[0] })
+  }, [data, sigma, level, params.showSamples, compact, params.corr])
   if (!data || !prob || !sigma) return <ChartMessage>x, y, 평균, 표준편차 열을 고르세요. 규칙적인 이차원 격자여야 합니다.</ChartMessage>
   const g = data.g
   const side = Math.min(width, height - (compact ? 4 : 44)) - (compact ? 4 : 20)
@@ -328,6 +328,7 @@ function ProbControls({ params, setParams }: ControlsProps<ProbParams>) {
       <Slider label="등치선의 값 (최소~최대 위치)" value={params.level} min={0.05} max={0.95} step={0.01} onChange={(level) => setParams({ level, selCell: -1 })} format={(v) => `${Math.round(v * 100)}%`} testId="ctl-level" />
       <Slider label="표준편차 배율" value={params.spread} min={0} max={3} step={0.1} onChange={(spread) => setParams({ spread })} format={(v) => v.toFixed(1)} testId="ctl-spread" />
       <Slider label="몬테카를로 표본 수" value={params.samples} min={50} max={800} step={50} onChange={(samples) => setParams({ samples })} testId="ctl-samples" />
+      <Slider label="공간 상관 길이(칸 수, 0 = 칸마다 독립)" value={params.corr} min={0} max={8} step={0.5} onChange={(corr) => setParams({ corr })} format={(v) => v.toFixed(1)} testId="ctl-corr" />
       <Toggle label="표본 등치선 8개 겹치기" checked={params.showSamples} onChange={(showSamples) => setParams({ showSamples })} testId="ctl-showsamples" />
       <Hint>격자점마다 평균과 표준편차를 가진 불확실한 스칼라장에서, 장의 값을 정규분포에서 여러 번 뽑아(몬테카를로) 각 표본마다 등치선이 지나는 격자 칸을 세고, 그 비율을 칸의 색으로 칠합니다. 검은 선은 평균 장의 등치선이고, 색이 진한 칸은 불확실성 때문에 등치선이 그곳을 지날 확률이 높다는 뜻입니다. 표준편차가 큰 오른쪽에서 확률이 넓은 띠로 번집니다. 표본 등치선을 겹치면 가능한 등치선들이 평균선 둘레에 흩어지는 모습이 보입니다. 이 구현은 격자점 값을 서로 독립으로 가정하고(공간 상관 없음) 칸 단위 통과 확률만 계산하며, 원 논문(Pöthkow·Hege)의 상관 구조를 반영한 확률 계산은 하지 않습니다.</Hint>
     </ControlGroup>
@@ -340,7 +341,7 @@ export const probIsoModule: VizModule<ProbParams> = {
     { key: 'mean', label: '평균', type: 'number', required: true, prefer: '평균|mean' }, { key: 'sigma', label: '표준편차', type: 'number', required: true, prefer: '표준편차|sigma|sd' },
   ],
   datasets: ['noisy-field'],
-  defaultParams: { level: 0.55, samples: 300, spread: 1, showSamples: true, selCell: -1 },
+  defaultParams: { level: 0.55, samples: 300, spread: 1, showSamples: true, selCell: -1, corr: 2 },
   Chart: ProbChart,
   Controls: ProbControls,
   hint: '등치선 값과 표준편차 배율을 바꿔 불확실한 영역이 번지는 것을 봅니다 · 칸에 올려 통과 확률 확인',

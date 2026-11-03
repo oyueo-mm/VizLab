@@ -54,7 +54,7 @@ function BagControls({ params, setParams }: ControlsProps<BagParams>) {
     <ControlGroup title="백플롯">
       <Slider label="울타리 배율(중심에서 가방을 몇 배로 부풀릴지)" value={params.factor} min={1.5} max={4} step={0.5} onChange={(factor) => setParams({ factor })} format={(v) => v.toFixed(1)} testId="ctl-factor" />
       <Toggle label="울타리 표시" checked={params.showFence} onChange={(showFence) => setParams({ showFence })} testId="ctl-fence" />
-      <Hint>이변량 상자그림입니다. 점마다 ‘그 점을 지나는 직선이 나누는 반평면 중 점이 더 적은 쪽의 점 수’(반공간 깊이)를 구해 깊은 점일수록 중심에 가깝다고 봅니다. 가장 깊은 점들의 평균이 중심(십자), 깊이가 큰 쪽 절반 점의 볼록 껍질이 가방, 중심에서 가방을 배율만큼 부풀린 것이 울타리이며 울타리 밖의 점(붉은색)이 이상점입니다. 이 구현은 점에서의 깊이를 360개 방향으로 근사하고, 가방을 정확한 깊이 윤곽 대신 점들의 껍질로 둡니다.</Hint>
+      <Hint>이변량 상자그림입니다. 점마다 ‘그 점을 지나는 직선이 나누는 반평면 중 점이 더 적은 쪽의 점 수’(반공간 깊이)를 구해 깊은 점일수록 중심에 가깝다고 봅니다. 가장 깊은 점들의 평균이 중심(십자), 절반 이상의 점을 담는 가장 깊은 깊이 영역(깊이 윤곽)이 가방, 중심에서 가방을 배율만큼 부풀린 것이 울타리이며 울타리 밖의 점(붉은색)이 이상점입니다. 이 구현은 깊이와 깊이 영역을 360개 방향으로 근사합니다.</Hint>
     </ControlGroup>
   )
 }

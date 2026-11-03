@@ -211,14 +211,32 @@ export function simplifyContourTree(t: ContourTree, g: Grid2, threshold: number)
 
 // ───────────────────────────── probabilistic isocontours ─────────────────────────────
 
-/** Probability that the isocontour of level `level` passes through each cell of a grid whose vertices have independent Gaussian noise (Monte Carlo). */
-export function crossingProbability(mean: Grid2, sigma: Float64Array, level: number, samples: number, seed: number): Float64Array {
+/**
+ * Standard-normal random field on an nx × ny grid with spatial correlation: white noise smoothed with a Gaussian kernel of standard deviation `len` cells and
+ * rescaled to unit variance, so neighbouring vertices move together (a squared-exponential covariance with length scale len·√2). len = 0 gives independent noise.
+ */
+export function correlatedNoise(nx: number, ny: number, len: number, normal: () => number): Float64Array {
+  const w = new Float64Array(nx * ny)
+  for (let i = 0; i < w.length; i++) w[i] = normal()
+  if (len <= 0.01) return w
+  const R = Math.ceil(3 * len)
+  const k = Array.from({ length: 2 * R + 1 }, (_, i) => Math.exp(-((i - R) ** 2) / (2 * len * len)))
+  const norm = Math.sqrt(k.reduce((s, v) => s + v * v, 0))
+  const tmp = new Float64Array(nx * ny), out = new Float64Array(nx * ny)
+  for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++) { let s = 0; for (let d = -R; d <= R; d++) { const xx = x + d; if (xx >= 0 && xx < nx) s += k[d + R] * w[y * nx + xx] } tmp[y * nx + x] = s / norm }
+  for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++) { let s = 0; for (let d = -R; d <= R; d++) { const yy = y + d; if (yy >= 0 && yy < ny) s += k[d + R] * tmp[yy * nx + x] } out[y * nx + x] = s / norm }
+  return out
+}
+
+/** Probability that the isocontour of level `level` passes through each cell of a grid whose vertices carry Gaussian noise (Monte Carlo); `corr` is the correlation length in cells (0 = independent vertices). */
+export function crossingProbability(mean: Grid2, sigma: Float64Array, level: number, samples: number, seed: number, corr = 0): Float64Array {
   const r = createRng(seed)
   const cells = (mean.nx - 1) * (mean.ny - 1)
   const count = new Float64Array(cells)
   const s = new Float64Array(mean.nx * mean.ny)
   for (let k = 0; k < samples; k++) {
-    for (let i = 0; i < s.length; i++) s[i] = mean.v[i] + sigma[i] * r.normal()
+    const z = correlatedNoise(mean.nx, mean.ny, corr, () => r.normal())
+    for (let i = 0; i < s.length; i++) s[i] = mean.v[i] + sigma[i] * z[i]
     for (let j = 0; j < mean.ny - 1; j++) for (let i = 0; i < mean.nx - 1; i++) {
       const a = s[j * mean.nx + i] >= level, b = s[j * mean.nx + i + 1] >= level, c = s[(j + 1) * mean.nx + i] >= level, d = s[(j + 1) * mean.nx + i + 1] >= level
       if (!(a === b && b === c && c === d)) count[j * (mean.nx - 1) + i]++

@@ -3,6 +3,7 @@ import { useMemo, useRef } from 'react'
 import { ChartMessage, Tooltip, localPoint, useTooltip } from '../../components/chart/primitives'
 import { ControlGroup, Hint, Slider, Toggle } from '../../components/controls'
 import { columnIndex, toNumber, toLabel } from '../../data/table'
+import { useReducedMotion } from '../../hooks/motion'
 import { fmt } from '../../lib/format'
 import { buildTree } from '../../stats/hierarchy'
 import { contourBoxplot, spaceTree } from '../../stats/stat10c'
@@ -100,6 +101,7 @@ export interface StParams { selected: string; labels: boolean }
 interface Tn { name: string; children?: Tn[] }
 
 function StChart({ table, mapping, params, setParams, width, height, compact }: ChartProps<StParams>) {
+  const reduced = useReducedMotion()
   const { tip, show, hide } = useTooltip()
   const svgRef = useRef<SVGSVGElement>(null)
   const levels = roleColumns(mapping, 'levels')
@@ -128,12 +130,12 @@ function StChart({ table, mapping, params, setParams, width, height, compact }: 
           const isSel = n.path.slice(1).join('/') === params.selected
           const triH = n.hasKids && !n.open ? Math.min(n.h * 2.2, 3 + Math.sqrt(n.leaves) * 2.4) : 0
           return (
-            <g key={n.path.join('/')} data-testid="st-node" data-open={n.open} data-depth={n.depth} style={{ cursor: n.hasKids ? 'pointer' : 'default' }}
+            <g key={n.path.join('/')} data-testid="st-node" data-open={n.open} data-depth={n.depth} style={{ cursor: n.hasKids ? 'pointer' : 'default', transform: `translate(${X(n.depth)}px, ${n.y}px)`, transition: reduced || compact ? 'none' : 'transform 320ms ease' }}
               onClick={() => pick(n)}
               onPointerEnter={compact ? undefined : (e) => { const lp = localPoint(svgRef.current!, e); show(lp.x, lp.y, <><b>{n.name}</b><br />아래 잎 {n.leaves}개{n.hasKids ? (n.open ? ' · 펼쳐짐' : ' · 눌러서 펼치기') : ''}</>) }} onPointerLeave={hide}>
-              <rect x={X(n.depth)} y={n.y - n.h / 2} width={bw} height={n.h} rx={3} fill={isSel ? '#cfe6dd' : onPath ? '#e8f1ee' : '#fff'} stroke={isSel ? '#3f8f78' : '#9fb0b0'} strokeWidth={isSel ? 1.8 : 1} />
-              {params.labels && n.h >= 11 && !compact && <text x={X(n.depth) + 5} y={n.y} dy="0.34em" fontSize={Math.min(11, n.h - 2)} fill="#1f2937">{n.name.length > 12 ? n.name.slice(0, 11) + '…' : n.name}</text>}
-              {triH > 0 && <path d={`M${X(n.depth) + bw + 3},${n.y - triH / 2}L${X(n.depth) + bw + 3 + Math.min(colW * 0.25, 14)},${n.y}L${X(n.depth) + bw + 3},${n.y + triH / 2}Z`} fill="#8fb7a8" data-testid="st-preview" />}
+              <rect x={0} y={-n.h / 2} width={bw} height={n.h} rx={3} fill={isSel ? '#cfe6dd' : onPath ? '#e8f1ee' : '#fff'} stroke={isSel ? '#3f8f78' : '#9fb0b0'} strokeWidth={isSel ? 1.8 : 1} />
+              {params.labels && n.h >= 11 && !compact && <text x={5} y={0} dy="0.34em" fontSize={Math.min(11, n.h - 2)} fill="#1f2937">{n.name.length > 12 ? n.name.slice(0, 11) + '…' : n.name}</text>}
+              {triH > 0 && <path d={`M${bw + 3},${-triH / 2}L${bw + 3 + Math.min(colW * 0.25, 14)},0L${bw + 3},${triH / 2}Z`} fill="#8fb7a8" data-testid="st-preview" />}
             </g>
           )
         })}
@@ -147,7 +149,7 @@ function StControls({ params, setParams }: ControlsProps<StParams>) {
   return (
     <ControlGroup title="스페이스트리">
       <Toggle label="이름 표시" checked={params.labels} onChange={(labels) => setParams({ labels })} testId="ctl-labels" />
-      <Hint>노드를 누르면 그 노드까지의 경로와 그 노드의 자식만 펼치고 나머지 가지는 접습니다. 같은 깊이에 보이는 노드가 많아질수록 노드의 높이가 줄어 한 열이 화면에 들어오도록 크기를 다시 맞추고(동적 재조정), 접힌 가지의 오른쪽에는 아래에 있는 잎의 수에 비례하는 삼각형(미리보기)을 둡니다. 선택한 노드를 한 번 더 누르면 한 단계 접습니다. 원 논문의 애니메이션, 카메라 이동, 검색·필터는 구현하지 않았습니다.</Hint>
+      <Hint>노드를 누르면 그 노드까지의 경로와 그 노드의 자식만 펼치고 나머지 가지는 접습니다. 같은 깊이에 보이는 노드가 많아질수록 노드의 높이가 줄어 한 열이 화면에 들어오도록 크기를 다시 맞추고(동적 재조정), 접힌 가지의 오른쪽에는 아래에 있는 잎의 수에 비례하는 삼각형(미리보기)을 둡니다. 선택한 노드를 한 번 더 누르면 한 단계 접습니다. 노드 위치의 이동 전환(0.3초)은 있지만 원 논문의 카메라 이동, 새 노드가 부모에서 펼쳐지는 전환, 검색·필터는 구현하지 않았습니다.</Hint>
     </ControlGroup>
   )
 }
