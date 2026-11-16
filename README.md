@@ -1,268 +1,127 @@
+<div align="center">
+
+<img src="public/favicon.svg" width="76" height="76" alt="VizLab logo">
+
 # VizLab
 
-인터랙티브 데이터 시각화 백과사전 — 다양한 시각화 기법을 찾아보고, 데이터와 매개변수를 직접 바꾸며 원리를 익히는 웹앱입니다.
+**인터랙티브 데이터 시각화 백과사전**
 
-**배포 주소:** https://oyueo-mm.github.io/VizLab/ (현재 버전 v1.1)
+데이터를 탐색하고, 직접 조작하고, 서로 다른 시각화의 원리를 비교합니다.
+
+![Version](https://img.shields.io/badge/version-1.1.0-297b72?style=flat-square)
+![React](https://img.shields.io/badge/React-19-149eca?style=flat-square)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178c6?style=flat-square)
+![D3.js](https://img.shields.io/badge/D3.js-f28b43?style=flat-square)
+![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-222222?style=flat-square)
+
+### [VizLab 시작하기](https://oyueo-mm.github.io/VizLab/)
+
+[도감](https://oyueo-mm.github.io/VizLab/#/catalog) · [비교 실험실](https://oyueo-mm.github.io/VizLab/#/compare) · [개발 기록](CHANGELOG.md)
+
+| **360** | **17** | **78** | **100** |
+| :---: | :---: | :---: | :---: |
+| 시각화 | 카테고리 | 비교 프리셋 | 홈 애니메이션 단계 |
+
+<a href="https://oyueo-mm.github.io/VizLab/#/catalog"><img src="docs/assets/overview.svg" width="780" alt="Representative visualization illustrations"></a>
+
+<sub>대표 시각화의 예시 그림 · 클릭하면 실제 도감으로 이동합니다.</sub>
+
+</div>
 
 ## 주요 기능
 
-- **시각화 도감 360종(17개 카테고리, 성격·표현 원리별 분류)** — 실제 렌더링 엔진으로 그린 미리보기 카드, 한국어·영어 이름·키워드 검색, **카테고리 · 성격 · 표현 원리 · 데이터 유형 · 검색어를 독립적으로 조합하는 필터**(수치형·범주형·시계열·다변량·계층형·네트워크·흐름형·지리공간), 결과 개수와 필터 초기화. 필터 상태는 URL(`#/catalog/<카테고리>?q=…&t=…&k=…&e=…`)에 담겨 새로고침·뒤로 가기에서 복원됩니다. 모바일에서는 필터가 접힙니다.
-- **개별 실험실** — 넓은 차트 영역, 접이식 설정 패널(설정/데이터 탭), 접이식 상세 설명, 실행 취소·다시 실행, 초기화, 전체 화면. 긴 설정 패널은 그룹별로 접고 펼칠 수 있습니다.
-- **시각화 비교 실험실** — 하나의 데이터셋을 2~3개의 시각화로 나란히 그립니다. 데이터는 공유하고 설정은 차트마다 독립입니다. 추천 조합 33종(지도·통계·네트워크·지형·벡터장·집합·생물정보학 조합 포함), 데이터 편집·샘플 수·새 표본, 차트별 열 매핑, 같은 관측값 연결 강조(Linked Highlighting: 지도 지역↔막대, 네트워크 노드↔인접 행렬 행·열, 인접 행렬 칸↔간선, 보정 곡선 구간↔ROC 곡선), **차트를 고르기 전에** 데이터와 맞지 않는 차트를 이유와 함께 표시(차트 코드를 불러오지 않고 정적 슬롯 표로 판단).
-- **직접 조작** — 차트마다 고유한 조작: 점 추가·드래그·삭제(산점도), 구간 수·경계 이동(히스토그램), 대역폭·커널(KDE), 노드 드래그·휠 확대(네트워크), 막대·눈금 드래그(불릿), 캔들 몸통 드래그(캔들스틱), 교차표 편집(모자이크) 등
-- **데이터 시스템** — 시드 기반으로 재현되는 43개 데이터셋, 표 편집기(셀 수정, 행 추가·삭제, 숫자형·범주형·날짜형 전환), **CSV·JSON 가져오기·내보내기**, 열 → 시각 채널 매핑, 호환되지 않는 데이터셋의 이유 안내. 모든 데이터는 브라우저 안에서만 처리됩니다.
-- **날짜·시간 데이터** — 날짜형 열(ISO 8601 `YYYY-MM-DD`, `YYYY-MM-DDTHH:mm`, `YYYY.MM.DD`)을 인식하고 선·영역·스텝·캔들스틱·호라이즌·팬 차트·범프·캘린더 히트맵에서 시간 축으로 그립니다. 시간대 표기가 없는 값은 UTC 달력 시각으로 다루고(‘Z’·`+09:00`이 붙은 값은 UTC로 환산) 일광절약시간의 영향을 받지 않습니다. `03/04/2024`처럼 일·월 순서가 모호한 값은 자동으로 해석하지 않고 형식을 고르게 합니다.
-- **정확한 통계 계산** — 실제 KDE(1D·2D), 경험적 CDF, 히스토그램, R-7/Tukey 사분위수, 야코비 고유분해 기반 PCA, 레터 밸류, ROC·PR(scikit-learn 값과 대조), d3-force 힘 기반 배치 등
-- **설명 콘텐츠** — 정의, 적합한 데이터, 작동 원리, KaTeX 수식, 장단점, 주의사항, 비슷한 시각화
-- 홈 화면에서 36종의 시각화(코로플레스·포레스트·플레임·에지 번들링·등고선·유선·카플란–마이어·UpSet 포함)가 약 1.8초 간격으로 순환하는 애니메이션. 같은 데이터가 실제 차트 계산 엔진으로 모핑되며(연결 산점도·인구 피라미드·호라이즌·네트워크 포함), 계층·흐름·네트워크·지도 데이터는 반복할 때마다 새 시드로 구조와 값이 달라집니다. 화면 밖·탭 비활성 때 멈추고 reduced-motion을 존중합니다.
-- 차트마다 동적 import로 분할되어 첫 화면에는 필요한 코드만 불러옵니다
-- 새로고침 후에도 경로·설정·편집한 데이터 유지, 모바일에서는 하단 시트로 설정 제공
+| 기능 | 설명 |
+| :--- | :--- |
+| [시각화 도감](https://oyueo-mm.github.io/VizLab/#/catalog) | 실제 렌더링 미리보기, 한·영 검색, 카테고리·성격·표현 원리·데이터 유형 필터 |
+| [인터랙티브 실험실](https://oyueo-mm.github.io/VizLab/#/viz/scatter) | 데이터와 매개변수 직접 조작, 실시간 결과, 실행 취소·다시 실행 |
+| [비교 실험실](https://oyueo-mm.github.io/VizLab/#/compare) | 같은 데이터를 2~3개 차트로 비교, 독립 설정, 일부 차트 간 연결 강조 |
+| 데이터 편집 | 표 편집, CSV·JSON 가져오기·내보내기, 시드 기반 재현 |
+| 이론 학습 | 정의, 수식, 작동 원리, 장단점, 유사 기법 및 참고문헌 |
 
-## 수록 시각화 (v0.4, 80종)
+설치나 로그인 없이 브라우저에서 사용할 수 있습니다. 사용자 데이터는 브라우저 내부에서 처리됩니다.
 
-| 카테고리 | 시각화 |
-| --- | --- |
-| 분포 | 히스토그램, KDE, ECDF, 박스, 바이올린, 스트립, 릿지라인, 레인클라우드, 스웜, Q-Q 플롯, P-P 플롯, 레터 밸류 플롯 (+ 2D KDE) |
-| 관계 | 산점도, 버블, 헥스빈, 페어 플롯, 2차원 KDE, 연결 산점도 (+ 코드, 네트워크, 아크, PCA 바이플롯, **지리적 헥스빈 지도**) |
-| 비교 | 막대, 그룹 막대, 누적 막대, 롤리팝, 덤벨, 슬로프, 워터폴, 인구 피라미드, 파레토 차트, 불릿 차트 |
-| 시계열 | 선, 영역, 누적 영역, 스트림그래프, 범프, 캘린더 히트맵, 스텝 플롯, 캔들스틱, 호라이즌 차트 (+ 연결 산점도, 팬 차트, **관리도, 간트 차트**) |
-| 비율·구성 | 원·도넛, 트리맵, 100% 누적 막대, 와플, 선버스트, 원 패킹, 모자이크 플롯 (+ 아이시클, 올루비얼) |
-| 다변량 | 히트맵, 평행좌표, 레이더, PCA 바이플롯, 앤드루스 곡선 (+ 덴드로그램, 호라이즌) |
-| 계층·흐름 | 생키, 코드, 덴드로그램, 아이시클, 네트워크 그래프, 아크 다이어그램, 올루비얼 다이어그램 (+ 트리맵, 선버스트, 원 패킹, **플레임 그래프, 계층형 에지 번들링**) |
-| 통계·불확실성 | 신뢰구간, ROC 곡선, Precision–Recall 곡선, 팬 차트 (+ Q-Q, P-P), **포레스트 플롯, 블랜드-알트만 플롯, 보정 곡선, 관리도, 퍼널 플롯** |
-| **지리공간** | **코로플레스 지도, 비례 심벌 지도, 점 밀도 지도, 지리적 헥스빈 지도, 흐름 지도, 타일 그리드 지도, 도를링 카토그램** |
-| **관계·네트워크** | **인접 행렬 그래프, 계층형 에지 번들링, 이분 그래프, 하이브 플롯** (+ 네트워크 그래프, 아크, 생키, 코드, 올루비얼) |
-| **특수·응용** | **간트 차트, 퍼널 차트, 마리메코 차트, 플레임 그래프** |
+## 시각화 갤러리
 
-굵게 표시한 20종이 v0.4에서 추가되었습니다(v0.3은 60종). 한 시각화가 여러 카테고리·데이터 유형에 나타날 수 있습니다(`alsoIn`, `dataKinds`).
+카테고리 이름 또는 그림을 클릭하면 해당 도감으로 이동합니다. 아래 SVG는 대표 기법을 설명하는 예시 그림이며 실제 앱 화면 캡처는 아닙니다.
 
-## v1.1: 방법론 13종과 전문 도표 7종, 정확도 개선, 3D 렌더링 비교
+| | | |
+| :---: | :---: | :---: |
+| <a href="https://oyueo-mm.github.io/VizLab/#/catalog/distribution"><img src="docs/assets/distribution.svg" width="240" alt="Histogram"><br><b>분포</b></a><br><sub>히스토그램 · KDE · 바이올린</sub> | <a href="https://oyueo-mm.github.io/VizLab/#/catalog/relationship"><img src="docs/assets/relationship.svg" width="240" alt="Scatter Plot"><br><b>관계</b></a><br><sub>산점도 · 버블 · 헥스빈</sub> | <a href="https://oyueo-mm.github.io/VizLab/#/catalog/comparison"><img src="docs/assets/comparison.svg" width="240" alt="Bar Chart"><br><b>비교</b></a><br><sub>막대 · 덤벨 · 롤리팝</sub> |
+| <a href="https://oyueo-mm.github.io/VizLab/#/catalog/timeseries"><img src="docs/assets/timeseries.svg" width="240" alt="Line Chart"><br><b>시계열</b></a><br><sub>선 · 범프 · 호라이즌</sub> | <a href="https://oyueo-mm.github.io/VizLab/#/catalog/composition"><img src="docs/assets/composition.svg" width="240" alt="Donut Chart"><br><b>비율·구성</b></a><br><sub>도넛 · 트리맵 · 선버스트</sub> | <a href="https://oyueo-mm.github.io/VizLab/#/catalog/multivariate"><img src="docs/assets/multivariate.svg" width="240" alt="Parallel Coordinates"><br><b>다변량</b></a><br><sub>평행좌표 · PCA · RadViz</sub> |
+| <a href="https://oyueo-mm.github.io/VizLab/#/catalog/hierarchy"><img src="docs/assets/hierarchy.svg" width="240" alt="Sankey Diagram"><br><b>계층·흐름</b></a><br><sub>생키 · 아이시클 · 덴드로그램</sub> | <a href="https://oyueo-mm.github.io/VizLab/#/catalog/uncertainty"><img src="docs/assets/uncertainty.svg" width="240" alt="Forest Plot"><br><b>통계·불확실성</b></a><br><sub>포레스트 · 신뢰구간 · Q-Q</sub> | <a href="https://oyueo-mm.github.io/VizLab/#/catalog/geo"><img src="docs/assets/geo.svg" width="240" alt="Tile Grid Map"><br><b>지리공간</b></a><br><sub>코로플레스 · 타일 그리드 · 카토그램</sub> |
+| <a href="https://oyueo-mm.github.io/VizLab/#/catalog/network"><img src="docs/assets/network.svg" width="240" alt="Network Graph"><br><b>관계·네트워크</b></a><br><sub>네트워크 · NodeTrix · Bubble Sets</sub> | <a href="https://oyueo-mm.github.io/VizLab/#/catalog/special"><img src="docs/assets/special.svg" width="240" alt="Funnel Chart"><br><b>특수·응용</b></a><br><sub>퍼널 · 간트 · 플레임</sub> | <a href="https://oyueo-mm.github.io/VizLab/#/catalog/science"><img src="docs/assets/science.svg" width="240" alt="Surface Plot"><br><b>과학·수학</b></a><br><sub>3D 곡면 · 프랙탈 · 벡터장</sub> |
+| <a href="https://oyueo-mm.github.io/VizLab/#/catalog/bio"><img src="docs/assets/bio.svg" width="240" alt="Expression Heatmap"><br><b>생물정보학</b></a><br><sub>발현 히트맵 · 유전체 · 계통</sub> | <a href="https://oyueo-mm.github.io/VizLab/#/catalog/finance"><img src="docs/assets/finance.svg" width="240" alt="Candlestick Chart"><br><b>금융·경제</b></a><br><sub>캔들스틱 · 수익률 · 위험</sub> | <a href="https://oyueo-mm.github.io/VizLab/#/catalog/industry"><img src="docs/assets/industry.svg" width="240" alt="Control Chart"><br><b>산업·공학</b></a><br><sub>관리도 · 공정 · 신뢰성</sub> |
+| <a href="https://oyueo-mm.github.io/VizLab/#/catalog/text"><img src="docs/assets/text.svg" width="240" alt="Word Cloud"><br><b>언어·텍스트</b></a><br><sub>워드 클라우드 · 워드 트리 · TextArc</sub> | <a href="https://oyueo-mm.github.io/VizLab/#/catalog/ml"><img src="docs/assets/ml.svg" width="240" alt="ROC Curve"><br><b>기계학습·AI</b></a><br><sub>ROC · UMAP · SHAP</sub> |  |
 
-v1.1은 기존 340종을 그대로 두고 새 20종을 더해 도감 **360종**이 되었습니다. 범용 방법론 13종(행렬 큐브, 평행 간선 스플래팅, 캑터스트리, 일반화 피타고라스 트리, 힌턴 도표, 연속 산점도, 연속 평행 좌표, 스폿 노이즈, 스트림 리본, 직사각형 카토그램, 이동시간 카토그램, 링 맵, 히스토리 플로)과 전문 도표 7종(테일러, 타깃, 노모그램, 파이퍼, 스티프, 스큐-T 로그-P, 하세)입니다.
+## 기술적 특징
 
-- 구현 수준·독립성·가장 가까운 기존 차트는 [docs/v11-inventory.md](docs/v11-inventory.md), 서지와 확인 정도는 [docs/v11-research.md](docs/v11-research.md)에 있습니다. 서지는 웹 기록으로만 확인했고 **본문을 대조한 항목은 없으며**, 링 맵·캑터스트리·이동시간 카토그램·스트림 리본은 원 문헌의 정확한 규칙을 확인하지 못한 직접 설계입니다.
-- **정확도 개선 3종**: 백플롯의 가방을 정확한 깊이 영역으로, 확률적 등치선에 공간 상관 길이를, 스페이스트리에 이동 전환을 추가했습니다.
-- **성능**: 3,000노드 잔여 롱태스크는 5회 중앙값에서 재현되지 않았고(JS가 아니라 래스터 지배), 적응형 LOD는 개선이 없어 되돌렸습니다. Canvas 2D와 WebGL을 같은 메쓰로 비교 측정했고(삼각형 4만 개에서 약 3.5배 차이) 앱의 3D 실험실이 모두 4천 개 이하라 도입하지 않았습니다([docs/v11-performance.md](docs/v11-performance.md)). 10,000노드는 측정하지 못했습니다.
-- **홈 애니메이션 100단계**, **비교 프리셋 78개**(새 11개). 행 단위 연결은 일부(파이퍼↔스티프, 힌턴, 지역 카토그램 등)에만 있고 나머지는 데이터 공유입니다.
-- 달성하지 못한 목표(요청문 밖 후보 조사, 370종, 원문 대조, 일부 정확도 개선)는 [docs/v11-next.md](docs/v11-next.md), 작업 기록은 [docs/v11-progress.md](docs/v11-progress.md)에 있습니다.
+- **실제 계산 엔진** — KDE, ECDF, PCA, ROC·PR, 통계적 추정, 지리 투영 및 그래프 레이아웃 등
+- **렌더링 최적화** — SVG·Canvas, 차트 단위 지연 로딩, 큰 네트워크 레이아웃의 Web Worker 분리
+- **재현 가능한 실험** — 시드 기반 데이터, 독립적인 매개변수, 데이터 호환성 검사
+- **검증** — v1.1 기준 단위 테스트 871개 통과, Playwright 브라우저 테스트 및 GitHub Actions 배포 기록 ([검증 상세](docs/v11-progress.md))
 
-## v1.0: 방법론 20종, 큰 네트워크의 Worker 레이아웃, 비교 프리셋 67개
-
-v1.0은 기존 320종(Mandelbrot·Julia·Newton·t-SNE·UMAP 포함)을 그대로 두고, 서지를 확인한 새 방법론 20종을 더해 도감 **340종**이 되었습니다: ZAME, 이센트릭 라벨링, LineUp, 단위 시각화, 스플래터플롯, 컨투어 트리, 지속성 바코드·다이어그램, 토폴로지컬 랜드스케이프, 확률적 등치선, 함수형 상자그림, 줄기-잎 그림, 선플라워 플롯, 걸린 루트그램, 로렌츠 곡선, 토네이도 차트, 백플롯, 발산형 쌓은 막대, 결정 곡선 분석, 윤곽 상자그림, 스페이스트리.
-
-- 각 기법의 구현 수준(충실한 재현 / 구조 보존 단순화 / 문헌 기반 대안 / 교육용 근사)과 독립성은 [docs/v10-inventory.md](docs/v10-inventory.md), 서지와 확인 정도는 [docs/v10-research.md](docs/v10-research.md)에 있습니다. 웹 기록으로만 확인했고 원문을 직접 읽지 못한 항목, 확인하지 못한 DOI는 ‘확인되지 않음’으로 적었습니다.
-- **큰 네트워크**: 캔버스로 그리는 큰 그래프(노드 400개 초과)의 d3-force 시뮬레이션을 Web Worker로 옮겼습니다. 3,000노드에서 레이아웃 종료 26 s → 약 4.5 s, 레이아웃 중 최악 프레임 667 ms → 183 ms(개발 PC 한 대에서의 단일 측정). 10,000노드와 WebGL 평가는 하지 못했습니다. 자세한 표와 한계는 [docs/v10-performance.md](docs/v10-performance.md).
-- **홈 애니메이션 90단계**, **비교 프리셋 67개**(새 8개: 백플롯·스플래터플롯·줄기-잎·로렌츠·위상·트리 브라우저·결정 곡선·루트그램). 행 단위 연결 하이라이트는 백플롯·걸린 루트그램에만 새로 추가했고, 나머지는 데이터 공유일 뿐 호버가 전달되지 않습니다.
-- **번들**: React를 별도 청크로 분리해 앱 메인 청크가 660 kB → 450 kB가 되었지만 첫 방문 총 전송량은 줄지 않았습니다(재방문 캐시 이득).
-- 달성하지 못한 목표(조사 후보 50개 이상, 350종 이상, 이전 구현 정확도 개선, 10,000노드·WebGL 평가)와 남은 과제는 [docs/v10-next.md](docs/v10-next.md)에, 작업 기록은 [docs/v10-progress.md](docs/v10-progress.md)에 있습니다.
-
-## v0.9: 논문으로 서지를 확인한 방법론 19종과 설명 로딩 개선
-
-v0.9는 기존 301종을 그대로 두고, 원 논문·공식 자료로 **서지를 확인한 뒤** 구현한 독립 방법론 19종을 더했습니다(도감 320종). 새 분석 결과가 아니라 새 배치·인코딩 원리를 기준으로 골랐고, 서지는 웹 기록으로 확인한 것만 적고 확인하지 못한 DOI는 ‘확인되지 않음’으로 두었습니다. 후보 29개의 상태와 서지 검증은 [docs/v09-research.md](docs/v09-research.md)에 있습니다.
-
-- **집합.** MetroSets(지하철 노선도형), MosaicSets(사각·육각 격자의 연속 영역), InfoCrystal(불리언 조합 결정체), SetNet(집합 먼저 배치 + 구역 안 네트워크).
-- **동적 관계·시퀀스.** PAOHvis(동적 하이퍼그래프), Set Streams(시간별 집합 조합과 개체 이동 리본), Sequence Braiding(이벤트 유형 DAG와 개체 가닥).
-- **다변량·계층.** Dust & Magnet(변수 자석), GosperMap(고스퍼 곡선 계층 지도).
-- **텍스트·지리·Focus+Context.** WordStream, TileBars, Seesoft(줄 단위 막대), OD Maps, MapTrix, Perspective Wall(Bifocal 포함).
-- **과학.** IBFV(움직이는 흐름 질감), Hyperstreamlines(텐서 고유벡터 관), Fiber Surfaces(두 스칼라장의 범위 평면 곡면), 벡터장 위상(임계점·분리선).
-- **기존 차트에 통합.** VSUP는 이변량 코로플레스의 ‘팔레트 방식’으로, Bifocal은 Perspective Wall의 방식으로 넣었습니다.
-- **설명·참고문헌.** 모든 신규 항목에 정의·시각적 매핑·작동 원리·수식·장단점·주의사항·**다른 기법과의 차이**·참고문헌이 있고, 서지 검증 결과와 원 논문과 다른 단순화(알고리즘 수준)를 적었습니다.
-- **비교 실험실 59종**(신규 10: 메트로셋 · 모자이크셋 · 레인보우 박스, 셋넷 · 메트로셋 · 모자이크셋 등). 메트로셋·모자이크셋·레인보우 박스·셋넷·더스트 앤 마그넷은 한 원소를 가리키면 다른 패널에서도 강조됩니다. **홈 애니메이션 80단계**, 데이터셋 214개(신규 15개, 모두 합성).
-- **성능.** 메인 번들이 v0.8의 757.9 kB에서 641.3 kB(gzip 209 kB)로 줄었습니다(신규 항목 메타데이터로 늘어난 약 35 kB를 포함해, 데이터셋 생성기를 지연 로드 청크로 분리한 효과). LIC는 Web Worker에서 낮은 해상도 미리보기 후 전체 해상도를 계산하며 설정이 바뀌면 이전 계산을 취소합니다. 설명 청크를 불러오지 못했을 때의 다시 시도 화면은 요청을 의도적으로 막는 브라우저 테스트로 검증했습니다.
-- 달성하지 못한 것(후보 조사 29개로 30개 목표에 1개 부족, ZAME·Sequen-C 등 미구현, 3,000노드 네트워크·WebGL 미착수), 단순화한 구현의 한계는 [docs/v09-inventory.md](docs/v09-inventory.md), [docs/v09-research.md](docs/v09-research.md), [docs/v09-next.md](docs/v09-next.md)에, 작업 기록과 측정은 [docs/v09-progress.md](docs/v09-progress.md)에 있습니다.
-
-## v0.8: 표현 구조가 다른 방법론 20종과 표현 원리 필터
-
-v0.8은 기존 281종을 그대로 두고, 데이터를 나타내는 **시각적 표현 구조 자체가 다른** 방법론 20종을 더했습니다(도감 301종). 새 분석 알고리즘이 아니라 새 배치·인코딩 원리를 우선했고, 기존 기법의 이름만 바꾼 항목은 만들지 않았습니다.
-
-- **집합(공간 위·겹치는 집합).** Bubble Sets(에너지 장 등치선), LineSets(집합당 최단 경로), Kelp Diagram(신장 트리 영역 + KelpFusion식 융합), Rainbow Boxes(원소 칸 위 상자, 끊김 최소화), Radial Sets(부채꼴 + 차수별 방사 막대).
-- **네트워크.** NodeTrix(공동체 행렬 + 선), Power Graph(power 노드로 무손실 압축·원본 간선 복원), Confluent Drawing(공유 줄기 합류), Semantic Substrates(속성 영역 배치), PivotGraph(속성 격자 집계).
-- **3차원·과학.** Cone Tree(3D 원뿔 계층, 경로 회전), Stream Surface(시작선이 훑는 유선 곡면), Streamtube(평행 이동 프레임 튜브, 유량 보존 반지름).
-- **시간·흐름·텍스트.** TimeArcs, LifeFlow(사건 순서 집계 + 패턴 검색), TimeSets, Flowstrates(출발 지도 + 시간 히트맵 + 도착 지도), TextArc, Parallel Tag Clouds, Phrase Net(한국어 조사 패턴).
-- **표현 원리 필터.** 모든 항목에 주 원리 1개와 보조 원리(위치·길이·면적·색상·글리프·연결·흐름·공간 분할·픽셀·다변량 매핑·투영·Focus+Context·시간·텍스처·3D·복합)를 붙이고 도감에서 카테고리·성격·검색과 조합해 걸러 봅니다(URL `?e=`). 정의와 경계 사례는 [docs/v08-encodings.md](docs/v08-encodings.md).
-- **설명.** 모든 신규 항목에 정의·시각적 매핑·작동 원리·수식·장단점·주의사항·**다른 기법과의 차이**(예: FDEB vs Confluent Drawing, Bubble Sets vs LineSets)·참고문헌이 있고, 원 논문보다 단순화한 부분은 ‘주의사항’에 명시했습니다.
-- **비교 실험실 49종**(신규 9: Bubble Sets / LineSets / Kelp, 네트워크 / NodeTrix / BioFabric, Power Graph / Confluent / NodeTrix, 3D 벡터장 / Stream Surface / Streamtube 등). 점 집합 세 그림은 한 점을 가리키면 모두에서 강조됩니다. **홈 애니메이션 72단계**, 데이터셋 199개(신규 9개, 모두 합성).
-- **성능.** 상세 설명 청크를 804 kB → 265 kB(+ 버전 그룹별 지연 로드 설명, 실험실 하나당 최대 약 162 kB)로 줄였고, FDEB는 Web Worker에서 계산해 300개 간선(약 1초) 동안에도 화면이 멈추지 않습니다.
-- 달성하지 못한 목표(신규 30종·도감 320종), SetNet·Sequence Braiding 등 미구현 후보, 단순화한 구현의 한계는 [docs/v08-inventory.md](docs/v08-inventory.md), [docs/v08-research.md](docs/v08-research.md), [docs/v08-next.md](docs/v08-next.md)에, 작업 기록과 측정은 [docs/v08-progress.md](docs/v08-progress.md)에 있습니다.
-
-## v0.7: 시각화 방법론 중심의 도감
-
-v0.7은 도감을 ‘시각화 방법론’ 중심의 백과사전으로 정리하면서 기존 250종을 그대로 두고 31종의 새 표현 기법을 더했습니다.
-
-- **성격 분류.** 모든 항목은 카테고리와 별개로 *시각화 방법론 · 전문 도표 · 분석·계산 결과 · 응용 예제* 중 하나의 주분류를 갖고(보조 성격 가능), 도감 화면의 ‘성격’ 필터(URL `?k=technique` 등)로 카테고리·데이터 유형·검색어와 독립적으로 조합할 수 있습니다. 주분류 합계는 방법론 142 · 전문 도표 78 · 분석·계산 결과 53 · 응용 예제 8(합 281). 기준과 판단 근거는 [docs/v07-classification.md](docs/v07-classification.md).
-- **기존 결과 중심 항목은 그대로.** 망델브로·줄리아·뉴턴 프랙탈, t-SNE, UMAP, 크리깅 등은 삭제나 변경 없이 ‘분석·계산 결과’로 표시하고, 상세 설명에 ‘표현 대상과 표현 방법을 구분하는 메모’를 붙였습니다. 방법론과 결과는 ‘관련 시각화’로 양방향 연결됩니다(예: 산점도 ↔ PCA·t-SNE·UMAP).
-- **신규 31종(모두 실제 계산·배치 알고리즘).** 다변량·고차원: RadViz, Star Coordinates, 그랜드 투어, 차원 쌓기, 테이블 렌즈, 재귀 패턴, 서클 세그먼트, 하이퍼슬라이스, 픽셀 막대 차트, 체르노프 얼굴. 분포·불확실성: 분위수 점도표, HOPs, 그라디언트 플롯, 윌킨슨 점도표, 펀치카드. 집합·계층·텍스트: 패럴렐 셋, 워드 클라우드, 워드 트리, 공간충전곡선 픽셀 시각화, 보로노이 트리맵, 탱글그램, 쌍곡 트리, 선형 집합 도표, 힘 기반 간선 묶음(FDEB). 시간: 타임 커브, 마레이 차트, 라이프라인, 스토리라인 차트. 과학·지리: 선적분 합성곱(LIC), 3D 지구본, 다평면 재구성(MPR). 각 설명에는 정의·시각적 매핑·작동 원리·수식·장단점·‘다른 기법과의 차이’·참고문헌이 있습니다.
-- 홈 애니메이션 64단계, 비교 실험실 추천 조합 40종(같은 데이터를 서로 다른 표현으로: 산점도 / RadViz / Star Coordinates 등), 데이터셋 190개.
-- 목록·미구현 항목: [docs/v07-inventory.md](docs/v07-inventory.md), 작업 기록 [docs/v07-progress.md](docs/v07-progress.md), 다음 할 일 [docs/v07-next.md](docs/v07-next.md). **새 예시 데이터는 모두 합성**입니다.
-
-## v0.6에서 추가된 시각화 (83종, 합계 250종)
-
-기계학습·AI 18종(혼동 행렬, 결정 경계, 학습·검증 곡선, t-SNE, UMAP, SHAP, ICE·ALE, 신경망 학습 등), 통계·시계열·베이지안 15종(ACF·PACF·STL, MCMC 진단, 사후 예측, 위험 함수, 극단값), 과학 16종(만델브로·줄리아·뉴턴 프랙탈, 이상한 끌개, 띠 구조, 등면·부피 렌더링, 분자·결정), 지리 7종(모란 산점도, 세미베리오그램, 크리깅, 시공간 KDE), 금융 10종(효율적 투자선, 내재변동성 곡면, VaR/ES, 호가 히트맵), 네트워크 5종(스펙트럼 임베딩, 층별 DAG, 최대 유량, 부자 클럽, 군집 블록 모형), 산업·공학 5종(와이블, 공차 누적, 대기행렬, 프로세스 맵, 고장 수목), 생물정보 4종(GSEA, 서열 로고, 접촉 지도, 라마찬드란), 언어·텍스트 3종(공기어 PMI, 어휘 분산, 지프 도표). 기계학습·산업·언어 카테고리가 새로 생겼고, 홈 애니메이션은 50단계, 비교 실험실 추천 조합은 33종, 데이터셋은 181개입니다. 검색은 분석 목적("병목", "이상치", "군집")과 약어(GSEA, PMI, CVaR)로도 찾습니다. 목록과 검증 방법은 [docs/v06-inventory.md](docs/v06-inventory.md), [docs/v06-progress.md](docs/v06-progress.md)에 있습니다.
-
-**v0.6의 모든 새 예시 데이터는 합성입니다.** 실제 환자·유전체·시세 자료를 쓰지 않았고 투자 조언 기능이 없습니다. 어텐션 맵은 학습하지 않은 임의 가중치, UMAP은 단순화 변형, 3차원 차트는 CPU(Canvas) 렌더링이며 이 한계는 화면에도 적혀 있습니다.
-
-### v0.6 성능 (v0.5와 같은 스크립트·환경, 헤드리스 Chromium, 각 3회 중 안정된 값)
-
-| 항목 | v0.5 | v0.6 |
-| --- | --- | --- |
-| 홈 JS 전송량(압축 전) | 746 kB | 905 kB |
-| 메인 번들 gzip | 186 kB | 230 kB |
-| 도감 카드 수 / 첫 카드까지 | 167장 / 약 220 ms | 250장 / 약 245 ms |
-| 검색 응답(5개 질의 중 최대) | 약 65 ms | 약 70 ms (한 번 153 ms) |
-| 실험실이 보이기까지 | 네트워크 800 ms, 산점도 780 ms | 같은 값, 등면 1.3 s, 부피 렌더링 1.3 s, t-SNE 1.1 s, 크리깅 1.0–1.3 s |
-
-설명 텍스트가 늘어 `Details` 청크가 572 kB → 718 kB가 되었습니다(지연 로드로 줄일 수 있음). 홈 애니메이션의 v0.6 단계 엔진은 별도 청크로 미리 가져옵니다. 이 값은 에뮬레이션이며 실기기 값이 아닙니다.
-
-## v0.5에서 추가된 시각화 (87종, 합계 167종)
-
-| 분야 | 시각화 |
-| --- | --- |
-| 지리공간 32 | 점 지도, 커널 밀도 지도, 정사각 격자 집계, 군집 지도, 스파이크 지도, 등고선, 음영기복, 경사·사면 방향, 벡터장, 유선, 입자 흐름, 이변량 지도, 범주형 코로플레스, 값 가림 지도, 글리프 지도, 연속·비연속·데머스·격자 카토그램, 보로노이 지도, 등시선, 버퍼 지도, 핫스팟(Gi*), LISA, 이동 궤적, 티소 지시 타원, 래스터 지도, 지형 단면, 다시메트릭 밀도, 3D 지형, 프리즘 지도, 시공간 큐브 |
-| 통계·불확실성 12 | 잔차 도표, 척도-위치, 영향력, 계수 도표, 부분 의존, 카플란–마이어, 넬슨–알렌, 부트스트랩, EWMA, CUSUM, 리프트·이득, PIT 히스토그램 |
-| 과학·수학 12 | 3D 표면, 3D 산점도, 위상 초상도, 분기 다이어그램, 스펙트로그램, 스칼로그램, 재귀 도표, 삼각 도표, 풍배도, 극좌표 도표, 극좌표 히트맵, 들로네 삼각분할 |
-| 금융·경제 10 | 렌코, 하이킨 아시, 카기, 점수 도표, 이퀴볼륨, 거래량 프로파일, 3선 전환도, 낙폭, 수익률 곡선, 호가창 깊이 |
-| 특수·응용 8 | 픽토그램, 나이팅게일 로즈, 방사형 막대, 이벤트 래스터, 바코드 타임라인, 렉시스 다이어그램, 누적 흐름, 나선형 시계열 |
-| 생물정보학 8 | 화산 도표, MA 도표, 맨해튼 도표, 서열 로고, 시퀀싱 깊이, PCoA, 계통수, 군집화 히트맵 |
-| 집합·네트워크 5 | 벤·오일러, UpSet, 하이퍼그래프, BioFabric, 방사형 트리 |
-
-카테고리는 14개이며 지리공간 등 일부는 하위 카테고리 칩(예: 지형·연속 표면, 공간 통계)으로 더 좁힐 수 있습니다. 요청 범위와 달리 **구현하지 않은 것**과 한계는 [docs/v05-progress.md](docs/v05-progress.md)에 목표와 실제를 구분해 적었습니다(유전체 트랙, Circos, 파라렐 셋, 힘 기반 에지 번들링, 보로노이 트리맵, 가시권·유역·3D 지구본 미구현).
-
-**v0.5의 모든 새 예시 데이터는 합성입니다.** 합성 지형은 실제 지형이 아니고, 등시선은 합성 도로망에서 계산한 이동 시간으로만 그렸으며, 생물정보학 예시는 실제 환자·유전체 자료가 아닙니다. 실제 경계는 아래 Natural Earth 지도만 씁니다.
-
-## 지도 데이터와 지리 엔진
-
-- **지도 데이터**: [Natural Earth](https://www.naturalearthdata.com/)(퍼블릭 도메인, 사용·재배포 제약 없음) — 세계 국가 경계 1:110m(남극 제외 176개)와 대한민국 시도 17곳(1:10m admin-1을 단순화). 두 파일을 합쳐 약 143 KB(TopoJSON)이며 지도 차트의 코드 청크와 함께 필요할 때만 내려받습니다. 홈 화면은 지도 데이터를 미리 받지 않고, 홈 애니메이션이 코로플레스 단계 몇 개 전에 한 번 불러옵니다.
-- **통계 값**: 세계 지도의 인구·GDP는 Natural Earth 속성(제작 시점 대체로 2019년 전후의 추정값), 면적은 경계에서 계산했습니다. 시도별 인구는 2023년 주민등록 기준을 반올림한 근삿값입니다. 흐름·점 밀도·위치 데이터와 메타분석·프로세스 데이터는 모두 **합성 데이터**이며 실제 통계가 아니라고 데이터 설명에 명시했습니다. 최신 통계로 쓰지 마세요. 경계는 학습용으로 단순화한 것이라 공식 경계와 다릅니다.
-- **지역 연결은 ID로만**: 세계는 ISO 3166-1 alpha-3(KOR), 한국은 ISO 3166-2(KR-11)로 표의 행과 경계를 잇고 이름은 쓰지 않습니다. 지도에 없는 ID는 그리지 않고 개수를 알립니다.
-- **투영법**: 메르카토르, Equal Earth(등적), Natural Earth, 정사 투영을 좌표 변환으로 실제 적용하며(d3-geo) 각 투영의 왜곡을 설명합니다. 확대·이동은 d3-zoom(휠·드래그·핀치·버튼)이고, 마커·타일·막대를 끄는 편집과 충돌하지 않도록 편집 요소는 지도 이동에서 제외됩니다.
-- **GeoJSON 가져오기**: GeoJSON·TopoJSON(Point/MultiPoint/Polygon/MultiPolygon)을 검증해 읽고, 잘못된 좌표·빈 도형·너무 큰 파일은 오류 대신 안내합니다. 외부 지도 타일·서버는 쓰지 않습니다.
-- 재생성: `node scripts/build-geo.mjs <countries.geojson> <admin1.geojson>` (Natural Earth 원본 필요).
-- 새로 쓰인 의존성: `topojson-client`(ISC), 빌드 스크립트 전용 `topojson-server`·`topojson-simplify`(ISC). 자세한 고지는 [NOTICE.md](NOTICE.md).
-
-### 계산의 근거
-
-- Q-Q: Acklam 정규 분위수 + Blom/Hazen/Weibull 플로팅 위치, 사분위수 기준선
-- 신뢰구간: Student t(정규화 불완전 베타 함수 기반 분위수, R `qt`와 대조), 정규 근사 z, 부트스트랩 백분위. 반복 표집 실험으로 포함률 확인
-- 덴드로그램: Lance–Williams 갱신의 단일·완전·평균·Ward 연결 (SciPy 높이와 대조), 높이 자르기
-- 스트림그래프: d3 wiggle(Byron–Wattenberg)/silhouette 기준선, 누적 순서 선택
-- 생키: d3-sankey (순환·자기 연결 감지와 안내, 노드 흐름 보존 점검)
-- 와플: 최대 잉여법(합이 항상 칸 수와 일치), 단순 반올림·내림과의 차이 표시
-- 캘린더: 윤년·월별 일수를 엄격히 반영한 날짜 해석, 없는 날과 0 구분
-- 범프: 공동·조밀·평균·순서 4가지 동률 처리
-- 2D KDE: 곱 가우시안 커널(Scott 규칙 σ·n^(−1/6)), 격자 질량 ≈ 1, 최고 밀도 영역(HDR) 임계값으로 확률 질량 기준 등고선
-- P-P: Hazen·Weibull·i/n 경험적 확률, 최대가능도로 맞춘 정규·균등·지수·로그정규 기준분포, KS 통계량
-- 레터 밸류: Hofmann–Wickham–Kafadar 깊이 점화식 d₁ = (n+1)/2, dᵢ₊₁ = (⌊dᵢ⌋+1)/2, Tukey·이상치 비율·신뢰 단계 규칙
-- PCA: 야코비 회전 고유분해, 설명분산비·점수 분산·직교성 검증, 표준화 시 적재량 = 상관계수, 화살표 배율 명시
-- 앤드루스: f(t) = x₁/√2 + x₂ sin t + x₃ cos t + …, 등거리 성질(∫(f−g)² = π‖x−y‖²) 테스트
-- 파레토·불릿·피라미드: 누적 비율과 80% 도달 항목, 구간 상한 보정, 전체·집단 내 백분율
-- 캔들스틱: OHLC 유효성(저가 ≤ min(시가, 종가) ≤ max(시가, 종가) ≤ 고가) 검사, 일→주·월 집계
-- 호라이즌: 층 분할·접기 계산과 합이 원래 편차를 복원하는 성질 테스트
-- 모자이크: 칸 넓이가 빈도에 정확히 비례(간격 0), 피어슨 잔차와 χ²
-- 아이시클: d3 partition, 자식 구간의 합 = 부모 구간
-- 네트워크: 중복·역방향 간선 병합, 연결 덩어리, d3-force 결정적 시작 배치, 시뮬레이션이 식으면 스스로 정지
-- 올루비얼: 모든 열이 같은 척도, 중간 노드의 유입·유출 보존 점검, 단계를 건너뛰는 흐름은 제외하고 이유 안내
-- ROC·PR: 동점 점수를 한 임계값으로 묶음, AUC = Mann–Whitney U/(P·N), AP(계단식)와 사다리꼴 PR AUC를 구분, scikit-learn 문서 예제와 일치
-- 팬 차트: 50·80·95% 구간의 z 값, 중심 ⊂ 50% ⊂ 80% ⊂ 95% 포함 검증과 자동 보정
-- 날짜: 윤년·월말·일광절약시간 경계(UTC 연산), 모호한 일/월 순서 거부
-- 코로플레스: 등간격·분위수·Jenks 자연 분류(계급 내 분산 최소화, 동적 계획법), 면적당·분모당 정규화. 점 밀도는 지역 안 기각 샘플링(시드+지역 ID로 재현), 도를링은 r = R√(v/vmax) + d3-force 충돌(겹침 0 검증), 지리적 헥스빈은 화면 평면과 방위 등적 평면 집계를 구분하고 칸의 구면 면적(km²)을 계산, 흐름 지도는 날짜변경선을 건너는 흐름을 두 조각으로 분리
-- 포레스트·퍼널 플롯: 로그 척도에서 se = (ln상한 − ln하한)/(2·1.96), 역분산 고정효과와 DerSimonian–Laird 무작위효과(τ², Cochran Q, I²), Egger 회귀 절편 검정(연구 3개 이상)
-- 블랜드-알트만: 편향 ± 1.96·SD, 편향과 한계의 신뢰구간은 Bland & Altman(1999) t 기반 공식, 절대·백분율·로그 비 형태, 상관 r과 일치도는 다름을 명시
-- 보정 곡선: 같은 폭·같은 개수 구간, Wilson 신뢰구간, ECE·MCE·Brier 점수
-- 관리도: I-MR(σ̂ = MR̄/1.128), X̄-R(A₂, D₃, D₄), p(점마다 달라지는 한계), c, Western Electric 규칙 1·2·3·5, 한계 계산 구간 분리, 규격한계와 Cp·Cpk는 관리한계와 별개
-- 간트: 날짜 UTC 일 단위 계산(종료일 포함), 선행 작업 검증(종료 전 시작, 없는 선행 작업, 순환), 드래그는 하루 단위
-- 퍼널 차트: 단계 전환율·이탈, 앞 단계보다 큰 단계는 중간 유입으로 표시. 마리메코: 칸 넓이 = 값/전체 합. 플레임: 접힌 스택 합산 트리, 포함·자체 비용, x축은 시간이 아님
-- 인접 행렬·하이브·번들링: 같은 간선 목록에서 행렬(무방향 대칭), 하이브 레이아웃(난수 없음), d3 계층 경로 + curveBundle(β), 이분 그래프 교차 수와 무게중심 정렬
-
-## 성능 측정 (v0.4)
-
-헤드리스 Chromium(소프트웨어 렌더링, 1440×900)에서 `vite preview`로 측정했습니다. **실제 기기에서 측정한 값이 아니며**, ‘4× 스로틀’은 DevTools의 CPU 스로틀링으로 느린 기기를 흉내 낸 에뮬레이션입니다. GPU가 있는 실제 기기에서는 Canvas의 래스터 비용이 크게 다를 수 있습니다.
-
-| 항목 | 1× | 4× CPU 스로틀 |
-| --- | --- | --- |
-| 홈 첫 마크까지 / DOMContentLoaded | 156 ms / 60 ms | 722 ms / 196 ms |
-| 홈 초기 요청 | 33개, 지도 데이터 요청 없음 | 동일 |
-| 홈 애니메이션 24단계 1바퀴(46 s) 프레임 | 평균 16.7 ms, p95 16.7 ms, 최대 16.8 ms, 33 ms 초과 0/2761 | 평균 17.7 ms, p95 16.8 ms, 최대 167 ms, 33 ms 초과 41/2603 |
-| 도감 80장 카드 표시 / 첫 미리보기 | 159 ms / 194 ms | 592 ms / 806 ms |
-| 세계 지도(176개 지역) 투영 변경 | 16–33 ms | 73–111 ms |
-| 지도 휠 확대·드래그 이동 프레임 | 평균 16.5 ms, p95 ≤ 19 ms | 평균 16.5 ms, p95 ≤ 19 ms |
-
-**큰 네트워크: SVG와 Canvas** (노드 n개, 간선은 노드의 약 3.5배, 각 3회 중앙값, 1×). 프레임은 힘 배치가 움직이는 처음 2.5초, 호버·휠은 배치가 멈춘 뒤 이벤트 하나를 처리해 그려지기까지의 시간입니다(60 Hz에서는 16.7 ms가 하한).
-
-| n | SVG 프레임 | Canvas 프레임 | SVG 호버 / 휠 | Canvas 호버 / 휠 | DOM 요소(SVG / Canvas) |
-| --- | --- | --- | --- | --- | --- |
-| 100 | 16.7 ms | 16.7 ms | 16.7 / 16.6 | 16.6 / 16.7 | 2,262 / 1,690 |
-| 300 | 17.7 ms | 17.7 ms | 16.8 / 16.7 | 16.7 / 16.8 | 5,064 / 3,290 |
-| 600 | 17.3 ms | 16.5 ms | 16.7 / 17.3 | 16.7 / 16.7 | 9,259 / 5,690 |
-| 1,000 | 26.6 ms | 16.5 ms | 16.7 / 16.8 | 16.8 / 16.5 | 14,849 / 8,890 |
-| 2,000 | 42.7 ms | 16.8 ms | 40.6 / 58.2 | 16.7 / 16.7 | 28,858 / 16,890 |
-| 3,000 | 91.1 ms | 23.0 ms | 90.9 / 124.5 | 16.6 / 16.9 | 42,853 / 24,890 |
-
-4× 스로틀(에뮬레이션)에서는 결과가 달라집니다. 호버·휠은 SVG가 n = 300에서 68 / 107 ms, n = 1,000에서 171 / 256 ms로 느려지지만 Canvas는 16.7 ms로 일정합니다. 반면 **배치가 움직이는 동안의 프레임 시간은 n ≤ 600에서 Canvas가 SVG보다 느리거나 비슷했습니다**(n = 150: SVG 31 ms, Canvas 47 ms · n = 300: 54 ms, 81 ms · n = 600: 94 ms, 108 ms · n = 1,000: 155 ms, 124 ms). 소프트웨어 래스터가 지배적이라 ‘Canvas로 바꾸면 무조건 빨라진다’는 가정은 맞지 않았습니다. 그래서 자동 전환 기준(노드+간선 1,500개 초과)은 호버·확대 반응이 확실히 좋아지는 지점으로 잡았고, 설정의 ‘렌더링 방식’에서 SVG·Canvas를 직접 고를 수 있습니다. Canvas에서는 간선을 선 굵기별로, 노드를 색별로 묶어 그립니다. 큰 그래프는 첫 레이아웃을 40틱만 동기 계산하고 나머지는 움직이며 다듬어 첫 화면 정지 시간을 줄였습니다(n = 2,000에서 긴 작업 2,055·2,599 ms → 383·266 ms).
-
-## 성능 측정 (v0.5, v0.4와 같은 조건 비교)
-
-같은 스크립트로 `b58993f`(v0.4)와 v0.5를 같은 환경(헤드리스 Chromium, 소프트웨어 렌더링)에서 측정했습니다. 전체 표와 해석은 [docs/v05-progress.md](docs/v05-progress.md)에 있습니다. 요약: 홈 첫 렌더·애니메이션 프레임은 v0.4와 같은 수준이고(1× 평균 16.7 ms), 도감 카드가 80 → 167장이 되어 첫 카드까지 약 30 ms 늘었으며, **메인 번들은 gzip 156 kB → 183 kB(+27 kB)** 로 커졌습니다. 3,000노드 네트워크(1× 평균 36 ms)와 4× 스로틀의 3D 지형 드래그(평균 23.5 ms)는 부드럽지 않습니다. 실기기 값이 아닙니다.
-
-## 모바일 검증 범위
-
-Playwright의 Pixel 7 에뮬레이션(412×915, 터치)에서 검증합니다: 20개 새 실험실의 가로 스크롤 없음, 범례·읽기 값 겹침 없음, 지도 줌 버튼(36px 이상) 탭, `Input.synthesizePinchGesture` 핀치 확대, 한 손가락 이동이 데이터를 바꾸지 않음, 지역 탭으로 값 편집, 노드 탭 선택, 하단 시트(설정·데이터), 가로 회전, 전체 화면. **실제 휴대폰에서는 확인하지 못했습니다.** 에뮬레이션과 실제 기기의 터치·성능 차이는 남아 있을 수 있습니다.
-
-## 알려진 한계
-
-- 세계 지도는 1:110m 해상도라 작은 섬나라·도시국가는 점이나 생략으로 보입니다(통계 표에는 있으나 경계가 없는 지역은 그리지 않음). 경계는 분쟁 지역의 공식 입장을 반영하지 않습니다.
-- 한국 지도는 시도 단위만 포함합니다(시군구 없음).
-- 타일 그리드 배치는 손으로 만든 근사이며, 한국 17곳과 세계 60여 개국만 제공합니다. 도를링은 값 0·결측 지역에 원이 없습니다.
-- 메타분석은 고정효과·DerSimonian–Laird만 구현합니다(Hartung–Knapp, REML 없음). 퍼널 플롯은 Egger 검정만 제공하고 trim-and-fill은 없습니다. 연구가 10개 미만이면 모두 불안정합니다.
-- 관리도 규칙 4(14점 교대)와 구역 규칙 일부, EWMA·CUSUM은 구현하지 않았습니다. 간트 차트는 임계 경로를 계산하지 않고, 달력(주말·공휴일) 제외도 없습니다.
-- Canvas 렌더링은 네트워크 그래프에만 적용했고 다른 큰 차트에는 없습니다. 인접 행렬은 노드 80개를 넘으면 라벨·칸 상호작용을 줄입니다.
-- 실제 기기(특히 저사양 휴대폰) 성능은 측정하지 못했습니다.
+교육용 구현 및 근사 기법도 포함하며, 모든 시각화가 원 논문의 완전한 재현인 것은 아닙니다. [구현·검증 한계](docs/limitations.md)를 참고하세요.
 
 ## 기술 스택
 
-React 19 · TypeScript · Vite · D3.js (척도·도형·통계·레이아웃·지리 투영) · topojson-client · Tailwind CSS · Lucide Icons · KaTeX · Vitest · Playwright
-
-차트는 React가 SVG를 렌더링하고 D3는 계산(척도, 경로, 스택, 계층 레이아웃)만 담당합니다.
+| 영역 | 기술 |
+| :--- | :--- |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS |
+| Visualization | D3.js, SVG, Canvas, topojson-client |
+| Math / Layout | KaTeX, 통계·레이아웃 계산 모듈 |
+| Testing / Deployment | Vitest, Playwright, GitHub Actions, GitHub Pages |
 
 ## 로컬 실행
 
 ```bash
-npm install
-npm run dev        # http://127.0.0.1:5173/VizLab/
+git clone https://github.com/oyueo-mm/VizLab.git
+cd VizLab
+npm ci
+npm run dev
 ```
 
-## 빌드와 검증
+접속: http://127.0.0.1:5173/VizLab/
+
+<details>
+<summary>빌드 및 테스트</summary>
 
 ```bash
 npm run typecheck
 npm run lint
-npm test                          # 단위 테스트 (통계, 레이아웃, 데이터, 레지스트리, 홈 애니메이션 프레임)
-npm run build                     # dist/
-npx playwright install chromium   # 최초 1회
-npm run test:e2e                  # 브라우저 테스트 (데스크톱 + 태블릿 + 모바일)
+npm test
+npm run build
+npx playwright install chromium
+npm run test:e2e
 ```
 
-`main`에 push하면 GitHub Actions가 위 검증을 모두 실행한 뒤 GitHub Pages에 배포합니다.
+</details>
 
-## 구조와 확장
+## 프로젝트 구조
 
-```
+```text
 src/
-  viz/catalog.ts       메타데이터 레지스트리 (이름, 카테고리, 키워드, 관련 시각화)
-  viz/charts/*.tsx     차트 모듈: 역할(roles), 기본 데이터셋, 매개변수, Chart, Controls
-  compare/             시각화 비교 실험실 (프리셋, 공유 상태, 호환성 검사)
-  content/*.ts         설명 콘텐츠 (차트 코드와 분리)
-  data/                데이터셋 라이브러리, 테이블 모델(숫자·범주·날짜), CSV·JSON
-  stats/               통계 계산 (KDE, ECDF, 히스토그램, 박스 플롯, 메타분석, 관리도, 플레임, 그래프 등)
-  geo/                 지도 엔진: 지도 데이터(TopoJSON), 투영, GeoJSON 검증, 줌 훅, 타일 배치
-  viz/needs.ts         차트별 필수 열 슬롯 표(차트 코드를 불러오기 전 호환성 판단; 테스트가 모듈과의 불일치를 막음)
-  lab/                 실험실 화면, 데이터 편집기, 상태·영속화·실행 취소
-  pages/, components/  홈, 도감, 사이드바, 공통 UI
+├── viz/        시각화 레지스트리 및 차트 모듈
+├── stats/      통계 및 계산 엔진
+├── data/       데이터셋 및 테이블 모델
+├── geo/        지도 데이터 및 투영
+├── compare/    비교 실험실
+├── lab/        개별 실험실 및 데이터 편집
+├── content/    시각화 설명 콘텐츠
+└── pages/      홈 및 도감 화면
 ```
 
-새 시각화는 `catalog.ts`에 항목 하나, `viz/charts/`에 모듈 하나, `content/`에 설명 하나를 추가하고 `charts/index.ts`에 등록하면 도감·검색·실험실에 자동으로 나타납니다. 모듈이 없는 항목은 도감에 표시되지 않습니다.
+## 개발 문서
 
-## 향후 확장 방향
+| 문서 | 내용 |
+| :--- | :--- |
+| [CHANGELOG](CHANGELOG.md) | 버전별 변경 기록 |
+| [Architecture](docs/architecture.md) | 시스템 구조 및 계산 엔진 |
+| [Performance](docs/performance.md) | 성능 측정과 최적화 기록 |
+| [Limitations](docs/limitations.md) | 구현 범위 및 검증 한계 |
+| [Research](docs/v11-research.md) · [Inventory](docs/v11-inventory.md) | v1.1 기법별 서지 및 구현 내역 |
+| [기존 README 보관본](docs/readme-v1.1-archive.md) | 개편 이전 전체 기록 |
+| [NOTICE](NOTICE.md) | 외부 데이터 및 출처 |
 
-- 유전체 트랙·Circos, 가시권·유역 분석, WebGL 3D, 시군구 지도
-- 다른 대용량 차트(산점도 수만 점 등)용 Canvas 경로
-- 연결 강조를 더 많은 차트로 확대, 이미지(SVG/PNG) 내보내기
+## 향후 개발
+
+WebGL 3D 및 대용량 차트, 추가 연결 강조, 이미지 내보내기, 세분화된 지도와 전문 시각화. 자세한 내용은 [v1.1 후속 과제](docs/v11-next.md)를 참고하세요.
